@@ -136,6 +136,26 @@ export const agreementsApi = {
     return !res.error;
   },
 
+  async restoreAgreement(agreementId: string): Promise<boolean> {
+    const res = await apiClient.patch(`/api/pdf/agreements/${agreementId}/restore`, {});
+    return !res.error;
+  },
+
+  async restoreFile(fileId: string, fileType: FileType): Promise<boolean> {
+    const res = await apiClient.patch(`/api/pdf/files/${fileId}/restore?fileType=${fileType}`, {});
+    return !res.error;
+  },
+
+  async permanentlyDeleteAgreement(agreementId: string): Promise<boolean> {
+    const res = await apiClient.delete(`/api/pdf/agreements/${agreementId}/permanent-delete`);
+    return !res.error;
+  },
+
+  async permanentlyDeleteFile(fileId: string, fileType: FileType): Promise<boolean> {
+    const res = await apiClient.delete(`/api/pdf/files/${fileId}/permanent-delete?fileType=${fileType}`);
+    return !res.error;
+  },
+
   // Upload a file attachment to an agreement.
   // Sends multipart/form-data with fields: file, agreementId, fileType.
   async uploadAttachment(
