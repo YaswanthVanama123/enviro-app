@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
   Platform,
@@ -189,22 +188,6 @@ export function SavedAgreementsScreen() {
     [handleDeleteAgreement, handleDeleteFile, refresh],
   );
 
-  const ListHeader = (
-    <View>
-      <View style={styles.searchContainer}>
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-      </View>
-      <FilterChips active={activeFilter} onSelect={setActiveFilter} />
-      {!loading && (
-        <Text style={styles.countText}>
-          {total === 0
-            ? 'No agreements'
-            : `${total} agreements · ${agreements.reduce((s, a) => s + a.fileCount, 0)} files`}
-        </Text>
-      )}
-    </View>
-  );
-
   const ListFooter = hasMore ? (
     <TouchableOpacity style={styles.loadMoreBtn} onPress={loadMore}>
       <Text style={styles.loadMoreText}>Load More</Text>
@@ -213,32 +196,17 @@ export function SavedAgreementsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Sticky header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Saved Agreements</Text>
-          {!loading && (
-            <Text style={styles.headerSub}>
-              {total} agreements
-            </Text>
-          )}
+      {/* Sticky search + filters */}
+      <View style={styles.stickyTop}>
+        <View style={styles.searchContainer}>
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </View>
-        {refreshing && (
-          <ActivityIndicator size="small" color={Colors.primary} />
-        )}
+        <FilterChips active={activeFilter} onSelect={setActiveFilter} />
       </View>
 
       {/* Skeleton loading state */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
-          <View style={styles.searchContainer}>
-            <View style={styles.skeletonSearch} />
-          </View>
-          <View style={styles.skeletonFiltersRow}>
-            {[80, 60, 65, 70].map((w, i) => (
-              <View key={i} style={[styles.skeletonChip, {width: w}]} />
-            ))}
-          </View>
           {[1, 2, 3, 4].map(i => (
             <SkeletonCard key={i} />
           ))}
@@ -248,7 +216,15 @@ export function SavedAgreementsScreen() {
           data={agreements}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          ListHeaderComponent={ListHeader}
+          ListHeaderComponent={
+            !loading ? (
+              <Text style={styles.countText}>
+                {total === 0
+                  ? 'No agreements'
+                  : `${total} agreements · ${agreements.reduce((s, a) => s + a.fileCount, 0)} files`}
+              </Text>
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               hasSearch={searchQuery.length > 0}
@@ -287,28 +263,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.primary,   // brand red accent — matches webapp active nav
-  },
-  headerTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.primary,               // webapp uses brand red for section titles
-  },
-  headerSub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 2,
   },
 
   // Search

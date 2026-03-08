@@ -52,13 +52,103 @@ export interface ServiceConfig {
   createdAt?: string;
 }
 
+export interface PricingBackupChangedBy {
+  _id: string;
+  username: string;
+  email: string;
+}
+
 export interface PricingBackup {
   changeDayId: string;
   createdAt: string;
+  // Legacy simple fields
   serviceConfigsCount?: number;
   productFamiliesCount?: number;
   totalProducts?: number;
   note?: string;
+  // Full fields
+  _id?: string;
+  changeDay?: string;
+  firstChangeTimestamp?: string;
+  backupTrigger?: 'pricefix_update' | 'product_catalog_update' | 'service_config_update' | 'manual' | 'scheduled';
+  changedBy?: PricingBackupChangedBy;
+  changeContext?: {
+    changedAreas: string[];
+    changeDescription: string;
+    changeCount: number;
+  };
+  snapshotMetadata?: {
+    includedDataTypes: {priceFix: boolean; productCatalog: boolean; serviceConfigs: boolean};
+    documentCounts: {priceFixCount: number; productCatalogCount: number; serviceConfigCount: number};
+    originalSize: number;
+    compressedSize: number;
+    compressionRatio: number;
+  };
+  restorationInfo?: {
+    hasBeenRestored: boolean;
+    lastRestoredAt?: string;
+    restoredBy?: PricingBackupChangedBy;
+    restorationNotes?: string;
+  };
+  updatedAt?: string;
+}
+
+export interface BackupSystemHealth {
+  status: 'healthy' | 'warning' | 'unhealthy' | 'unknown';
+  checks: {
+    backupModelAccessible: boolean;
+    totalBackups: number;
+    retentionPolicyCompliant: boolean;
+    hasBackupToday: boolean;
+    mostRecentBackup?: {changeDay: string; createdAt: string; trigger: string};
+  };
+  warnings: string[];
+}
+
+export interface BackupTriggerStats {
+  trigger: string;
+  count: number;
+  percentage: number;
+}
+
+export interface BackupStatistics {
+  totalBackups: number;
+  storageEfficiency: number;
+  totalOriginalSize: number;
+  totalCompressedSize: number;
+  systemHealth: 'healthy' | 'warning' | 'unhealthy';
+  triggerBreakdown: BackupTriggerStats[];
+  recentBackups: PricingBackup[];
+  compressionAnalysis: {best: number; worst: number; average: number};
+}
+
+export interface ServiceAgreementTemplate {
+  id?: string;
+  name?: string;
+  term1: string;
+  term2: string;
+  term3: string;
+  term4: string;
+  term5: string;
+  term6: string;
+  term7: string;
+  noteText: string;
+  titleText: string;
+  subtitleText: string;
+  retainDispensersLabel: string;
+  disposeDispensersLabel: string;
+  emSalesRepLabel: string;
+  insideSalesRepLabel: string;
+  authorityText: string;
+  customerContactLabel: string;
+  customerSignatureLabel: string;
+  customerDateLabel: string;
+  emFranchiseeLabel: string;
+  emSignatureLabel: string;
+  emDateLabel: string;
+  pageNumberText: string;
+  isActive?: boolean;
+  updatedAt?: string;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
@@ -93,20 +183,66 @@ export const pricingApi = {
   },
 
   async getBackupList(): Promise<PricingBackup[]> {
-    const res = await apiClient.get<any>('/api/pricing-backup/list');
+    const res = await apiClient.get<any>('/api/pricing-backup/list?limit=50');
     if (res.error || !res.data) {return [];}
-    return res.data.backups ?? (Array.isArray(res.data) ? res.data : []);
+    const payload = res.data.data ?? res.data;
+    return payload.backups ?? (Array.isArray(payload) ? payload : []);
   },
 
-  async createBackup(note?: string): Promise<boolean> {
+  async getBackupDetails(changeDayId: string): Promise<PricingBackup | null> {
+    const res = await apiClient.get<any>(`/api/pricing-backup/details/${changeDayId}`);
+    if (res.error || !res.data) {return null;}
+    return res.data.data ?? res.data ?? null;
+  },
+
+  async getBackupHealth(): Promise<BackupSystemHealth | null> {
+    const res = await apiClient.get<any>('/api/pricing-backup/health');
+    if (res.error || !res.data) {return null;}
+    return res.data.data ?? res.data ?? null;
+  },
+
+  async getBackupStatistics(): Promise<BackupStatistics | null> {
+    const res = await apiClient.get<any>('/api/pricing-backup/statistics');
+    if (res.error || !res.data) {return null;}
+    const d = res.data.data ?? res.data;
+    if (!d) {return null;}
+    const si = d.sizeStatistics ?? {};
+    const ts: {_id: string; count: number}[] = d.triggerStatistics ?? [];
+    const total = ts.reduce((sum, t) => sum + t.count, 0);
+    return {
+      totalBackups: d.totalBackups ?? 0,
+      storageEfficiency: si.avgCompressionRatio != null ? (1 - si.avgCompressionRatio) * 100 : 0,
+      totalOriginalSize: si.totalOriginalSize ?? 0,
+      totalCompressedSize: si.totalCompressedSize ?? 0,
+      systemHealth: d.retentionCompliance ? 'healthy' : 'warning',
+      triggerBreakdown: ts.map(t => ({
+        trigger: t._id,
+        count: t.count,
+        percentage: total > 0 ? (t.count / total) * 100 : 0,
+      })),
+      recentBackups: d.recentBackups ?? [],
+      compressionAnalysis: {
+        best: si.minCompressionRatio != null ? (1 - si.minCompressionRatio) * 100 : 0,
+        worst: si.maxCompressionRatio != null ? (1 - si.maxCompressionRatio) * 100 : 0,
+        average: si.avgCompressionRatio != null ? (1 - si.avgCompressionRatio) * 100 : 0,
+      },
+    };
+  },
+
+  async createBackup(description?: string): Promise<boolean> {
     const res = await apiClient.post('/api/pricing-backup/create', {
-      note: note ?? 'Manual backup from mobile',
+      changeDescription: description ?? 'Manual backup from mobile',
     });
     return !res.error;
   },
 
-  async restoreBackup(changeDayId: string): Promise<boolean> {
-    const res = await apiClient.post('/api/pricing-backup/restore', {changeDayId});
+  async restoreBackup(changeDayId: string, restorationNotes?: string): Promise<boolean> {
+    const res = await apiClient.post('/api/pricing-backup/restore', {changeDayId, restorationNotes});
+    return !res.error;
+  },
+
+  async enforceRetentionPolicy(): Promise<boolean> {
+    const res = await apiClient.post('/api/pricing-backup/enforce-retention', {});
     return !res.error;
   },
 
@@ -140,5 +276,16 @@ export const pricingApi = {
     const res = await apiClient.put(`/api/service-configs/${id}/partial`, data);
     if (res.error) {return {ok: false, error: res.error};}
     return {ok: true};
+  },
+
+  async getServiceAgreementTemplate(): Promise<ServiceAgreementTemplate | null> {
+    const res = await apiClient.get<any>('/api/service-agreement-template/active');
+    if (res.error || !res.data) {return null;}
+    return res.data.template ?? res.data;
+  },
+
+  async updateServiceAgreementTemplate(data: Partial<ServiceAgreementTemplate>): Promise<boolean> {
+    const res = await apiClient.put('/api/service-agreement-template', data);
+    return !res.error;
   },
 };

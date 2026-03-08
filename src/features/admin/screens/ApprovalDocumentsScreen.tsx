@@ -554,19 +554,6 @@ export function ApprovalDocumentsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Approval Documents</Text>
-          {!loading && (
-            <Text style={styles.headerSub}>
-              {totalAgreements} {totalAgreements === 1 ? 'agreement' : 'agreements'} · {totalFiles} files
-            </Text>
-          )}
-        </View>
-        {refreshing && <ActivityIndicator size="small" color={Colors.primary} />}
-      </View>
-
       {/* Skeleton */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
@@ -680,19 +667,6 @@ const SKELETON_BG = '#e5e7eb';
 
 const styles = StyleSheet.create({
   screen: {flex: 1, backgroundColor: Colors.background},
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.primary,
-  },
-  headerTitle: {fontSize: FontSize.lg, fontWeight: '700', color: Colors.primary},
-  headerSub: {fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2},
 
   // Search
   searchContainer: {

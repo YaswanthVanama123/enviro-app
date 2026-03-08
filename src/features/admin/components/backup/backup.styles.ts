@@ -1,0 +1,595 @@
+import {StyleSheet} from 'react-native';
+import {Colors} from '../../../../theme/colors';
+import {Spacing, Radius} from '../../../../theme/spacing';
+import {FontSize} from '../../../../theme/typography';
+
+export const bStyles = StyleSheet.create({
+  // Sub-tab bar
+  subTabBar: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  subTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    gap: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  subTabActive: {
+    borderBottomColor: '#2563eb',
+  },
+  subTabText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  subTabTextActive: {
+    color: '#2563eb',
+  },
+
+  // List header
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  listHeaderTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#2563eb',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
+  },
+  createBtnText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: '#fff',
+  },
+
+  // Backup card
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  cardIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  cardTitle: {
+    flex: 1,
+    minWidth: 0,
+  },
+  cardChangeDay: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  cardDaysAgo: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  triggerBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  triggerBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  cardCounts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  countBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+  },
+  countBadgeText: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  cardSize: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  cardCompression: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+  },
+  statusAvailable: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#bbf7d0',
+  },
+  statusRestored: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#fde68a',
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    marginTop: Spacing.xs,
+  },
+  detailsBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    backgroundColor: '#eff6ff',
+  },
+  detailsBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
+  restoreActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#e9d5ff',
+    backgroundColor: '#faf5ff',
+  },
+  restoreActionBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#7c3aed',
+  },
+
+  // Statistics
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  statCard: {
+    width: '47.5%',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    fontSize: FontSize.xl,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  statLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+
+  // Shared section box
+  sectionBox: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: 4,
+    marginBottom: Spacing.sm,
+  },
+  boxTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+
+  // Trigger breakdown
+  triggerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 3,
+  },
+  triggerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  triggerRowLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    width: 70,
+  },
+  triggerBarWrap: {
+    flex: 1,
+    height: 6,
+    backgroundColor: Colors.borderLight,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  triggerBar: {
+    height: '100%' as any,
+    borderRadius: 3,
+  },
+  triggerCount: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    width: 24,
+    textAlign: 'right',
+  },
+
+  // Compression analysis
+  compressionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 4,
+  },
+  compressionStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  compressionValue: {
+    fontSize: FontSize.xl,
+    fontWeight: '800',
+  },
+  compressionLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+  },
+  compressionDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.border,
+  },
+
+  // Recent row
+  recentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 3,
+  },
+  recentDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  recentId: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  recentAge: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  recentTrigger: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    width: 60,
+    textAlign: 'right',
+  },
+
+  // System health
+  healthBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+  },
+  healthBannerTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  healthBannerSub: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  healthCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    gap: 8,
+  },
+  healthCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  healthCardIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.md,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  healthCardTitle: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  healthCardMsg: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    paddingLeft: 40,
+  },
+  progressWrap: {
+    gap: 4,
+    paddingLeft: 40,
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: Colors.borderLight,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%' as any,
+    borderRadius: 3,
+  },
+  progressLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.xs,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  enforceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 12,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    backgroundColor: '#fff5f5',
+    marginTop: Spacing.sm,
+  },
+  enforceBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: '#dc2626',
+  },
+
+  // Info / warning boxes
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: '#eff6ff',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  infoBoxText: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: '#1e40af',
+    lineHeight: 18,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: '#fffbeb',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  warningBoxText: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: '#92400e',
+    lineHeight: 18,
+  },
+
+  // Info rows (used in detail / restore modals)
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  infoRowLabel: {
+    width: 120,
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    fontWeight: '500',
+    flexShrink: 0,
+  },
+  infoRowValue: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+
+  // Modal sheet
+  sheet: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  sheetTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  sheetContent: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  sheetFooter: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  sheetCancelBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  sheetCancelBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  sheetSaveBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: Radius.lg,
+    backgroundColor: '#2563eb',
+  },
+  sheetSaveBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: '#fff',
+  },
+
+  // Form fields
+  field: {
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  fieldOptional: {
+    fontWeight: '400',
+    color: Colors.textMuted,
+  },
+  input: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 11,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+  },
+  inputMulti: {
+    height: 80,
+    paddingTop: 11,
+    textAlignVertical: 'top',
+  },
+});

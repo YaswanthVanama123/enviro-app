@@ -5,7 +5,6 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
   Platform,
@@ -185,21 +184,6 @@ export function TrashScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Sticky header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Trash</Text>
-          {!loading && (
-            <Text style={styles.headerSub}>
-              {total} deleted {total === 1 ? 'agreement' : 'agreements'}
-            </Text>
-          )}
-        </View>
-        {refreshing && (
-          <ActivityIndicator size="small" color={Colors.primary} />
-        )}
-      </View>
-
       {/* Skeleton loading state */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
@@ -253,28 +237,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.primary,
-  },
-  headerTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  headerSub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 2,
   },
 
   // Search
