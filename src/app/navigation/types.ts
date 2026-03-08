@@ -11,3 +11,4 @@ export type TabParamList = {
   Trash: undefined;
   More: undefined;
 };
+

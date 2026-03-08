@@ -186,4 +186,30 @@ export const agreementsApi = {
     );
     return !res.error;
   },
+
+  // Per-file status: version_pdf → PATCH /api/versions/{id}/status
+  async updateVersionStatus(
+    versionId: string,
+    status: AgreementStatus,
+  ): Promise<boolean> {
+    const res = await apiClient.patch(`/api/versions/${versionId}/status`, {status});
+    return !res.error;
+  },
+
+  // Per-file status: attached_pdf → PATCH /api/manual-upload/{id}/status
+  async updateAttachedFileStatus(
+    fileId: string,
+    status: AgreementStatus,
+  ): Promise<boolean> {
+    const res = await apiClient.patch(`/api/manual-upload/${fileId}/status`, {status});
+    return !res.error;
+  },
+
+  // Approval-documents grouped endpoint
+  async getApprovalDocumentsGrouped(): Promise<GroupedSavedFilesResult & {totalFiles?: number} | null> {
+    const res = await apiClient.get<GroupedSavedFilesResult & {totalFiles?: number}>(
+      '/api/pdf/approval-documents/grouped',
+    );
+    return res.data ?? null;
+  },
 };

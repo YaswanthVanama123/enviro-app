@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,13 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {apiClient} from '../../../services/api/client';
-import {storage} from '../../../services/storage/storage.service';
+import {useAdminAuth} from '../context/AdminAuthContext';
+import {API_BASE_URL} from '../../../config';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
-import {API_BASE_URL} from '../../../config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface AdminUser {
-  id: string;
-  username: string;
-}
 
 type ForgotStep = 'developer' | 'reset';
 
@@ -33,10 +27,7 @@ type ForgotStep = 'developer' | 'reset';
 
 export function AdminPanelScreen() {
   const insets = useSafeAreaInsets();
-
-  // Auth state
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+  const {user, isAuthenticated, authReady, login, logout} = useAdminAuth();
 
   // Login form
   const [username, setUsername] = useState('');
@@ -57,20 +48,6 @@ export function AdminPanelScreen() {
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
 
-  // ── Restore session on mount ─────────────────────────────────────────────
-
-  useEffect(() => {
-    (async () => {
-      const token = await storage.getToken();
-      const storedUser = await storage.getAdminUser();
-      if (token && storedUser) {
-        apiClient.setToken(token);
-        setUser(storedUser);
-      }
-      setAuthReady(true);
-    })();
-  }, []);
-
   // ── Login ────────────────────────────────────────────────────────────────
 
   const handleLogin = useCallback(async () => {
@@ -80,33 +57,19 @@ export function AdminPanelScreen() {
     }
     setLoading(true);
     setLoginError(null);
-
-    const res = await apiClient.post<{token: string; admin: AdminUser}>(
-      '/api/admin/login',
-      {username: username.trim(), password},
-    );
-
-    if (res.error || !res.data) {
-      setLoginError(res.error ?? 'Login failed. Please try again.');
-    } else {
-      apiClient.setToken(res.data.token);
-      await storage.setToken(res.data.token);
-      await storage.setAdminUser(res.data.admin);
-      setUser(res.data.admin);
-    }
+    const error = await login(username, password);
+    if (error) {setLoginError(error);}
     setLoading(false);
-  }, [username, password]);
+  }, [username, password, login]);
 
   // ── Logout ───────────────────────────────────────────────────────────────
 
   const handleLogout = useCallback(async () => {
-    apiClient.setToken(null);
-    await storage.clearAuth();
-    setUser(null);
+    await logout();
     setUsername('');
     setPassword('');
     setLoginError(null);
-  }, []);
+  }, [logout]);
 
   // ── Forgot password ──────────────────────────────────────────────────────
 
@@ -170,7 +133,7 @@ export function AdminPanelScreen() {
     }
   }, [newPassword, confirmPassword, developerName, closeForgotModal]);
 
-  // ── Render: loading splash ────────────────────────────────────────────────
+  // ── Loading splash ────────────────────────────────────────────────────────
 
   if (!authReady) {
     return (
@@ -180,14 +143,13 @@ export function AdminPanelScreen() {
     );
   }
 
-  // ── Render: logged-in ─────────────────────────────────────────────────────
+  // ── Logged-in view ────────────────────────────────────────────────────────
 
-  if (user) {
+  if (isAuthenticated && user) {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Admin Panel</Text>
+          <Text style={styles.headerTitle}>Admin</Text>
           <Text style={styles.headerSub}>Logged in as {user.username}</Text>
         </View>
 
@@ -198,7 +160,6 @@ export function AdminPanelScreen() {
           ]}
           showsVerticalScrollIndicator={false}>
 
-          {/* Profile card */}
           <View style={styles.profileCard}>
             <View style={styles.avatarCircle}>
               <Ionicons name="person" size={32} color={Colors.primary} />
@@ -211,7 +172,6 @@ export function AdminPanelScreen() {
             </View>
           </View>
 
-          {/* Logout button */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={18} color="#ef4444" />
             <Text style={styles.logoutBtnText}>Log Out</Text>
@@ -221,11 +181,10 @@ export function AdminPanelScreen() {
     );
   }
 
-  // ── Render: login form ────────────────────────────────────────────────────
+  // ── Login form ────────────────────────────────────────────────────────────
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Admin Login</Text>
         <Text style={styles.headerSub}>Restricted access</Text>
@@ -242,7 +201,6 @@ export function AdminPanelScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
 
-          {/* Lock icon hero */}
           <View style={styles.heroRow}>
             <View style={styles.heroIcon}>
               <Ionicons name="lock-closed" size={36} color={Colors.primary} />
@@ -251,10 +209,7 @@ export function AdminPanelScreen() {
             <Text style={styles.heroSub}>Sign in with your admin credentials</Text>
           </View>
 
-          {/* Login card */}
           <View style={styles.card}>
-
-            {/* Username */}
             <Text style={styles.fieldLabel}>Username</Text>
             <View style={styles.inputRow}>
               <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
@@ -270,7 +225,6 @@ export function AdminPanelScreen() {
               />
             </View>
 
-            {/* Password */}
             <Text style={[styles.fieldLabel, {marginTop: Spacing.md}]}>Password</Text>
             <View style={styles.inputRow}>
               <Ionicons name="key-outline" size={18} color={Colors.textMuted} />
@@ -297,7 +251,6 @@ export function AdminPanelScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Error */}
             {loginError ? (
               <View style={styles.errorRow}>
                 <Ionicons name="alert-circle-outline" size={14} color="#ef4444" />
@@ -305,7 +258,6 @@ export function AdminPanelScreen() {
               </View>
             ) : null}
 
-            {/* Sign in button */}
             <TouchableOpacity
               style={[styles.signInBtn, loading && {opacity: 0.7}]}
               onPress={handleLogin}
@@ -320,7 +272,6 @@ export function AdminPanelScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Forgot password */}
             <TouchableOpacity style={styles.forgotBtn} onPress={openForgotModal}>
               <Text style={styles.forgotBtnText}>Forgot password?</Text>
             </TouchableOpacity>
@@ -336,8 +287,6 @@ export function AdminPanelScreen() {
         onRequestClose={closeForgotModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-
-            {/* Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalIconBox}>
                 <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
@@ -350,7 +299,6 @@ export function AdminPanelScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* ── Step 1: Developer name ── */}
             {forgotStep === 'developer' ? (
               <View style={styles.modalBody}>
                 <Text style={styles.modalDescription}>
@@ -388,13 +336,11 @@ export function AdminPanelScreen() {
                 </View>
               </View>
             ) : (
-              /* ── Step 2: Reset password ── */
               <View style={styles.modalBody}>
                 <Text style={styles.modalDescription}>
                   Welcome, {developerName}! Set a new admin password:
                 </Text>
 
-                {/* New password */}
                 <Text style={styles.fieldLabel}>New Password</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="key-outline" size={18} color={Colors.textMuted} />
@@ -421,7 +367,6 @@ export function AdminPanelScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Confirm password */}
                 <Text style={[styles.fieldLabel, {marginTop: Spacing.md}]}>Confirm Password</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="key-outline" size={18} color={Colors.textMuted} />
@@ -492,16 +437,9 @@ export function AdminPanelScreen() {
 
 const styles = StyleSheet.create({
   flex: {flex: 1},
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  screen: {flex: 1, backgroundColor: Colors.background},
+  center: {alignItems: 'center', justifyContent: 'center'},
 
-  // Header (matches other screens)
   header: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
@@ -509,28 +447,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: Colors.primary,
   },
-  headerTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  headerSub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
+  headerTitle: {fontSize: FontSize.lg, fontWeight: '700', color: Colors.primary},
+  headerSub: {fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2},
 
   scrollContent: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
   },
 
-  // Hero section
-  heroRow: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
-  },
+  heroRow: {alignItems: 'center', marginBottom: Spacing.xl, gap: Spacing.sm},
   heroIcon: {
     width: 72,
     height: 72,
@@ -540,18 +465,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
-  heroTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  heroSub: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-    textAlign: 'center',
-  },
+  heroTitle: {fontSize: FontSize.xl, fontWeight: '700', color: Colors.textPrimary},
+  heroSub: {fontSize: FontSize.sm, color: Colors.textMuted, textAlign: 'center'},
 
-  // Login card
   card: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
@@ -565,13 +481,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  // Field
-  fieldLabel: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
+  fieldLabel: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs},
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -583,14 +493,8 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? Spacing.md : Spacing.sm,
     gap: Spacing.sm,
   },
-  input: {
-    flex: 1,
-    fontSize: FontSize.md,
-    color: Colors.textPrimary,
-    padding: 0,
-  },
+  input: {flex: 1, fontSize: FontSize.md, color: Colors.textPrimary, padding: 0},
 
-  // Error
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -603,14 +507,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: '#ef4444',
-    flex: 1,
-    lineHeight: 18,
-  },
+  errorText: {fontSize: FontSize.xs, color: '#ef4444', flex: 1, lineHeight: 18},
 
-  // Sign in button
   signInBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -621,25 +519,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     backgroundColor: Colors.primary,
   },
-  signInBtnText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: '#fff',
-  },
+  signInBtnText: {fontSize: FontSize.md, fontWeight: '700', color: '#fff'},
 
-  // Forgot password link
-  forgotBtn: {
-    marginTop: Spacing.md,
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  forgotBtnText: {
-    fontSize: FontSize.sm,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
+  forgotBtn: {marginTop: Spacing.md, alignItems: 'center', paddingVertical: Spacing.sm},
+  forgotBtnText: {fontSize: FontSize.sm, color: Colors.primary, fontWeight: '500'},
 
-  // Logged-in profile card
+  // Logged-in profile
   profileCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
@@ -663,15 +548,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
-  profileName: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  profileRole: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-  },
+  profileName: {fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary},
+  profileRole: {fontSize: FontSize.sm, color: Colors.textMuted},
   profileBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -682,19 +560,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     marginTop: Spacing.xs,
   },
-  profileBadgeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
-  },
-  profileBadgeText: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: '#065f46',
-  },
+  profileBadgeDot: {width: 7, height: 7, borderRadius: 4, backgroundColor: '#10b981'},
+  profileBadgeText: {fontSize: FontSize.xs, fontWeight: '600', color: '#065f46'},
 
-  // Logout button
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -707,13 +575,9 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
     backgroundColor: '#fff5f5',
   },
-  logoutBtnText: {
-    fontSize: FontSize.md,
-    fontWeight: '600',
-    color: '#ef4444',
-  },
+  logoutBtnText: {fontSize: FontSize.md, fontWeight: '600', color: '#ef4444'},
 
-  // Forgot password modal
+  // Forgot modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -749,27 +613,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalTitle: {
-    flex: 1,
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  modalBody: {
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  modalDescription: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-    lineHeight: 20,
-    marginBottom: Spacing.xs,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-  },
+  modalTitle: {flex: 1, fontSize: FontSize.md, fontWeight: '700', color: Colors.textPrimary},
+  modalBody: {padding: Spacing.lg, gap: Spacing.sm},
+  modalDescription: {fontSize: FontSize.sm, color: Colors.textMuted, lineHeight: 20, marginBottom: Spacing.xs},
+  modalActions: {flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md},
   modalCancelBtn: {
     flex: 1,
     paddingVertical: 12,
@@ -779,11 +626,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
     alignItems: 'center',
   },
-  modalCancelBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
+  modalCancelBtnText: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary},
   modalPrimaryBtn: {
     flex: 1,
     paddingVertical: 12,
@@ -791,9 +634,5 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
   },
-  modalPrimaryBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: '#fff',
-  },
+  modalPrimaryBtnText: {fontSize: FontSize.sm, fontWeight: '700', color: '#fff'},
 });

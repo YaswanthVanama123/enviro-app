@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet, Platform} from 'react-native';
+import {View, StyleSheet, Platform, ActivityIndicator} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../../features/home/screens/HomeScreen';
@@ -7,20 +7,47 @@ import {SavedAgreementsScreen} from '../../features/agreements/screens/SavedAgre
 import {CreateAgreementScreen} from '../../features/agreements/screens/CreateAgreementScreen';
 import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
 import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
+import {AdminDashboardScreen} from '../../features/admin/screens/AdminDashboardScreen';
+import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocumentsScreen';
+import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
+import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
-import type {TabParamList} from './types';
 
-const Tab = createBottomTabNavigator<TabParamList>();
+// ─── Single navigator instance ────────────────────────────────────────────────
+// Using ONE createBottomTabNavigator (no type param) so React Navigation can
+// cleanly swap screens when auth state changes. Two separate navigator instances
+// cannot be reconciled inside the same NavigationContainer, which is what caused
+// logout to silently fail.
 
-// Icon name pairs: [inactive, active]
+const Tab = createBottomTabNavigator();
+
+// ─── Icon map ─────────────────────────────────────────────────────────────────
+
 const TAB_ICON: Record<string, [string, string]> = {
-  Home:  ['home-outline',          'home'],
-  Saved: ['document-text-outline', 'document-text'],
-  Trash: ['trash-outline',         'trash'],
-  More:  ['ellipsis-horizontal-circle-outline', 'ellipsis-horizontal-circle'],
+  Home:      ['home-outline',                       'home'],
+  Saved:     ['document-text-outline',              'document-text'],
+  Trash:     ['trash-outline',                      'trash'],
+  More:      ['ellipsis-horizontal-circle-outline', 'ellipsis-horizontal-circle'],
+  Dashboard: ['grid-outline',                       'grid'],
+  Approvals: ['checkmark-circle-outline',           'checkmark-circle'],
+  Pricing:   ['pricetag-outline',                   'pricetag'],
+  Admin:     ['shield-checkmark-outline',           'shield-checkmark'],
 };
 
+// ─── TabNavigator ─────────────────────────────────────────────────────────────
+
 export function TabNavigator() {
+  const {isAuthenticated, authReady} = useAdminAuth();
+
+  // While restoring session from AsyncStorage, show a spinner
+  if (!authReady) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
@@ -42,29 +69,84 @@ export function TabNavigator() {
         },
       })}>
 
-      <Tab.Screen name="Home" component={HomeScreen} options={{tabBarLabel: 'Home'}} />
-
-      <Tab.Screen
-        name="New"
-        component={CreateAgreementScreen}
-        options={{
-          tabBarLabel: 'New',
-          tabBarIcon: ({focused}) => (
-            <View style={[styles.newBtn, focused && styles.newBtnActive]}>
-              <Ionicons name="add" size={26} color={focused ? Colors.textWhite : Colors.primary} />
-            </View>
-          ),
-        }}
-      />
-
-      <Tab.Screen name="Saved" component={SavedAgreementsScreen} options={{tabBarLabel: 'Saved'}} />
-      <Tab.Screen name="Trash" component={TrashScreen}           options={{tabBarLabel: 'Trash'}} />
-      <Tab.Screen name="More"  component={AdminPanelScreen}      options={{tabBarLabel: 'More'}} />
+      {isAuthenticated ? (
+        // ── Admin tabs ──────────────────────────────────────────────────────
+        <>
+          <Tab.Screen
+            name="Dashboard"
+            component={AdminDashboardScreen}
+            options={{tabBarLabel: 'Dashboard'}}
+          />
+          <Tab.Screen
+            name="Approvals"
+            component={ApprovalDocumentsScreen}
+            options={{tabBarLabel: 'Approvals'}}
+          />
+          <Tab.Screen
+            name="Pricing"
+            component={PricingDetailsScreen}
+            options={{tabBarLabel: 'Pricing'}}
+          />
+          <Tab.Screen
+            name="Admin"
+            component={AdminPanelScreen}
+            options={{tabBarLabel: 'Admin'}}
+          />
+        </>
+      ) : (
+        // ── Regular tabs ────────────────────────────────────────────────────
+        <>
+          <Tab.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{tabBarLabel: 'Home'}}
+          />
+          <Tab.Screen
+            name="New"
+            component={CreateAgreementScreen}
+            options={{
+              tabBarLabel: 'New',
+              tabBarIcon: ({focused}) => (
+                <View style={[styles.newBtn, focused && styles.newBtnActive]}>
+                  <Ionicons
+                    name="add"
+                    size={26}
+                    color={focused ? Colors.textWhite : Colors.primary}
+                  />
+                </View>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Saved"
+            component={SavedAgreementsScreen}
+            options={{tabBarLabel: 'Saved'}}
+          />
+          <Tab.Screen
+            name="Trash"
+            component={TrashScreen}
+            options={{tabBarLabel: 'Trash'}}
+          />
+          <Tab.Screen
+            name="More"
+            component={AdminPanelScreen}
+            options={{tabBarLabel: 'More'}}
+          />
+        </>
+      )}
     </Tab.Navigator>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
   tabBar: {
     backgroundColor: Colors.surface,
     borderTopColor: '#e5e7eb',

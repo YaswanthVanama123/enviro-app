@@ -22,6 +22,7 @@ export const storage = {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   },
   async clearAuth(): Promise<void> {
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    await AsyncStorage.removeItem(USER_KEY);
   },
 };
