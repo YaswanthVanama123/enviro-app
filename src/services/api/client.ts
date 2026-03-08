@@ -134,6 +134,32 @@ class ApiClient {
     }
   }
 
+  // Multipart form-data upload — do NOT set Content-Type; fetch sets it with boundary automatically
+  async postFormData<T>(endpoint: string, body: FormData): Promise<ApiResponse<T>> {
+    try {
+      const headers: Record<string, string> = {};
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+      const res = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        this.handleUnauthorized(res.status, endpoint);
+        return {error: data.message || 'Upload failed', status: res.status};
+      }
+      return {data, status: res.status};
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : 'Network error',
+        status: 0,
+      };
+    }
+  }
+
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const res = await fetch(`${this.baseUrl}${endpoint}`, {

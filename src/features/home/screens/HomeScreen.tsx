@@ -90,7 +90,7 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
               description="Create a new customer agreement with comprehensive service details"
               iconBg={Colors.greenLight}
               iconColor={Colors.green}
-              iconChar="✎"
+              iconName="add-circle-outline"
               btnLabel="Get Started →"
               btnColor={Colors.green}
               onPress={() => go('New')}
@@ -101,7 +101,7 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
               description="Extend an existing agreement with new terms and updated packages"
               iconBg={Colors.orangeLight}
               iconColor={Colors.orange}
-              iconChar="⊕"
+              iconName="git-branch-outline"
               btnLabel="Click to extend"
               btnColor={Colors.green}
               onPress={() => go('New')}
@@ -113,7 +113,7 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
             description="Modify existing agreement details, update services, or adjust product configurations"
             iconBg={Colors.blueLight}
             iconColor={Colors.blue}
-            iconChar="✏"
+            iconName="create-outline"
             btnLabel="Get Started →"
             btnColor={Colors.blue}
             onPress={() => go('Saved')}

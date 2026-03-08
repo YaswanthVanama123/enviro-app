@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, StyleSheet, Platform} from 'react-native';
+import {View, StyleSheet, Platform} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../../features/home/screens/HomeScreen';
 import {SavedAgreementsScreen} from '../../features/agreements/screens/SavedAgreementsScreen';
 import {CreateAgreementScreen} from '../../features/agreements/screens/CreateAgreementScreen';
@@ -11,12 +12,12 @@ import type {TabParamList} from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-const TAB_ICONS: Record<string, {active: string; inactive: string}> = {
-  Home: {active: '\u2B24', inactive: '\u25CB'},
-  New: {active: '\uFF0B', inactive: '\uFF0B'},
-  Saved: {active: '\u2B24', inactive: '\u25CB'},
-  Trash: {active: '\u2B24', inactive: '\u25CB'},
-  More: {active: '\u2B24', inactive: '\u25CB'},
+// Icon name pairs: [inactive, active]
+const TAB_ICON: Record<string, [string, string]> = {
+  Home:  ['home-outline',          'home'],
+  Saved: ['document-text-outline', 'document-text'],
+  Trash: ['trash-outline',         'trash'],
+  More:  ['ellipsis-horizontal-circle-outline', 'ellipsis-horizontal-circle'],
 };
 
 export function TabNavigator() {
@@ -28,49 +29,37 @@ export function TabNavigator() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: ({focused, color}) => {
-          const icon = TAB_ICONS[route.name];
+        tabBarIcon: ({focused, color, size}) => {
+          const icons = TAB_ICON[route.name];
+          if (!icons) {return null;}
           return (
-            <Text style={{fontSize: focused ? 10 : 8, color}}>
-              {focused ? icon.active : icon.inactive}
-            </Text>
+            <Ionicons
+              name={focused ? icons[1] : icons[0]}
+              size={size ?? 22}
+              color={color}
+            />
           );
         },
       })}>
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{tabBarLabel: 'Home'}}
-      />
+
+      <Tab.Screen name="Home" component={HomeScreen} options={{tabBarLabel: 'Home'}} />
+
       <Tab.Screen
         name="New"
         component={CreateAgreementScreen}
         options={{
           tabBarLabel: 'New',
           tabBarIcon: ({focused}) => (
-            <View style={[styles.tabNewBtn, focused && styles.tabNewBtnActive]}>
-              <Text style={[styles.tabNewBtnText, focused && styles.tabNewBtnTextActive]}>
-                {'\uFF0B'}
-              </Text>
+            <View style={[styles.newBtn, focused && styles.newBtnActive]}>
+              <Ionicons name="add" size={26} color={focused ? Colors.textWhite : Colors.primary} />
             </View>
           ),
         }}
       />
-      <Tab.Screen
-        name="Saved"
-        component={SavedAgreementsScreen}
-        options={{tabBarLabel: 'Saved'}}
-      />
-      <Tab.Screen
-        name="Trash"
-        component={TrashScreen}
-        options={{tabBarLabel: 'Trash'}}
-      />
-      <Tab.Screen
-        name="More"
-        component={AdminPanelScreen}
-        options={{tabBarLabel: 'More'}}
-      />
+
+      <Tab.Screen name="Saved" component={SavedAgreementsScreen} options={{tabBarLabel: 'Saved'}} />
+      <Tab.Screen name="Trash" component={TrashScreen}           options={{tabBarLabel: 'Trash'}} />
+      <Tab.Screen name="More"  component={AdminPanelScreen}      options={{tabBarLabel: 'More'}} />
     </Tab.Navigator>
   );
 }
@@ -89,7 +78,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  tabNewBtn: {
+  newBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -98,16 +87,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  tabNewBtnActive: {
+  newBtnActive: {
     backgroundColor: Colors.primary,
-  },
-  tabNewBtnText: {
-    fontSize: 22,
-    color: Colors.primary,
-    fontWeight: '300',
-    marginTop: -2,
-  },
-  tabNewBtnTextActive: {
-    color: Colors.textWhite,
   },
 });

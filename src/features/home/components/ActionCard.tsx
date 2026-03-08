@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, Spacing, Radius, FontSize, Shadow} from '../../../theme';
 
 interface ActionCardProps {
@@ -7,7 +8,7 @@ interface ActionCardProps {
   description: string;
   iconBg: string;
   iconColor: string;
-  iconChar: string;
+  iconName: string;       // Ionicons icon name
   btnLabel: string;
   btnColor: string;
   onPress: () => void;
@@ -20,7 +21,7 @@ export function ActionCard({
   description,
   iconBg,
   iconColor,
-  iconChar,
+  iconName,
   btnLabel,
   btnColor,
   onPress,
@@ -36,9 +37,7 @@ export function ActionCard({
         fullWidth ? styles.actionCardFull : cardWidth ? {width: cardWidth} : undefined,
       ]}>
       <View style={[styles.actionIcon, {backgroundColor: iconBg}]}>
-        <Text style={[styles.actionIconChar, {color: iconColor}]}>
-          {iconChar}
-        </Text>
+        <Ionicons name={iconName} size={22} color={iconColor} />
       </View>
       <View style={fullWidth ? styles.actionTextFull : styles.actionTextBlock}>
         <Text style={styles.actionTitle}>{title}</Text>
@@ -82,7 +81,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
-  actionIconChar: {fontSize: 20, fontWeight: '600'},
   actionTextBlock: {flex: 1, marginBottom: Spacing.md},
   actionTextFull: {flex: 1},
   actionTitle: {
