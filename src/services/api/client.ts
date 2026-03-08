@@ -36,7 +36,8 @@ class ApiClient {
       endpoint.includes('/admin') ||
       endpoint.includes('/api/pdf') ||
       endpoint.includes('/api/email') ||
-      endpoint.includes('/api/upload');
+      endpoint.includes('/api/upload') ||
+      endpoint.includes('/api/service-configs');
 
     if ((status === 401 || status === 403) && isProtected && this.onUnauthorized) {
       this.onUnauthorized();
