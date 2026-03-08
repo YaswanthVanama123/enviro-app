@@ -121,10 +121,12 @@ class ApiClient {
         headers: this.getHeaders(),
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = null;
+      try {data = JSON.parse(text);} catch {}
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Request failed', status: res.status};
+        return {error: data?.message || `HTTP ${res.status}: ${endpoint}`, status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
