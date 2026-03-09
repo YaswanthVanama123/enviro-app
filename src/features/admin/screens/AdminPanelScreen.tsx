@@ -206,11 +206,6 @@ export function AdminPanelScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Login</Text>
-        <Text style={styles.headerSub}>Restricted access</Text>
-      </View>
-
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -460,16 +455,6 @@ const styles = StyleSheet.create({
   flex: {flex: 1},
   screen: {flex: 1, backgroundColor: Colors.background},
   center: {alignItems: 'center', justifyContent: 'center'},
-
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.primary,
-  },
-  headerTitle: {fontSize: FontSize.lg, fontWeight: '700', color: Colors.primary},
-  headerSub: {fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2},
 
   scrollContent: {
     paddingHorizontal: Spacing.lg,
