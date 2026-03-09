@@ -1,3 +1,4 @@
+import {API_BASE_URL} from '../../../config';
 import {apiClient} from '../client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -213,3 +214,109 @@ export const agreementsApi = {
     return res.data ?? null;
   },
 };
+
+// ─── Zoho/Bigin Upload Types ──────────────────────────────────────────────────
+
+export interface ZohoUploadStatus {
+  isFirstTime: boolean;
+  mapping?: {
+    companyName: string;
+    companyId: string;
+    dealName: string;
+    dealId: string;
+    currentVersion: number;
+    nextVersion: number;
+    lastUploadedAt: string;
+  };
+}
+
+export interface ZohoCompany {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+export interface ZohoUploadResult {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export interface ZohoFirstTimePayload {
+  companyId: string;
+  companyName: string;
+  dealName: string;
+  noteText: string;
+}
+
+export interface ZohoUpdatePayload {
+  noteText: string;
+  dealId?: string;
+}
+
+// ─── Zoho/Bigin Upload API ────────────────────────────────────────────────────
+
+export const zohoApi = {
+  async getStatus(agreementId: string): Promise<ZohoUploadStatus | null> {
+    const res = await apiClient.get<ZohoUploadStatus>(
+      `/api/zoho-upload/${agreementId}/status`,
+    );
+    return res.data ?? null;
+  },
+
+  async getCompanies(search?: string, page = 1): Promise<ZohoCompany[]> {
+    const params = new URLSearchParams({page: String(page)});
+    if (search) {params.set('search', search);}
+    const res = await apiClient.get<{companies: ZohoCompany[]}>(
+      `/api/zoho-upload/companies?${params.toString()}`,
+    );
+    return res.data?.companies ?? [];
+  },
+
+  async firstTimeUpload(
+    agreementId: string,
+    payload: ZohoFirstTimePayload,
+  ): Promise<ZohoUploadResult> {
+    const res = await apiClient.post<ZohoUploadResult>(
+      `/api/zoho-upload/${agreementId}/first-time`,
+      payload,
+    );
+    return res.data ?? {success: false, message: res.error ?? 'Upload failed'};
+  },
+
+  async updateUpload(
+    agreementId: string,
+    payload: ZohoUpdatePayload,
+  ): Promise<ZohoUploadResult> {
+    const res = await apiClient.post<ZohoUploadResult>(
+      `/api/zoho-upload/${agreementId}/update`,
+      payload,
+    );
+    return res.data ?? {success: false, message: res.error ?? 'Update failed'};
+  },
+};
+
+// ─── File Download URL Helper ─────────────────────────────────────────────────
+// Builds the correct per-file-type download URL, appending the Bearer token
+// as a query param so Linking.openURL can access authenticated endpoints.
+
+export function getFileDownloadUrl(
+  file: SavedFileListItem,
+  token: string | null,
+): string | null {
+  if (!file.id) {return null;}
+  const tok = token ? `?token=${encodeURIComponent(token)}` : '';
+  switch (file.fileType) {
+    case 'version_pdf':
+      return `${API_BASE_URL}/api/versions/${file.versionId ?? file.id}/download${tok}`;
+    case 'attached_pdf':
+      return `${API_BASE_URL}/api/manual-upload/${file.id}/download${tok}`;
+    case 'version_log':
+      return `${API_BASE_URL}/api/pdf/logs/${file.id}/download${tok}`;
+    case 'main_pdf':
+    default:
+      return `${API_BASE_URL}/api/pdf/viewer/download/${file.id}${tok}`;
+  }
+}

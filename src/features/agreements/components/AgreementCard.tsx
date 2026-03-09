@@ -16,20 +16,14 @@ import {
   SavedFileListItem,
   FileType,
   agreementsApi,
-  AgreementStatus,
+  getFileDownloadUrl,
 } from '../../../services/api/endpoints/agreements.api';
+import {apiClient} from '../../../services/api/client';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 import {ConfirmModal, InfoModal, OptionsModal} from '../../../shared/components/ui/AppModal';
-
-const API_BASE = 'http://localhost:5002';
-
-function getPdfUrl(pdfStoredAt: string | null): string | null {
-  if (!pdfStoredAt) {return null;}
-  if (pdfStoredAt.startsWith('http')) {return pdfStoredAt;}
-  return `${API_BASE}${pdfStoredAt}`;
-}
+import {BiginUploadModal} from './BiginUploadModal';
 
 // ─── Timeline status ──────────────────────────────────────────────────────────
 
@@ -166,43 +160,45 @@ function FileRow({file, onDelete}: FileRowProps) {
 
   const iconCfg = FILE_ICON[file.fileType] ?? FILE_ICON.main_pdf;
   const tag = getFileTag(file);
-  const pdfUrl = getPdfUrl(file.pdfStoredAt);
+
+  // Build the authenticated download URL for this specific file type
+  const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
 
   const handleDelete = useCallback(() => onDelete(file), [file, onDelete]);
 
   const handleView = useCallback(async () => {
-    if (!pdfUrl) {
+    if (!fileUrl) {
       setShowNoPdf(true);
       return;
     }
-    const supported = await Linking.canOpenURL(pdfUrl);
+    const supported = await Linking.canOpenURL(fileUrl);
     if (supported) {
-      await Linking.openURL(pdfUrl);
+      await Linking.openURL(fileUrl);
     } else {
       setShowCannotOpen(true);
     }
-  }, [pdfUrl]);
+  }, [fileUrl]);
 
   const handleDownload = useCallback(async () => {
-    if (!pdfUrl) {
+    if (!fileUrl) {
       setShowNoPdf(true);
       return;
     }
-    await Linking.openURL(pdfUrl);
-  }, [pdfUrl]);
+    await Linking.openURL(fileUrl);
+  }, [fileUrl]);
 
   const handleEmail = useCallback(async () => {
     const name = file.title || file.fileName;
-    if (pdfUrl) {
+    if (fileUrl) {
       await Share.share({
         title: name,
-        message: `${name}\n${pdfUrl}`,
-        url: pdfUrl,
+        message: `${name}\n${fileUrl}`,
+        url: fileUrl,
       });
     } else {
       await Share.share({title: name, message: name});
     }
-  }, [file, pdfUrl]);
+  }, [file, fileUrl]);
 
   return (
     <View style={styles.fileRow}>
@@ -297,24 +293,14 @@ export interface AgreementCardProps {
   onRefresh?: () => void;
 }
 
-const STATUS_OPTIONS: {label: string; value: AgreementStatus; color: string}[] = [
-  {label: 'Draft',            value: 'draft',             color: '#6b7280'},
-  {label: 'Saved',            value: 'saved',             color: '#0ea5e9'},
-  {label: 'In Progress',      value: 'in_progress',       color: '#f97316'},
-  {label: 'Pending Approval', value: 'pending_approval',  color: '#f59e0b'},
-  {label: 'Approved',         value: 'approved_salesman', color: '#10b981'},
-];
-
 export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: AgreementCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   // Calendar modal
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Status picker modal (replaces ActionSheetIOS + Android modal)
-  const [showStatusPicker, setShowStatusPicker] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [statusResult, setStatusResult] = useState<{ok: boolean; label: string} | null>(null);
+  // Bigin upload modal
+  const [showBiginModal, setShowBiginModal] = useState(false);
 
   // Add options modal
   const [showAddOptions, setShowAddOptions] = useState(false);
@@ -338,20 +324,10 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   // ── Calendar: show dates info ──────────────────────────────────────────────
   const handleCalendar = useCallback(() => setShowCalendar(true), []);
 
-  // ── Begin: update agreement status ────────────────────────────────────────
+  // ── Begin: open Bigin upload modal ────────────────────────────────────────
   const handleBegin = useCallback(() => {
-    setShowStatusPicker(true);
+    setShowBiginModal(true);
   }, []);
-
-  const handleStatusSelect = useCallback(async (status: AgreementStatus, label: string) => {
-    setUpdatingStatus(true);
-    const ok = await agreementsApi.updateAgreementStatus(agreement.id, status);
-    setUpdatingStatus(false);
-    if (ok) {
-      onRefresh?.();
-    }
-    setStatusResult({ok, label});
-  }, [agreement.id, onRefresh]);
 
   // ── Add: add attachment options ────────────────────────────────────────────
   const handleAdd = useCallback(() => {
@@ -441,11 +417,10 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           <View style={styles.cardActionDivider} />
 
           <TouchableOpacity
-            style={[styles.beginBtn, updatingStatus && {opacity: 0.6}]}
-            onPress={handleBegin}
-            disabled={updatingStatus}>
+            style={styles.beginBtn}
+            onPress={handleBegin}>
             <Ionicons name="play-circle-outline" size={13} color="#fff" />
-            <Text style={styles.beginBtnText}>{updatingStatus ? '...' : 'Begin'}</Text>
+            <Text style={styles.beginBtnText}>Begin</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.addBtn} onPress={handleAdd} disabled={uploading}>
@@ -575,33 +550,16 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         onCancel={() => setShowDeleteAgreement(false)}
       />
 
-      {/* ── Status picker ── */}
-      <OptionsModal
-        visible={showStatusPicker}
-        title="Update Status"
-        subtitle={`Current: ${STATUS_MAP[agreement.agreementStatus]?.label ?? agreement.agreementStatus}`}
-        options={STATUS_OPTIONS.map(opt => ({
-          label: opt.label,
-          icon: agreement.agreementStatus === opt.value ? 'checkmark-circle' : 'ellipse-outline',
-          iconColor: opt.color,
-          onPress: () => handleStatusSelect(opt.value, opt.label),
-        }))}
-        onCancel={() => setShowStatusPicker(false)}
-      />
-
-      {/* ── Status update result ── */}
-      <InfoModal
-        visible={statusResult !== null}
-        icon={statusResult?.ok ? 'checkmark-circle' : 'alert-circle'}
-        iconColor={statusResult?.ok ? '#16a34a' : '#ef4444'}
-        iconBg={statusResult?.ok ? '#f0fdf4' : '#fef2f2'}
-        title={statusResult?.ok ? 'Status Updated' : 'Update Failed'}
-        subtitle={
-          statusResult?.ok
-            ? `Status changed to "${statusResult.label}".`
-            : 'Failed to update status. Please try again.'
-        }
-        onClose={() => setStatusResult(null)}
+      {/* ── Bigin Upload Modal ── */}
+      <BiginUploadModal
+        visible={showBiginModal}
+        agreementId={agreement.id}
+        agreementTitle={agreement.agreementTitle}
+        onClose={() => setShowBiginModal(false)}
+        onSuccess={() => {
+          setShowBiginModal(false);
+          onRefresh?.();
+        }}
       />
 
       {/* ── Add options ── */}
