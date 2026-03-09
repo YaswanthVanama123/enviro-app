@@ -2,6 +2,8 @@ export type RootStackParamList = {
   Main: undefined;
   AdminLogin: undefined;
   AdminPanel: undefined;
+  Agreement: undefined;
+  Trash: undefined;
 };
 
 export type TabParamList = {

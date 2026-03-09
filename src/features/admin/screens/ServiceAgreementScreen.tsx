@@ -4,6 +4,7 @@ import {
   ActivityIndicator, Alert, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {pricingApi, ServiceAgreementTemplate} from '../../../services/api/endpoints/pricing.api';
 import {timeAgo} from '../utils/pricing.utils';
@@ -90,6 +91,7 @@ const LABEL_GROUPS: LabelGroup[] = [
 
 export function ServiceAgreementScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<AgreementTab>('terms');
   const [template, setTemplate] = useState<ServiceAgreementTemplate | null>(null);
   const [draft, setDraft] = useState<ServiceAgreementTemplate | null>(null);
@@ -140,6 +142,12 @@ export function ServiceAgreementScreen() {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
         <View style={styles.screenHeader}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
+          </TouchableOpacity>
           <Ionicons name="reader-outline" size={18} color={Colors.primary} />
           <Text style={styles.screenTitle}>Service Agreement Template</Text>
         </View>
@@ -161,6 +169,12 @@ export function ServiceAgreementScreen() {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
         <View style={styles.screenHeader}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
+          </TouchableOpacity>
           <Ionicons name="reader-outline" size={18} color={Colors.primary} />
           <Text style={styles.screenTitle}>Service Agreement Template</Text>
         </View>
@@ -181,6 +195,12 @@ export function ServiceAgreementScreen() {
 
       {/* Screen header */}
       <View style={styles.screenHeader}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+          <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
+        </TouchableOpacity>
         <View style={styles.screenHeaderLeft}>
           <Ionicons name="reader-outline" size={18} color={Colors.primary} />
           <Text style={styles.screenTitle}>Service Agreement Template</Text>
@@ -345,6 +365,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   screenHeaderLeft: {
     flexDirection: 'row',

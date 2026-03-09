@@ -265,6 +265,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
+  // Sticky top bar
+  stickyTop: {
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+
   // Search
   searchContainer: {
     paddingHorizontal: Spacing.lg,
@@ -391,22 +398,6 @@ const styles = StyleSheet.create({
   // Skeleton
   skeletonList: {
     flex: 1,
-  },
-  skeletonSearch: {
-    height: 44,
-    backgroundColor: SKELETON_BG,
-    borderRadius: Radius.lg,
-  },
-  skeletonFiltersRow: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  skeletonChip: {
-    height: 32,
-    backgroundColor: SKELETON_BG,
-    borderRadius: Radius.full,
   },
   skeletonCard: {
     flexDirection: 'row',

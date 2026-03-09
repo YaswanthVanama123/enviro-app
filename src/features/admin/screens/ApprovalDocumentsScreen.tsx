@@ -486,23 +486,6 @@ export function ApprovalDocumentsScreen() {
 
   const ListHeader = (
     <View>
-      {/* Search */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchRow}>
-          <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search agreements..."
-            placeholderTextColor={Colors.textMuted}
-            value={searchQuery}
-            onChangeText={onSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-          />
-        </View>
-      </View>
-
       {/* Stats + Approve Selected bar */}
       {!loading && (
         <View style={styles.statsBar}>
@@ -554,12 +537,28 @@ export function ApprovalDocumentsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
+      {/* Sticky search */}
+      <View style={styles.stickyTop}>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchRow}>
+            <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search agreements..."
+              placeholderTextColor={Colors.textMuted}
+              value={searchQuery}
+              onChangeText={onSearch}
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+            />
+          </View>
+        </View>
+      </View>
+
       {/* Skeleton */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
-          <View style={styles.searchContainer}>
-            <View style={styles.skeletonSearch} />
-          </View>
           <View style={styles.skeletonStatsBar} />
           {[1, 2, 3, 4, 5].map(i => (
             <View key={i} style={styles.skeletonRow}>
@@ -667,6 +666,13 @@ const SKELETON_BG = '#e5e7eb';
 
 const styles = StyleSheet.create({
   screen: {flex: 1, backgroundColor: Colors.background},
+
+  // Sticky top bar
+  stickyTop: {
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
 
   // Search
   searchContainer: {

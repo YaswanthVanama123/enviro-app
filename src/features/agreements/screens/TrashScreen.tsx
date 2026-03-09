@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import {useTrash} from '../hooks/useTrash';
 import {TrashCard} from '../components/TrashCard';
 import {SavedFileGroup, FileType} from '../../../services/api/endpoints/agreements.api';
@@ -103,6 +104,7 @@ function SkeletonCard() {
 
 export function TrashScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const {
     agreements,
     loading,
@@ -161,21 +163,6 @@ export function TrashScreen() {
     [handleRestore, handleRestoreFile, handlePermanentDelete, handlePermanentDeleteFile],
   );
 
-  const ListHeader = (
-    <View>
-      <View style={styles.searchContainer}>
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-      </View>
-      {!loading && (
-        <Text style={styles.countText}>
-          {total === 0
-            ? 'Trash is empty'
-            : `${total} deleted ${total === 1 ? 'agreement' : 'agreements'}`}
-        </Text>
-      )}
-    </View>
-  );
-
   const ListFooter = hasMore ? (
     <TouchableOpacity style={styles.loadMoreBtn} onPress={loadMore}>
       <Text style={styles.loadMoreText}>Load More</Text>
@@ -184,12 +171,27 @@ export function TrashScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
+      {/* Back header */}
+      <View style={styles.backHeader}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+          <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.backHeaderTitle}>Trash</Text>
+      </View>
+
+      {/* Sticky search */}
+      <View style={styles.stickyTop}>
+        <View style={styles.searchContainer}>
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        </View>
+      </View>
+
       {/* Skeleton loading state */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
-          <View style={styles.searchContainer}>
-            <View style={styles.skeletonSearch} />
-          </View>
           {[1, 2, 3, 4].map(i => (
             <SkeletonCard key={i} />
           ))}
@@ -199,7 +201,15 @@ export function TrashScreen() {
           data={agreements}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          ListHeaderComponent={ListHeader}
+          ListHeaderComponent={
+            !loading ? (
+              <Text style={styles.countText}>
+                {total === 0
+                  ? 'Trash is empty'
+                  : `${total} deleted ${total === 1 ? 'agreement' : 'agreements'}`}
+              </Text>
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               hasSearch={searchQuery.length > 0}
@@ -237,6 +247,38 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+
+  // Back header
+  backHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backHeaderTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+
+  // Sticky top bar
+  stickyTop: {
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
 
   // Search
@@ -330,11 +372,6 @@ const styles = StyleSheet.create({
   // Skeleton
   skeletonList: {
     flex: 1,
-  },
-  skeletonSearch: {
-    height: 44,
-    backgroundColor: SKELETON_BG,
-    borderRadius: Radius.lg,
   },
   skeletonCard: {
     flexDirection: 'row',

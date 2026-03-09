@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.sm,
     gap: Spacing.md,
   },
 
@@ -336,6 +336,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: 'flex-start',
     gap: 4,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   statIconBox: {
     width: 44,
@@ -366,6 +368,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: Spacing.lg,
     gap: Spacing.sm,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   sectionTitle: {
     fontSize: FontSize.md,

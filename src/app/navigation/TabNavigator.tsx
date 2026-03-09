@@ -10,7 +10,6 @@ import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
 import {AdminDashboardScreen} from '../../features/admin/screens/AdminDashboardScreen';
 import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocumentsScreen';
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
-import {ServiceAgreementScreen} from '../../features/admin/screens/ServiceAgreementScreen';
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
 
@@ -32,7 +31,6 @@ const TAB_ICON: Record<string, [string, string]> = {
   Dashboard: ['grid-outline',                       'grid'],
   Approvals: ['checkmark-circle-outline',           'checkmark-circle'],
   Pricing:   ['pricetag-outline',                   'pricetag'],
-  Agreement: ['reader-outline',                     'reader'],
   Admin:     ['shield-checkmark-outline',           'shield-checkmark'],
 };
 
@@ -77,17 +75,28 @@ export function TabNavigator() {
           <Tab.Screen
             name="Dashboard"
             component={AdminDashboardScreen}
-            options={{tabBarLabel: 'Dashboard'}}
+            options={{tabBarLabel: 'Dash'}}
+          />
+          <Tab.Screen
+            name="New"
+            component={CreateAgreementScreen}
+            options={{
+              tabBarLabel: 'New',
+              tabBarIcon: ({focused}) => (
+                <View style={[styles.newBtn, focused && styles.newBtnActive]}>
+                  <Ionicons
+                    name="add"
+                    size={26}
+                    color={focused ? Colors.textWhite : Colors.primary}
+                  />
+                </View>
+              ),
+            }}
           />
           <Tab.Screen
             name="Saved"
             component={SavedAgreementsScreen}
             options={{tabBarLabel: 'Saved'}}
-          />
-          <Tab.Screen
-            name="Trash"
-            component={TrashScreen}
-            options={{tabBarLabel: 'Trash'}}
           />
           <Tab.Screen
             name="Approvals"
@@ -98,11 +107,6 @@ export function TabNavigator() {
             name="Pricing"
             component={PricingDetailsScreen}
             options={{tabBarLabel: 'Pricing'}}
-          />
-          <Tab.Screen
-            name="Agreement"
-            component={ServiceAgreementScreen}
-            options={{tabBarLabel: 'Agreement'}}
           />
           <Tab.Screen
             name="Admin"

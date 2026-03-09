@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import {useAdminAuth} from '../context/AdminAuthContext';
 import {API_BASE_URL} from '../../../config';
 import {Colors} from '../../../theme/colors';
@@ -27,6 +28,7 @@ type ForgotStep = 'developer' | 'reset';
 
 export function AdminPanelScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const {user, isAuthenticated, authReady, login, logout} = useAdminAuth();
 
   // Login form
@@ -148,11 +150,6 @@ export function AdminPanelScreen() {
   if (isAuthenticated && user) {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Admin</Text>
-          <Text style={styles.headerSub}>Logged in as {user.username}</Text>
-        </View>
-
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
@@ -172,8 +169,32 @@ export function AdminPanelScreen() {
             </View>
           </View>
 
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('Agreement')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#eff6ff'}]}>
+                <Ionicons name="reader-outline" size={18} color="#2563eb" />
+              </View>
+              <Text style={styles.menuRowText}>Service Agreement Template</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('Trash')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fef2f2'}]}>
+                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+              </View>
+              <Text style={styles.menuRowText}>Trash</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+            <Ionicons name="log-out-outline" size={18} color={Colors.primary} />
             <Text style={styles.logoutBtnText}>Log Out</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -563,6 +584,36 @@ const styles = StyleSheet.create({
   profileBadgeDot: {width: 7, height: 7, borderRadius: 4, backgroundColor: '#10b981'},
   profileBadgeText: {fontSize: FontSize.xs, fontWeight: '600', color: '#065f46'},
 
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  menuRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  menuIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuRowText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -572,10 +623,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: Radius.lg,
     borderWidth: 1.5,
-    borderColor: '#fecaca',
-    backgroundColor: '#fff5f5',
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
   },
-  logoutBtnText: {fontSize: FontSize.md, fontWeight: '600', color: '#ef4444'},
+  logoutBtnText: {fontSize: FontSize.md, fontWeight: '600', color: Colors.primary},
 
   // Forgot modal
   modalOverlay: {
