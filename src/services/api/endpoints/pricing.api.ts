@@ -263,6 +263,15 @@ export const pricingApi = {
     return {ok: true};
   },
 
+  async updateProductCatalog(
+    catalogId: string,
+    data: {families: ProductFamily[]; version?: string},
+  ): Promise<{ok: boolean; error?: string}> {
+    const res = await apiClient.put(`/api/product-catalog/${catalogId}`, data);
+    if (res.error) {return {ok: false, error: res.error};}
+    return {ok: true};
+  },
+
   async updateServiceConfig(
     id: string,
     data: {

@@ -9,60 +9,74 @@ import {FontSize} from '../../../../theme/typography';
 
 interface ProductRowProps {
   product: Product;
+  onEditBase?: (product: Product) => void;
 }
 
-export function ProductRow({product}: ProductRowProps) {
+export function ProductRow({product, onEditBase}: ProductRowProps) {
   const [expanded, setExpanded] = useState(false);
   const hasWarranty = (product.warrantyPricePerUnit?.amount ?? 0) > 0;
   const hasDesc = !!product.description;
 
   return (
-    <TouchableOpacity
-      activeOpacity={hasDesc ? 0.7 : 1}
-      onPress={() => hasDesc && setExpanded(e => !e)}
-      style={styles.productRow}>
-      <View style={styles.productRowTop}>
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>{product.name}</Text>
-          <View style={styles.productKeyBadge}>
-            <Text style={styles.productKeyText}>{product.key}</Text>
+    <View>
+      <TouchableOpacity
+        activeOpacity={hasDesc ? 0.7 : 1}
+        onPress={() => hasDesc && setExpanded(e => !e)}
+        style={styles.productRow}>
+        <View style={styles.productRowTop}>
+          <View style={styles.productInfo}>
+            <Text style={styles.productName}>{product.name}</Text>
+            <View style={styles.productKeyBadge}>
+              <Text style={styles.productKeyText}>{product.key}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.productPrices}>
-          <View style={styles.priceChip}>
-            <Text style={styles.priceChipLabel}>Base</Text>
-            <Text style={styles.priceChipValue}>
-              {fmt(product.basePrice?.amount)}
-              {product.basePrice?.uom ? (
-                <Text style={styles.priceUom}> /{product.basePrice.uom}</Text>
-              ) : null}
-            </Text>
-          </View>
-          {hasWarranty && (
+          <View style={styles.productPrices}>
             <View style={styles.priceChip}>
-              <Text style={styles.priceChipLabel}>Warranty</Text>
-              <Text style={[styles.priceChipValue, {color: '#7c3aed'}]}>
-                {fmt(product.warrantyPricePerUnit?.amount)}
-                {product.warrantyPricePerUnit?.billingPeriod ? (
-                  <Text style={styles.priceUom}> /{product.warrantyPricePerUnit.billingPeriod}</Text>
+              <Text style={styles.priceChipLabel}>Base</Text>
+              <Text style={styles.priceChipValue}>
+                {fmt(product.basePrice?.amount)}
+                {product.basePrice?.uom ? (
+                  <Text style={styles.priceUom}> /{product.basePrice.uom}</Text>
                 ) : null}
               </Text>
             </View>
-          )}
-          {hasDesc && (
-            <Ionicons
-              name={expanded ? 'chevron-up' : 'chevron-down'}
-              size={14}
-              color={Colors.textMuted}
-              style={{marginTop: 2}}
-            />
-          )}
+            {hasWarranty && (
+              <View style={styles.priceChip}>
+                <Text style={styles.priceChipLabel}>Warranty</Text>
+                <Text style={[styles.priceChipValue, {color: '#7c3aed'}]}>
+                  {fmt(product.warrantyPricePerUnit?.amount)}
+                  {product.warrantyPricePerUnit?.billingPeriod ? (
+                    <Text style={styles.priceUom}> /{product.warrantyPricePerUnit.billingPeriod}</Text>
+                  ) : null}
+                </Text>
+              </View>
+            )}
+            {hasDesc && (
+              <Ionicons
+                name={expanded ? 'chevron-up' : 'chevron-down'}
+                size={14}
+                color={Colors.textMuted}
+                style={{marginTop: 2}}
+              />
+            )}
+          </View>
         </View>
-      </View>
-      {expanded && hasDesc && (
-        <Text style={styles.productDesc}>{product.description}</Text>
+        {expanded && hasDesc && (
+          <Text style={styles.productDesc}>{product.description}</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* Edit Base button below the row */}
+      {onEditBase && (
+        <TouchableOpacity
+          style={styles.editBaseBtn}
+          onPress={() => onEditBase(product)}
+          activeOpacity={0.7}>
+          <Ionicons name="pencil-outline" size={11} color="#1d4ed8" />
+          <Text style={styles.editBaseBtnText}>Edit Base</Text>
+        </TouchableOpacity>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -133,5 +147,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
     paddingTop: 6,
+  },
+  editBaseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-end',
+    marginRight: Spacing.lg,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: '#dbeafe',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  editBaseBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1d4ed8',
   },
 });
