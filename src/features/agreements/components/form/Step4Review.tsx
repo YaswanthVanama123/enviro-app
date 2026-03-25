@@ -86,6 +86,22 @@ export function Step4Review({form}: Step4ReviewProps) {
   const parkingTotal = parkingCharge * parkingChargeFrequency * contractMonths;
   const grandTotal   = serviceTotal  + productTotal + tripTotal + parkingTotal;
 
+  // Pricing indicator (Red / Green Line) — mirrors webapp logic
+  let totalPerVisit = 0;
+  let totalMinimum  = 0;
+  visibleServices.forEach(id => {
+    const svc = services[id];
+    if (!svc) {return;}
+    totalPerVisit += svc.perVisit ?? 0;
+    totalMinimum  +=
+      svc.perVisitMinimum     ??
+      svc.minCharge           ??
+      svc.minimumChargePerVisit ?? 0;
+  });
+  const greenThreshold = totalMinimum * 1.20;
+  const pricingLine: 'red' | 'green' =
+    (totalMinimum > 0 && totalPerVisit > greenThreshold) ? 'green' : 'red';
+
   const displayDate = startDate
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
@@ -199,6 +215,38 @@ export function Step4Review({form}: Step4ReviewProps) {
             );
           })}
         </SectionCard>
+      )}
+
+      {/* Pricing Indicator (Red / Green Line) */}
+      {visibleServices.length > 0 && (
+        <View style={[
+          styles.pricingBanner,
+          pricingLine === 'green' ? styles.pricingBannerGreen : styles.pricingBannerRed,
+        ]}>
+          <View style={styles.pricingBannerLeft}>
+            <Ionicons
+              name={pricingLine === 'green' ? 'checkmark-circle' : 'warning'}
+              size={20}
+              color={pricingLine === 'green' ? '#16a34a' : '#dc2626'}
+            />
+            <View style={styles.pricingBannerInfo}>
+              <Text style={[styles.pricingBannerTitle, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
+                {pricingLine === 'green' ? 'Green Line Pricing' : 'Red Line Pricing'}
+              </Text>
+              <Text style={styles.pricingBannerSub}>
+                {pricingLine === 'green'
+                  ? '20%+ above original – auto approved'
+                  : 'Below 20% above original – requires approval'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.pricingBannerRight}>
+            <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
+              ${totalPerVisit.toFixed(2)}
+            </Text>
+            <Text style={styles.pricingBannerLabel}>per visit</Text>
+          </View>
+        </View>
       )}
 
       {/* Grand total */}
@@ -344,6 +392,60 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     backgroundColor: Colors.primary,
     borderRadius: Radius.lg,
+  },
+  pricingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+  },
+  pricingBannerGreen: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  pricingBannerRed: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  pricingBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flex: 1,
+  },
+  pricingBannerInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  pricingBannerTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  pricingBannerSub: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  pricingGreenText: {
+    color: '#16a34a',
+  },
+  pricingRedText: {
+    color: '#dc2626',
+  },
+  pricingBannerRight: {
+    alignItems: 'flex-end',
+  },
+  pricingBannerAmount: {
+    fontSize: FontSize.md,
+    fontWeight: '800',
+  },
+  pricingBannerLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
   },
   grandLabel: {
     fontSize: FontSize.md,
