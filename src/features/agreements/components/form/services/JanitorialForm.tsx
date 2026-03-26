@@ -75,7 +75,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Visits per Week" value={visitsPerWeek} onChange={v => update({visitsPerWeek: v})} decimals={0} />
-      <NumberRow label="Hourly Rate ($)" value={baseHourlyRate} onChange={v => update({baseHourlyRate: v})} prefix="$" decimals={2} />
+      <NumberRow label="Hourly Rate" value={baseHourlyRate} onChange={v => update({baseHourlyRate: v})} prefix="$" decimals={2} />
       <NumberRow label="Manual Cleaning Hours" value={manualHours} onChange={v => update({manualHours: v})} suffix="hrs" decimals={1} />
       <NumberRow label="Vacuuming Hours" value={vacuumingHours} onChange={v => update({vacuumingHours: v})} suffix="hrs" decimals={1} />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />

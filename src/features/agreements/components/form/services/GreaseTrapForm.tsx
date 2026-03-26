@@ -56,7 +56,7 @@ export function GreaseTrapForm({data, onChange, contractMonths, onRemove, pricin
       <FormDivider />
       <CalcRow label="Number of Traps" qty={numberOfTraps} onQtyChange={v => update({numberOfTraps: v})} rate={perTrapRate} onRateChange={v => update({perTrapRate: v})} total={numberOfTraps * perTrapRate} />
       <NumberRow label="Trap Size (gallons)" value={sizeOfTraps} onChange={v => update({sizeOfTraps: v})} decimals={0} />
-      <NumberRow label="Rate per Gallon ($)" value={perGallonRate} onChange={v => update({perGallonRate: v})} prefix="$" decimals={4} />
+      <NumberRow label="Rate per Gallon" value={perGallonRate} onChange={v => update({perGallonRate: v})} prefix="$" decimals={4} />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>
   );

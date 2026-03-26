@@ -87,7 +87,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       <CalcRow label="Urinals"        qty={urinals}       onQtyChange={v => update({urinals: v})}       rate={urinalRate}  onRateChange={v => update({urinalRate: v})}  total={urinals * urinalRate} />
       <CalcRow label="Male Toilets"   qty={maleToilets}   onQtyChange={v => update({maleToilets: v})}   rate={maleRate}    onRateChange={v => update({maleRate: v})}    total={maleToilets * maleRate} />
       <CalcRow label="Female Toilets" qty={femaleToilets} onQtyChange={v => update({femaleToilets: v})} rate={femaleRate}  onRateChange={v => update({femaleRate: v})}  total={femaleToilets * femaleRate} />
-      <NumberRow label="Minimum Per Visit ($)" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
+      <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock
         frequency={freq}

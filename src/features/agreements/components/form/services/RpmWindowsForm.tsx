@@ -60,7 +60,7 @@ export function RpmWindowsForm({data, onChange, contractMonths, onRemove, pricin
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Windows" qty={numWindows} onQtyChange={v => update({numWindows: v})} rate={ratePerWindow} onRateChange={v => update({ratePerWindow: v})} total={rawCost} />
-      <NumberRow label="Minimum Per Visit ($)" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
+      <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>

@@ -74,7 +74,7 @@ function AreaSection({label, config, onChange}: AreaSectionProps) {
           </View>
           {pricingType === 'flat' ? (
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Flat Rate ($)</Text>
+              <Text style={styles.inputLabel}>Flat Rate</Text>
               <NumberRow
                 label=""
                 value={flatRate}
@@ -96,7 +96,7 @@ function AreaSection({label, config, onChange}: AreaSectionProps) {
                 />
               </View>
               <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Rate / sq ft ($)</Text>
+                <Text style={styles.inputLabel}>Rate / sq ft</Text>
                 <NumberRow
                   label=""
                   value={ratePerSqFt}

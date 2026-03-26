@@ -227,11 +227,12 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
           keyboardType="numeric"
         />
         <Text style={ss.calcAt}>@</Text>
+        <Text style={ss.calcAt}>$</Text>
         <TextInput
           style={[ss.calcInput, rateReadOnly && ss.calcInputReadOnly]}
           value={rate === 0 ? '' : rate.toFixed(2)}
           onChangeText={t => {if (onRateChange) {const n = parseFloat(t); onRateChange(isNaN(n) ? 0 : n);}}}
-          placeholder="Rate"
+          placeholder="0.00"
           placeholderTextColor={Colors.textMuted}
           keyboardType="numeric"
           editable={!rateReadOnly}

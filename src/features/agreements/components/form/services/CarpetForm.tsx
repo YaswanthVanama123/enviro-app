@@ -65,9 +65,9 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Area (sq ft)" value={areaSqFt} onChange={v => update({areaSqFt: v})} suffix="sq ft" decimals={0} />
-      <NumberRow label="First 500 sq ft Rate ($)" value={firstUnitRate} onChange={v => update({firstUnitRate: v})} prefix="$" decimals={4} />
-      <NumberRow label="Additional Rate ($/sq ft)" value={additionalUnitRate} onChange={v => update({additionalUnitRate: v})} prefix="$" decimals={4} />
-      <NumberRow label="Per Visit Minimum ($)" value={perVisitMinimum} onChange={v => update({perVisitMinimum: v})} prefix="$" decimals={2} />
+      <NumberRow label="First 500 sq ft Rate" value={firstUnitRate} onChange={v => update({firstUnitRate: v})} prefix="$" decimals={4} />
+      <NumberRow label="Additional Rate (per sq ft)" value={additionalUnitRate} onChange={v => update({additionalUnitRate: v})} prefix="$" decimals={4} />
+      <NumberRow label="Per Visit Minimum" value={perVisitMinimum} onChange={v => update({perVisitMinimum: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>

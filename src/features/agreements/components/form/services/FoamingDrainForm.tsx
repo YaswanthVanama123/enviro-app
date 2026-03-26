@@ -94,7 +94,7 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       {needsPlumbing && (
         <CalcRow label="Plumbing Drains" qty={plumbingDrainCount} onQtyChange={v => update({plumbingDrainCount: v})} rate={plumbingAddonRate} onRateChange={v => update({plumbingAddonRate: v})} total={plumbingDrainCount * plumbingAddonRate} />
       )}
-      <NumberRow label="Minimum Per Visit ($)" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
+      <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>

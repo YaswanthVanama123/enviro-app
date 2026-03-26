@@ -78,8 +78,8 @@ export function StripWaxForm({data, onChange, contractMonths, onRemove, pricingC
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Floor Area (sq ft)" value={floorAreaSqFt} onChange={v => update({floorAreaSqFt: v})} suffix="sq ft" decimals={0} />
-      <NumberRow label="Rate per Sq Ft ($)" value={ratePerSqFt} onChange={v => update({ratePerSqFt: v})} prefix="$" decimals={4} />
-      <NumberRow label="Minimum Charge ($)" value={minCharge} onChange={v => update({minCharge: v})} prefix="$" decimals={2} />
+      <NumberRow label="Rate per Sq Ft" value={ratePerSqFt} onChange={v => update({ratePerSqFt: v})} prefix="$" decimals={4} />
+      <NumberRow label="Minimum Charge" value={minCharge} onChange={v => update({minCharge: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>

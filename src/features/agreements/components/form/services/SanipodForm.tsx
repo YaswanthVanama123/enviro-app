@@ -71,12 +71,12 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Pod Quantity" value={podQuantity} onChange={v => update({podQuantity: v})} decimals={0} />
-      <NumberRow label="Weekly Rate / Unit ($)" value={weeklyRatePerUnit} onChange={v => update({weeklyRatePerUnit: v})} prefix="$" decimals={2} />
-      <NumberRow label="Alt Weekly Rate / Unit ($)" value={altWeeklyRatePerUnit} onChange={v => update({altWeeklyRatePerUnit: v})} prefix="$" decimals={2} />
+      <NumberRow label="Weekly Rate / Unit" value={weeklyRatePerUnit} onChange={v => update({weeklyRatePerUnit: v})} prefix="$" decimals={2} />
+      <NumberRow label="Alt Weekly Rate / Unit" value={altWeeklyRatePerUnit} onChange={v => update({altWeeklyRatePerUnit: v})} prefix="$" decimals={2} />
       <NumberRow label="Extra Bags / Week" value={extraBagsPerWeek} onChange={v => update({extraBagsPerWeek: v})} decimals={0} />
       <ToggleRow label="Standalone Service" value={isStandalone} onChange={v => update({isStandalone: v})} subtitle="Charge standalone extra fee" />
       {isStandalone && (
-        <NumberRow label="Standalone Extra / Week ($)" value={standaloneExtraWeekly} onChange={v => update({standaloneExtraWeeklyCharge: v})} prefix="$" decimals={2} />
+        <NumberRow label="Standalone Extra / Week" value={standaloneExtraWeekly} onChange={v => update({standaloneExtraWeeklyCharge: v})} prefix="$" decimals={2} />
       )}
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>
