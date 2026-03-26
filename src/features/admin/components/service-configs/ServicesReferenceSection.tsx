@@ -1,7 +1,7 @@
 import React, {useState, useMemo, useCallback, useEffect} from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  ScrollView, StyleSheet, Platform, RefreshControl,
+  ScrollView, StyleSheet, Platform, RefreshControl, Image, Linking,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {pricingApi, ServiceConfig} from '../../../../services/api/endpoints/pricing.api';
@@ -371,6 +371,47 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
               )}
             </>
           )}
+
+          {/* ── Images gallery ── */}
+          {config.images && config.images.length > 0 && (
+            <View style={cardStyles.mediaSection}>
+              <View style={cardStyles.mediaSectionHeader}>
+                <Ionicons name="image-outline" size={13} color="#9ca3af" />
+                <Text style={cardStyles.mediaSectionTitle}>IMAGES</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={cardStyles.imageRow}>
+                {config.images.map((img, idx) => (
+                  <View key={idx} style={cardStyles.imageCard}>
+                    <Image source={{uri: img.url}} style={cardStyles.imageThumb} resizeMode="cover" />
+                    {img.caption ? <Text style={cardStyles.imageCaption} numberOfLines={1}>{img.caption}</Text> : null}
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* ── Links ── */}
+          {config.links && config.links.length > 0 && (
+            <View style={cardStyles.mediaSection}>
+              <View style={cardStyles.mediaSectionHeader}>
+                <Ionicons name="link-outline" size={13} color="#9ca3af" />
+                <Text style={cardStyles.mediaSectionTitle}>LINKS</Text>
+              </View>
+              <View style={cardStyles.linksList}>
+                {config.links.map((link, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={cardStyles.linkItem}
+                    onPress={() => Linking.openURL(link.url)}
+                    activeOpacity={0.7}>
+                    <Ionicons name="open-outline" size={13} color="#2563eb" />
+                    <Text style={cardStyles.linkLabel} numberOfLines={1}>{link.label}</Text>
+                    <Ionicons name="chevron-forward" size={12} color="#9ca3af" style={{marginLeft: 'auto' as any}} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -514,6 +555,68 @@ const cardStyles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textMuted,
     fontStyle: 'italic',
+  },
+  mediaSection: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: '#f9fafb',
+  },
+  mediaSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Spacing.sm,
+  },
+  mediaSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#374151',
+    letterSpacing: 0.5,
+  },
+  imageRow: {
+    gap: Spacing.sm,
+    paddingBottom: 2,
+  },
+  imageCard: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+    backgroundColor: Colors.surface,
+    width: 130,
+  },
+  imageThumb: {
+    width: 130,
+    height: 86,
+  },
+  imageCaption: {
+    fontSize: 11,
+    color: '#6b7280',
+    padding: 5,
+    backgroundColor: '#f8fafc',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  linksList: {
+    gap: Spacing.xs,
+  },
+  linkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+  },
+  linkLabel: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: '#2563eb',
   },
 });
 

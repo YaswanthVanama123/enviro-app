@@ -12,6 +12,7 @@ import {
   Alert,
   StyleSheet,
   Platform,
+  Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -41,6 +42,15 @@ export function EditServiceConfigModal({
   const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Images & links state
+  const [images, setImages] = useState<Array<{url: string; caption?: string}>>([]);
+  const [links, setLinks] = useState<Array<{label: string; url: string}>>([]);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImageCaption, setNewImageCaption] = useState('');
+  const [newLinkLabel, setNewLinkLabel] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [mediaTab, setMediaTab] = useState<'images' | 'links'>('images');
+
   // Populate form when config changes
   useEffect(() => {
     if (config && visible) {
@@ -49,6 +59,13 @@ export function EditServiceConfigModal({
       setVersion(config.version ?? '');
       setIsActive(config.isActive ?? true);
       setTagsInput(config.tags?.join(', ') ?? '');
+      setImages(config.images ?? []);
+      setLinks(config.links ?? []);
+      setNewImageUrl('');
+      setNewImageCaption('');
+      setNewLinkLabel('');
+      setNewLinkUrl('');
+      setMediaTab('images');
     }
   }, [config, visible]);
 
@@ -70,6 +87,8 @@ export function EditServiceConfigModal({
       version: version.trim() || undefined,
       isActive,
       tags: parsedTags,
+      images,
+      links,
     });
     setSaving(false);
     if (result.ok) {
@@ -80,12 +99,14 @@ export function EditServiceConfigModal({
         version: version.trim() || undefined,
         isActive,
         tags: parsedTags,
+        images,
+        links,
       });
       onClose();
     } else {
       Alert.alert('Save Failed', result.error ?? 'Unknown error. Please try again.');
     }
-  }, [config, label, description, version, isActive, tagsInput, onSaved, onClose]);
+  }, [config, label, description, version, isActive, tagsInput, images, links, onSaved, onClose]);
 
   if (!config) {return null;}
 
@@ -195,6 +216,134 @@ export function EditServiceConfigModal({
                 trackColor={{false: '#e5e7eb', true: Colors.primary + '60'}}
                 thumbColor={isActive ? Colors.primary : '#9ca3af'}
               />
+            </View>
+
+            {/* ── Images & Links ── */}
+            <View style={editStyles.mediaSection}>
+              {/* Media tab toggle */}
+              <View style={editStyles.mediaTabRow}>
+                <TouchableOpacity
+                  style={[editStyles.mediaTab, mediaTab === 'images' && editStyles.mediaTabActive]}
+                  onPress={() => setMediaTab('images')}
+                  activeOpacity={0.7}>
+                  <Ionicons name="image-outline" size={13} color={mediaTab === 'images' ? '#fff' : Colors.textMuted} />
+                  <Text style={[editStyles.mediaTabText, mediaTab === 'images' && editStyles.mediaTabTextActive]}>
+                    Images ({images.length})
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[editStyles.mediaTab, mediaTab === 'links' && editStyles.mediaTabActive]}
+                  onPress={() => setMediaTab('links')}
+                  activeOpacity={0.7}>
+                  <Ionicons name="link-outline" size={13} color={mediaTab === 'links' ? '#fff' : Colors.textMuted} />
+                  <Text style={[editStyles.mediaTabText, mediaTab === 'links' && editStyles.mediaTabTextActive]}>
+                    Links ({links.length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Images panel */}
+              {mediaTab === 'images' && (
+                <View style={editStyles.mediaPanel}>
+                  <Text style={editStyles.fieldHint}>Paste a public image URL to add it.</Text>
+                  <View style={editStyles.addMediaRow}>
+                    <TextInput
+                      style={[editStyles.input, {flex: 1}]}
+                      value={newImageUrl}
+                      onChangeText={setNewImageUrl}
+                      placeholder="https://example.com/photo.jpg"
+                      placeholderTextColor={Colors.textMuted}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="url"
+                    />
+                    <TouchableOpacity
+                      style={editStyles.addBtn}
+                      onPress={() => {
+                        const u = newImageUrl.trim();
+                        if (!u) return;
+                        setImages(prev => [...prev, {url: u, caption: newImageCaption.trim()}]);
+                        setNewImageUrl('');
+                        setNewImageCaption('');
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="add" size={18} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                  <TextInput
+                    style={editStyles.input}
+                    value={newImageCaption}
+                    onChangeText={setNewImageCaption}
+                    placeholder="Caption (optional)"
+                    placeholderTextColor={Colors.textMuted}
+                  />
+                  {images.map((img, idx) => (
+                    <View key={idx} style={editStyles.mediaItem}>
+                      <Image source={{uri: img.url}} style={editStyles.mediaThumb} resizeMode="cover" />
+                      <Text style={editStyles.mediaItemUrl} numberOfLines={1}>{img.caption || img.url}</Text>
+                      <TouchableOpacity
+                        onPress={() => setImages(prev => prev.filter((_, i) => i !== idx))}
+                        hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                        <Ionicons name="close-circle" size={18} color="#9ca3af" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Links panel */}
+              {mediaTab === 'links' && (
+                <View style={editStyles.mediaPanel}>
+                  <View style={editStyles.addMediaRow}>
+                    <TextInput
+                      style={[editStyles.input, {flex: 1}]}
+                      value={newLinkLabel}
+                      onChangeText={setNewLinkLabel}
+                      placeholder="Label (e.g. Product Sheet)"
+                      placeholderTextColor={Colors.textMuted}
+                    />
+                  </View>
+                  <View style={editStyles.addMediaRow}>
+                    <TextInput
+                      style={[editStyles.input, {flex: 1}]}
+                      value={newLinkUrl}
+                      onChangeText={setNewLinkUrl}
+                      placeholder="https://…"
+                      placeholderTextColor={Colors.textMuted}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="url"
+                    />
+                    <TouchableOpacity
+                      style={editStyles.addBtn}
+                      onPress={() => {
+                        const lbl = newLinkLabel.trim();
+                        const url = newLinkUrl.trim();
+                        if (!lbl || !url) return;
+                        setLinks(prev => [...prev, {label: lbl, url}]);
+                        setNewLinkLabel('');
+                        setNewLinkUrl('');
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="add" size={18} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                  {links.map((link, idx) => (
+                    <View key={idx} style={editStyles.mediaItem}>
+                      <Ionicons name="link-outline" size={16} color="#2563eb" style={{flexShrink: 0}} />
+                      <View style={{flex: 1, minWidth: 0}}>
+                        <Text style={editStyles.mediaItemLabel} numberOfLines={1}>{link.label}</Text>
+                        <Text style={editStyles.mediaItemUrl} numberOfLines={1}>{link.url}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setLinks(prev => prev.filter((_, i) => i !== idx))}
+                        hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                        <Ionicons name="close-circle" size={18} color="#9ca3af" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
           </ScrollView>
@@ -354,5 +503,80 @@ const editStyles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
     color: '#fff',
+  },
+  mediaSection: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+  },
+  mediaTabRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f9fafb',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  mediaTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 10,
+  },
+  mediaTabActive: {
+    backgroundColor: '#2563eb',
+  },
+  mediaTabText: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  mediaTabTextActive: {
+    color: '#fff',
+  },
+  mediaPanel: {
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  addMediaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  addBtn: {
+    width: 40,
+    height: 44,
+    backgroundColor: '#2563eb',
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  mediaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.sm,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+  },
+  mediaThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    backgroundColor: '#e5e7eb',
+    flexShrink: 0,
+  },
+  mediaItemLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
+  mediaItemUrl: {
+    fontSize: 11,
+    color: Colors.textMuted,
   },
 });

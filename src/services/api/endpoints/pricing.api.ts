@@ -48,6 +48,8 @@ export interface ServiceConfig {
   adminByDisplay?: boolean;
   tags?: string[];
   config?: any;
+  images?: Array<{url: string; caption?: string}>;
+  links?: Array<{label: string; url: string}>;
   updatedAt?: string;
   createdAt?: string;
 }
@@ -280,11 +282,32 @@ export const pricingApi = {
       version?: string;
       isActive?: boolean;
       tags?: string[];
+      images?: Array<{url: string; caption?: string}>;
+      links?: Array<{label: string; url: string}>;
     },
   ): Promise<{ok: boolean; error?: string}> {
     const res = await apiClient.put(`/api/service-configs/${id}/partial`, data);
     if (res.error) {return {ok: false, error: res.error};}
     return {ok: true};
+  },
+
+  async uploadServiceImage(
+    id: string,
+    fileUri: string,
+    fileName: string,
+    mimeType: string,
+    caption = '',
+  ): Promise<{ok: boolean; url?: string; error?: string}> {
+    const formData = new FormData();
+    // React Native FormData accepts {uri, name, type}
+    formData.append('image', {uri: fileUri, name: fileName, type: mimeType} as any);
+    formData.append('caption', caption);
+    const res = await apiClient.postFormData<{url: string; success: boolean}>(
+      `/api/service-configs/${id}/upload-image`,
+      formData,
+    );
+    if (res.error || !res.data?.url) {return {ok: false, error: res.error ?? 'Upload failed'};}
+    return {ok: true, url: res.data.url};
   },
 
   async getServiceAgreementTemplate(): Promise<ServiceAgreementTemplate | null> {
