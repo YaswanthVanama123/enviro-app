@@ -31,6 +31,10 @@ export function GreaseTrapForm({data, onChange, contractMonths, onRemove, pricin
     const pg = fields.perGallonRate ?? perGallonRate;
     const nf = fields.frequency     ?? freq;
     const newTotals = calcTotals(nt * pt + st * pg, nf, contractMonths);
+    const origPt = cfg.perTrapRate   ?? 50;
+    const origPg = cfg.perGallonRate ?? 2;
+    const originalPerVisitBase = nt * origPt + st * origPg;
+    const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
     onChange({
       serviceId: 'greaseTrap',
       displayName: 'Grease Trap',
@@ -42,6 +46,7 @@ export function GreaseTrapForm({data, onChange, contractMonths, onRemove, pricin
       perVisit: newTotals.perVisit,
       monthlyRecurring: newTotals.monthlyRecurring,
       contractTotal: newTotals.contractTotal,
+      originalContractTotal,
     });
   }, [data, freq, numberOfTraps, sizeOfTraps, perTrapRate, perGallonRate, contractMonths, onChange]);
 

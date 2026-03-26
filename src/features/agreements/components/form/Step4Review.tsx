@@ -86,21 +86,17 @@ export function Step4Review({form}: Step4ReviewProps) {
   const parkingTotal = parkingCharge * parkingChargeFrequency * contractMonths;
   const grandTotal   = serviceTotal  + productTotal + tripTotal + parkingTotal;
 
-  // Pricing indicator (Red / Green Line) — mirrors webapp logic
-  let totalPerVisit = 0;
-  let totalMinimum  = 0;
+  // Pricing indicator (Red / Green Line) — contract-total-based logic
+  let totalCurrentContract  = 0;
+  let totalOriginalContract = 0;
   visibleServices.forEach(id => {
     const svc = services[id];
     if (!svc) {return;}
-    totalPerVisit += svc.perVisit ?? 0;
-    totalMinimum  +=
-      svc.perVisitMinimum     ??
-      svc.minCharge           ??
-      svc.minimumChargePerVisit ?? 0;
+    totalCurrentContract  += svc.contractTotal         ?? 0;
+    totalOriginalContract += svc.originalContractTotal ?? svc.contractTotal ?? 0;
   });
-  const greenThreshold = totalMinimum * 1.20;
-  const pricingLine: 'red' | 'green' =
-    (totalMinimum > 0 && totalPerVisit > greenThreshold) ? 'green' : 'red';
+  const greenThreshold = totalOriginalContract * 1.20;
+  const pricingLine: 'red' | 'green' = totalCurrentContract > greenThreshold ? 'green' : 'red';
 
   const displayDate = startDate
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
@@ -242,9 +238,13 @@ export function Step4Review({form}: Step4ReviewProps) {
           </View>
           <View style={styles.pricingBannerRight}>
             <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
-              ${totalPerVisit.toFixed(2)}
+              ${totalCurrentContract.toFixed(2)}
             </Text>
-            <Text style={styles.pricingBannerLabel}>per visit</Text>
+            <Text style={styles.pricingBannerLabel}>Current Contract</Text>
+            <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
+              ${greenThreshold.toFixed(2)}
+            </Text>
+            <Text style={styles.pricingBannerLabel}>Target (Original ×1.20)</Text>
           </View>
         </View>
       )}

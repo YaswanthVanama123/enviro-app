@@ -44,6 +44,13 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
     const nr  = nf === 'biweekly' ? ar : wr;
     const newBase = nq * nr + (sa ? se : 0) + eb * ebp;
     const newTotals = calcTotals(newBase, nf, contractMonths);
+    const origWr  = cfg.weeklyRatePerUnit            ?? 3;
+    const origAr  = cfg.altWeeklyRatePerUnit         ?? 8;
+    const origSe  = cfg.standaloneExtraWeeklyCharge  ?? 40;
+    const origEbp = cfg.extraBagPrice                ?? 2;
+    const origNr  = nf === 'biweekly' ? origAr : origWr;
+    const originalPerVisitBase = nq * origNr + (sa ? origSe : 0) + eb * origEbp;
+    const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
     onChange({
       serviceId: 'sanipod',
       displayName: 'SaniPod',
@@ -55,6 +62,7 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
       perVisit: newTotals.perVisit,
       monthlyRecurring: newTotals.monthlyRecurring,
       contractTotal: newTotals.contractTotal,
+      originalContractTotal,
     });
   }, [data, freq, podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit, isStandalone, standaloneExtraWeekly, extraBagsPerWeek, extraBagPrice, contractMonths, onChange]);
 

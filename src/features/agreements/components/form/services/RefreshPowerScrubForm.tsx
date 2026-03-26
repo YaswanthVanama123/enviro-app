@@ -166,6 +166,7 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
       foh:      nf,
       boh:      nb,
       contractTotal: newTotal,
+      originalContractTotal: newTotal,
     });
   }, [data, dumpster, patio, foh, boh, contractMonths, onChange]);
 

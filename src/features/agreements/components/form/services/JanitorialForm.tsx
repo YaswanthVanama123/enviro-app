@@ -42,6 +42,9 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     const hr = fields.baseHourlyRate ?? baseHourlyRate;
     const nf = fields.frequency      ?? freq;
     const newTotals = calcTotals((mh + vh) * hr, nf, contractMonths);
+    const origHourlyRate = cfg.standardHourlyPricing?.standardHourlyRate ?? 30;
+    const originalPerVisitBase = (mh + vh) * origHourlyRate;
+    const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
     onChange({
       serviceId: 'pureJanitorial',
       displayName: 'Janitorial',
@@ -53,6 +56,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       perVisit: newTotals.perVisit,
       monthlyRecurring: newTotals.monthlyRecurring,
       contractTotal: newTotals.contractTotal,
+      originalContractTotal,
     });
   }, [data, freq, serviceType, visitsPerWeek, baseHourlyRate, manualHours, vacuumingHours, contractMonths, onChange]);
 

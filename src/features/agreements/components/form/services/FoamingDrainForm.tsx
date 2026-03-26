@@ -1,7 +1,7 @@
 import React, {useCallback} from 'react';
 import {
   ServiceCard, TotalsBlock, calcTotals,
-  FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, ToggleRow,
+  FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
 } from './ServiceBase';
 
 interface Props {
@@ -15,38 +15,52 @@ interface Props {
 export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
-  const freq               = data?.frequency          ?? 'weekly';
-  const standardDrainCount = data?.standardDrainCount ?? 0;
-  const greaseTrapCount    = data?.greaseTrapCount    ?? 0;
-  const greenDrainCount    = data?.greenDrainCount    ?? 0;
-  const standardDrainRate  = data?.standardDrainRate  ?? cfg.standardDrainRate      ?? 10;
-  const greaseWeeklyRate   = data?.greaseWeeklyRate   ?? cfg.greaseTrapWeeklyRate   ?? 125;
-  const greenWeeklyRate    = data?.greenWeeklyRate    ?? cfg.greenDrainWeeklyRate   ?? 5;
-  const needsPlumbing      = data?.needsPlumbing      ?? false;
-  const plumbingDrainCount = data?.plumbingDrainCount ?? 0;
-  const plumbingAddonRate  = data?.plumbingAddonRate  ?? cfg.plumbingAddonRate      ?? 10;
+  const freq                  = data?.frequency             ?? 'weekly';
+  const standardDrainCount    = data?.standardDrainCount    ?? 0;
+  const greaseTrapCount       = data?.greaseTrapCount       ?? 0;
+  const greenDrainCount       = data?.greenDrainCount       ?? 0;
+  const standardDrainRate     = data?.standardDrainRate     ?? cfg.standardDrainRate      ?? 10;
+  const greaseWeeklyRate      = data?.greaseWeeklyRate      ?? cfg.greaseTrapWeeklyRate   ?? 125;
+  const greenWeeklyRate       = data?.greenWeeklyRate       ?? cfg.greenDrainWeeklyRate   ?? 5;
+  const needsPlumbing         = data?.needsPlumbing         ?? false;
+  const plumbingDrainCount    = data?.plumbingDrainCount    ?? 0;
+  const plumbingAddonRate     = data?.plumbingAddonRate     ?? cfg.plumbingAddonRate      ?? 10;
+  const minimumChargePerVisit = data?.minimumChargePerVisit ?? cfg.minimumChargePerVisit  ?? 0;
+  const applyMinimum          = data?.applyMinimum !== false;
 
-  const perVisitBase =
+  const rawCost =
     standardDrainCount * standardDrainRate +
     greaseTrapCount    * greaseWeeklyRate   +
     greenDrainCount    * greenWeeklyRate    +
     (needsPlumbing ? plumbingDrainCount * plumbingAddonRate : 0);
 
+  const perVisitBase = applyMinimum && minimumChargePerVisit > 0 ? Math.max(rawCost, minimumChargePerVisit) : rawCost;
   const totals = calcTotals(perVisitBase, freq, contractMonths);
 
   const update = useCallback((fields: Record<string, any>) => {
-    const sd  = fields.standardDrainCount ?? standardDrainCount;
-    const gt  = fields.greaseTrapCount    ?? greaseTrapCount;
-    const gn  = fields.greenDrainCount    ?? greenDrainCount;
-    const np  = fields.needsPlumbing      ?? needsPlumbing;
-    const pd  = fields.plumbingDrainCount ?? plumbingDrainCount;
-    const sdr = fields.standardDrainRate  ?? standardDrainRate;
-    const gwr = fields.greaseWeeklyRate   ?? greaseWeeklyRate;
-    const gnr = fields.greenWeeklyRate    ?? greenWeeklyRate;
-    const par = fields.plumbingAddonRate  ?? plumbingAddonRate;
-    const nf  = fields.frequency          ?? freq;
-    const newBase = sd * sdr + gt * gwr + gn * gnr + (np ? pd * par : 0);
+    const sd  = fields.standardDrainCount    ?? standardDrainCount;
+    const gt  = fields.greaseTrapCount       ?? greaseTrapCount;
+    const gn  = fields.greenDrainCount       ?? greenDrainCount;
+    const np  = fields.needsPlumbing         ?? needsPlumbing;
+    const pd  = fields.plumbingDrainCount    ?? plumbingDrainCount;
+    const sdr = fields.standardDrainRate     ?? standardDrainRate;
+    const gwr = fields.greaseWeeklyRate      ?? greaseWeeklyRate;
+    const gnr = fields.greenWeeklyRate       ?? greenWeeklyRate;
+    const par = fields.plumbingAddonRate     ?? plumbingAddonRate;
+    const mn  = fields.minimumChargePerVisit ?? minimumChargePerVisit;
+    const nf  = fields.frequency             ?? freq;
+    const applyMin = (fields.applyMinimum !== undefined ? fields.applyMinimum : data?.applyMinimum) !== false;
+    const raw      = sd * sdr + gt * gwr + gn * gnr + (np ? pd * par : 0);
+    const newBase  = applyMin && mn > 0 ? Math.max(raw, mn) : raw;
     const newTotals = calcTotals(newBase, nf, contractMonths);
+    const origSdr   = cfg.standardDrainRate    ?? 10;
+    const origGwr   = cfg.greaseTrapWeeklyRate ?? 125;
+    const origGnr   = cfg.greenDrainWeeklyRate ?? 5;
+    const origPar   = cfg.plumbingAddonRate    ?? 10;
+    const origMin   = cfg.minimumChargePerVisit ?? 0;
+    const origRaw   = sd * origSdr + gt * origGwr + gn * origGnr + (np ? pd * origPar : 0);
+    const originalPerVisitBase = applyMin && origMin > 0 ? Math.max(origRaw, origMin) : origRaw;
+    const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
     onChange({
       serviceId: 'foamingDrain',
       displayName: 'Foaming Drain',
@@ -55,11 +69,13 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       ...data,
       ...fields,
       frequency: nf,
+      applyMinimum: applyMin,
       perVisit: newTotals.perVisit,
       monthlyRecurring: newTotals.monthlyRecurring,
       contractTotal: newTotals.contractTotal,
+      originalContractTotal,
     });
-  }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, contractMonths, onChange]);
+  }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
 
   return (
     <ServiceCard
@@ -78,6 +94,8 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       {needsPlumbing && (
         <CalcRow label="Plumbing Drains" qty={plumbingDrainCount} onQtyChange={v => update({plumbingDrainCount: v})} rate={plumbingAddonRate} onRateChange={v => update({plumbingAddonRate: v})} total={plumbingDrainCount * plumbingAddonRate} />
       )}
+      <NumberRow label="Minimum Per Visit ($)" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
+      <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
     </ServiceCard>
   );
