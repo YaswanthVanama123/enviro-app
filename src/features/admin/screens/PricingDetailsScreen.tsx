@@ -5,6 +5,7 @@ import {MainTab} from '../utils/pricing.utils';
 import {PricingTabBar} from '../components/pricing-shared/PricingTabBar';
 import {PricingTablesSection} from '../components/pricing-tables/PricingTablesSection';
 import {ServiceConfigsSection} from '../components/service-configs/ServiceConfigsSection';
+import {ServicesReferenceSection} from '../components/service-configs/ServicesReferenceSection';
 import {ProductCatalogSection} from '../components/product-catalog/ProductCatalogSection';
 import {BackupManagementSection} from '../components/backup/BackupManagementSection';
 import {Colors} from '../../../theme/colors';
@@ -16,10 +17,11 @@ export function PricingDetailsScreen() {
     <View style={[styles.screen, {paddingTop: insets.top}]}>
       <PricingTabBar active={activeTab} onSelect={setActiveTab} />
       <View style={styles.tabContent}>
-        {activeTab === 'pricing'  && <PricingTablesSection />}
-        {activeTab === 'services' && <ServiceConfigsSection />}
-        {activeTab === 'catalog'  && <ProductCatalogSection />}
-        {activeTab === 'backup'   && <BackupManagementSection />}
+        {activeTab === 'pricing'   && <PricingTablesSection />}
+        {activeTab === 'services'  && <ServiceConfigsSection />}
+        {activeTab === 'catalog'   && <ProductCatalogSection />}
+        {activeTab === 'backup'    && <BackupManagementSection />}
+        {activeTab === 'reference' && <ServicesReferenceSection />}
       </View>
     </View>
   );
