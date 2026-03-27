@@ -57,6 +57,7 @@ interface Step2ContractProps {
   onPaymentOptionChange: (v: PaymentOption) => void;
   paymentNote: string;
   onPaymentNoteChange: (v: string) => void;
+  allServicesOneTime?: boolean;
 }
 
 // ─── Date Picker (simple inline) ─────────────────────────────────────────────
@@ -136,10 +137,12 @@ export function Step2Contract({
   onPaymentOptionChange,
   paymentNote,
   onPaymentNoteChange,
+  allServicesOneTime = false,
 }: Step2ContractProps) {
   return (
     <View>
-      {/* Duration */}
+      {/* Duration — hidden when all services are one-time */}
+      {!allServicesOneTime && (
       <FormSection icon="calendar-outline" title="Contract Duration">
         <DropdownRow
           label="Duration"
@@ -152,8 +155,8 @@ export function Step2Contract({
           <SimpleDatePicker value={startDate} onChange={onStartDateChange} />
         </View>
       </FormSection>
-
-      <FormDivider />
+      )}
+      {!allServicesOneTime && <FormDivider />}
 
       {/* Charges */}
       <FormSection icon="car-outline" title="Trip & Parking Charges">
@@ -227,7 +230,7 @@ export function Step2Contract({
       <FormSection icon="calculator-outline" title="Pricing Summary">
         <DollarRow label="Trip Charge / visit" value={tripCharge} />
         <DollarRow label="Parking / visit" value={parkingCharge} />
-        <DollarRow label="Contract Duration" value={contractMonths} />
+        {!allServicesOneTime && <DollarRow label="Contract Duration" value={contractMonths} />}
       </FormSection>
     </View>
   );

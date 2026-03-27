@@ -62,6 +62,7 @@ export function CreateAgreementScreen() {
     updateServiceAgreement,
     saveDraft,
     generate,
+    allServicesOneTime,
   } = useFormFilling();
 
   const {step, saving, saveError, savedId} = form;
@@ -148,6 +149,7 @@ export function CreateAgreementScreen() {
             onPaymentOptionChange={setPaymentOption}
             paymentNote={form.paymentNote}
             onPaymentNoteChange={setPaymentNote}
+            allServicesOneTime={allServicesOneTime}
           />
         );
       case 5:

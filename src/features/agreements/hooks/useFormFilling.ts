@@ -564,6 +564,24 @@ export function useFormFilling() {
     setForm(INITIAL_STATE);
   }, []);
 
+  // ── Derived: are all active services one-time? ─────────────────────────────
+  const allServicesOneTime: boolean = (() => {
+    const activeEntries = form.visibleServices
+      .map(id => form.services[id])
+      .filter(sd => sd?.isActive);
+    if (activeEntries.length === 0) {return false;}
+    return activeEntries.every(sd => {
+      const freq: string =
+        sd?.frequency ??
+        sd?.frequencyKey ??
+        sd?.frequency?.frequencyKey ??
+        sd?.frequency?.value ??
+        '';
+      const normalized = String(freq).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      return normalized === 'onetime' || normalized === '1time';
+    });
+  })();
+
   return {
     form,
     goToStep,
@@ -598,5 +616,6 @@ export function useFormFilling() {
     saveDraft,
     generate,
     reset,
+    allServicesOneTime,
   };
 }
