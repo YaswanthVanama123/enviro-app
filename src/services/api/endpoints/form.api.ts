@@ -50,6 +50,7 @@ export interface FormPayload {
     customerExecutedOn: string;
     additionalMonths: number;
     paymentOption: string;
+    paymentNote: string;
     startDate: string;
   };
   serviceAgreement?: ServiceAgreementData;

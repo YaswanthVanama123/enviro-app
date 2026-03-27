@@ -62,6 +62,7 @@ export interface FormState {
   parkingCharge: number;
   parkingChargeFrequency: number;
   paymentOption: PaymentOption;
+  paymentNote: string;
 
   // Step 3: Services
   visibleServices: string[];
@@ -117,6 +118,7 @@ const INITIAL_STATE: FormState = {
   parkingCharge: 0,
   parkingChargeFrequency: 1,
   paymentOption: 'online',
+  paymentNote: '',
   visibleServices: [],
   services: {},
   enviroOf: '',
@@ -421,6 +423,10 @@ export function useFormFilling() {
     setForm(prev => ({...prev, paymentOption}));
   }, []);
 
+  const setPaymentNote = useCallback((paymentNote: string) => {
+    setForm(prev => ({...prev, paymentNote}));
+  }, []);
+
   // ── Services ───────────────────────────────────────────────────────────────
   const addService = useCallback((serviceId: string) => {
     setForm(prev => {
@@ -511,6 +517,7 @@ export function useFormFilling() {
         customerExecutedOn: new Date().toISOString(),
         additionalMonths: 0,
         paymentOption: form.paymentOption,
+        paymentNote: form.paymentNote,
         startDate: form.startDate,
       },
       serviceAgreement: form.serviceAgreement,
@@ -573,6 +580,7 @@ export function useFormFilling() {
     setParkingCharge,
     setParkingChargeFrequency,
     setPaymentOption,
+    setPaymentNote,
     addService,
     removeService,
     updateService,

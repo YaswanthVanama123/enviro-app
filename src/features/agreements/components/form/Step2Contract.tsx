@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, Modal, StyleSheet} from 'react-native';
+import {View, Text, TouchableOpacity, Modal, StyleSheet, TextInput} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   FormSection,
@@ -55,6 +55,8 @@ interface Step2ContractProps {
   onParkingChargeFrequencyChange: (v: number) => void;
   paymentOption: PaymentOption;
   onPaymentOptionChange: (v: PaymentOption) => void;
+  paymentNote: string;
+  onPaymentNoteChange: (v: string) => void;
 }
 
 // ─── Date Picker (simple inline) ─────────────────────────────────────────────
@@ -132,6 +134,8 @@ export function Step2Contract({
   onParkingChargeFrequencyChange,
   paymentOption,
   onPaymentOptionChange,
+  paymentNote,
+  onPaymentNoteChange,
 }: Step2ContractProps) {
   return (
     <View>
@@ -207,6 +211,14 @@ export function Step2Contract({
             </TouchableOpacity>
           ))}
         </View>
+        <TextInput
+          style={styles.paymentNoteInput}
+          value={paymentNote}
+          onChangeText={onPaymentNoteChange}
+          placeholder="Add a note..."
+          placeholderTextColor={Colors.textMuted}
+          multiline
+        />
       </FormSection>
 
       <FormDivider />
@@ -290,5 +302,20 @@ const styles = StyleSheet.create({
   },
   paymentOptionTextActive: {
     color: '#fff',
+  },
+  paymentNoteInput: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    minHeight: 72,
+    textAlignVertical: 'top',
   },
 });

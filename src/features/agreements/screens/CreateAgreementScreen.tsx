@@ -53,6 +53,7 @@ export function CreateAgreementScreen() {
     setParkingCharge,
     setParkingChargeFrequency,
     setPaymentOption,
+    setPaymentNote,
     addService,
     removeService,
     updateService,
@@ -142,6 +143,8 @@ export function CreateAgreementScreen() {
             onParkingChargeFrequencyChange={setParkingChargeFrequency}
             paymentOption={form.paymentOption}
             onPaymentOptionChange={setPaymentOption}
+            paymentNote={form.paymentNote}
+            onPaymentNoteChange={setPaymentNote}
           />
         );
       case 5:
