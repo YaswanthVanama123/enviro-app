@@ -55,6 +55,7 @@ export interface FormPayload {
   };
   serviceAgreement?: ServiceAgreementData;
   summary: GlobalSummary;
+  includeProductsTable?: boolean;
 }
 
 // ─── Default header rows matching webapp customer section ─────────────────────

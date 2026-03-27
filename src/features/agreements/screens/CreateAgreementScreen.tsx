@@ -54,6 +54,7 @@ export function CreateAgreementScreen() {
     setParkingChargeFrequency,
     setPaymentOption,
     setPaymentNote,
+    setIncludeProductsTable,
     addService,
     removeService,
     updateService,
@@ -111,6 +112,8 @@ export function CreateAgreementScreen() {
             onRemoveDispenser={removeDispenser}
             onUpdateDispenser={updateDispenser}
             productCatalog={form.productCatalog}
+            includeProductsTable={form.includeProductsTable}
+            onIncludeProductsTableChange={setIncludeProductsTable}
           />
         );
       case 3:

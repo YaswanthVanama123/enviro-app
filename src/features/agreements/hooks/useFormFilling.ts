@@ -63,6 +63,7 @@ export interface FormState {
   parkingChargeFrequency: number;
   paymentOption: PaymentOption;
   paymentNote: string;
+  includeProductsTable: boolean;
 
   // Step 3: Services
   visibleServices: string[];
@@ -119,6 +120,7 @@ const INITIAL_STATE: FormState = {
   parkingChargeFrequency: 1,
   paymentOption: 'online',
   paymentNote: '',
+  includeProductsTable: true,
   visibleServices: [],
   services: {},
   enviroOf: '',
@@ -427,6 +429,10 @@ export function useFormFilling() {
     setForm(prev => ({...prev, paymentNote}));
   }, []);
 
+  const setIncludeProductsTable = useCallback((includeProductsTable: boolean) => {
+    setForm(prev => ({...prev, includeProductsTable}));
+  }, []);
+
   // ── Services ───────────────────────────────────────────────────────────────
   const addService = useCallback((serviceId: string) => {
     setForm(prev => {
@@ -521,6 +527,7 @@ export function useFormFilling() {
         startDate: form.startDate,
       },
       serviceAgreement: form.serviceAgreement,
+      includeProductsTable: form.includeProductsTable,
       summary,
     };
   }, [form]);
@@ -581,6 +588,7 @@ export function useFormFilling() {
     setParkingChargeFrequency,
     setPaymentOption,
     setPaymentNote,
+    setIncludeProductsTable,
     addService,
     removeService,
     updateService,
