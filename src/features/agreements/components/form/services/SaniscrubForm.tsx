@@ -62,7 +62,9 @@ export function SaniscrubForm({data, onChange, contractMonths, onRemove, pricing
       icon="water-outline"
       iconColor="#0ea5e9"
       iconBg="#e0f2fe"
-      onRemove={onRemove}>
+      onRemove={onRemove}
+      notes={data?.notes ?? ''}
+      onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Units" qty={qty} onQtyChange={v => update({qty: v})} rate={rate} onRateChange={v => update({rate: v})} total={rawCost} />

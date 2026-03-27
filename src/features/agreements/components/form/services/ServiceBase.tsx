@@ -3,7 +3,7 @@
  * Each service form wraps this for consistent layout.
  */
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, ActivityIndicator} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors} from '../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../theme/spacing';
@@ -24,10 +24,12 @@ interface ServiceCardProps {
   iconBg: string;
   onRemove: () => void;
   loading?: boolean;
+  notes?: string;
+  onNotesChange?: (v: string) => void;
   children: React.ReactNode;
 }
 
-export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, onRemove, loading, children}: ServiceCardProps) {
+export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, onRemove, loading, notes, onNotesChange, children}: ServiceCardProps) {
   return (
     <View style={sc.card}>
       {/* Header */}
@@ -49,6 +51,21 @@ export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, on
       )}
 
       {!loading && <View style={sc.body}>{children}</View>}
+
+      {/* Notes field — shown for all services; triggers approval when filled */}
+      {!loading && onNotesChange !== undefined && (
+        <View style={sc.notesContainer}>
+          <Text style={sc.notesLabel}>Service Notes</Text>
+          <TextInput
+            style={sc.notesInput}
+            value={notes ?? ''}
+            onChangeText={onNotesChange}
+            placeholder="Add notes (will require approval)..."
+            placeholderTextColor={Colors.textMuted}
+            multiline
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -164,6 +181,32 @@ const sc = StyleSheet.create({
     color: Colors.textMuted,
   },
   body: {},
+  notesContainer: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  notesLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
+  },
+  notesInput: {
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
 });
 
 const tb = StyleSheet.create({

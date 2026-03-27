@@ -80,7 +80,9 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       icon="shield-checkmark-outline"
       iconColor="#7c3aed"
       iconBg="#ede9fe"
-      onRemove={onRemove}>
+      onRemove={onRemove}
+      notes={data?.notes ?? ''}
+      onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Sinks"          qty={sinks}         onQtyChange={v => update({sinks: v})}         rate={sinkRate}    onRateChange={v => update({sinkRate: v})}    total={sinks * sinkRate} />

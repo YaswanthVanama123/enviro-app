@@ -51,7 +51,7 @@ export function GreaseTrapForm({data, onChange, contractMonths, onRemove, pricin
   }, [data, freq, numberOfTraps, sizeOfTraps, perTrapRate, perGallonRate, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="greaseTrap" displayName="Grease Trap" icon="trash-bin-outline" iconColor="#d97706" iconBg="#fef3c7" onRemove={onRemove}>
+    <ServiceCard serviceId="greaseTrap" displayName="Grease Trap" icon="trash-bin-outline" iconColor="#d97706" iconBg="#fef3c7" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Number of Traps" qty={numberOfTraps} onQtyChange={v => update({numberOfTraps: v})} rate={perTrapRate} onRateChange={v => update({perTrapRate: v})} total={numberOfTraps * perTrapRate} />

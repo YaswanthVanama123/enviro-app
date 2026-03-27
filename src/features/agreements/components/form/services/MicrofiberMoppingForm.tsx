@@ -56,7 +56,7 @@ export function MicrofiberMoppingForm({data, onChange, contractMonths, onRemove,
   }, [data, freq, qty, rate, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="microfiberMopping" displayName="Microfiber Mopping" icon="brush-outline" iconColor="#2563eb" iconBg="#dbeafe" onRemove={onRemove}>
+    <ServiceCard serviceId="microfiberMopping" displayName="Microfiber Mopping" icon="brush-outline" iconColor="#2563eb" iconBg="#dbeafe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Locations" qty={qty} onQtyChange={v => update({qty: v})} rate={rate} onRateChange={v => update({rate: v})} total={rawCost} />

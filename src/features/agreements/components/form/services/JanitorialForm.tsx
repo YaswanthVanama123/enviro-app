@@ -61,7 +61,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
   }, [data, freq, serviceType, visitsPerWeek, baseHourlyRate, manualHours, vacuumingHours, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="pureJanitorial" displayName="Janitorial" icon="briefcase-outline" iconColor="#059669" iconBg="#d1fae5" onRemove={onRemove}>
+    <ServiceCard serviceId="pureJanitorial" displayName="Janitorial" icon="briefcase-outline" iconColor="#059669" iconBg="#d1fae5" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <View style={styles.typeRow}>
         <Text style={styles.typeLabel}>Service Type</Text>
         <View style={styles.chips}>

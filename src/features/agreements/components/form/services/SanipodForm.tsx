@@ -67,7 +67,7 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
   }, [data, freq, podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit, isStandalone, standaloneExtraWeekly, extraBagsPerWeek, extraBagPrice, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="sanipod" displayName="SaniPod" icon="cube-outline" iconColor="#7c3aed" iconBg="#ede9fe" onRemove={onRemove}>
+    <ServiceCard serviceId="sanipod" displayName="SaniPod" icon="cube-outline" iconColor="#7c3aed" iconBg="#ede9fe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Pod Quantity" value={podQuantity} onChange={v => update({podQuantity: v})} decimals={0} />

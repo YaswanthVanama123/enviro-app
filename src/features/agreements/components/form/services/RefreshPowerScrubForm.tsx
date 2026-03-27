@@ -177,7 +177,9 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
       icon="water-outline"
       iconColor="#0891b2"
       iconBg="#cffafe"
-      onRemove={onRemove}>
+      onRemove={onRemove}
+      notes={data?.notes ?? ''}
+      onNotesChange={v => update({notes: v})}>
       <AreaSection
         label="Dumpster Area"
         config={dumpster}

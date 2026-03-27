@@ -64,7 +64,7 @@ export function StripWaxForm({data, onChange, contractMonths, onRemove, pricingC
   }, [data, freq, serviceVariant, floorAreaSqFt, ratePerSqFt, minCharge, applyMinimum, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="stripwax" displayName="Strip & Wax" icon="sparkles-outline" iconColor="#ea580c" iconBg="#ffedd5" onRemove={onRemove}>
+    <ServiceCard serviceId="stripwax" displayName="Strip & Wax" icon="sparkles-outline" iconColor="#ea580c" iconBg="#ffedd5" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <View style={styles.variantRow}>
         <Text style={styles.variantLabel}>Service Variant</Text>
         <View style={styles.chips}>

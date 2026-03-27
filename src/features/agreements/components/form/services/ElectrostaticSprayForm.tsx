@@ -75,7 +75,7 @@ export function ElectrostaticSprayForm({data, onChange, contractMonths, onRemove
   }, [data, freq, pricingMethod, roomCount, squareFeet, ratePerRoom, ratePerThousandSqFt, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="electrostaticSpray" displayName="Electrostatic Spray" icon="flash-outline" iconColor="#dc2626" iconBg="#fee2e2" onRemove={onRemove}>
+    <ServiceCard serviceId="electrostaticSpray" displayName="Electrostatic Spray" icon="flash-outline" iconColor="#dc2626" iconBg="#fee2e2" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <View style={styles.methodRow}>
         <Text style={styles.methodLabel}>Pricing Method</Text>
         <View style={styles.chips}>

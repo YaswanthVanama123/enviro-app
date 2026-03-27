@@ -84,7 +84,9 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       icon="flask-outline"
       iconColor="#10b981"
       iconBg="#d1fae5"
-      onRemove={onRemove}>
+      onRemove={onRemove}
+      notes={data?.notes ?? ''}
+      onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Standard Drains" qty={standardDrainCount} onQtyChange={v => update({standardDrainCount: v})} rate={standardDrainRate} onRateChange={v => update({standardDrainRate: v})} total={standardDrainCount * standardDrainRate} />

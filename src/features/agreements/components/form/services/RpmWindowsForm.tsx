@@ -56,7 +56,7 @@ export function RpmWindowsForm({data, onChange, contractMonths, onRemove, pricin
   }, [data, freq, numWindows, ratePerWindow, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="rpmWindows" displayName="RPM Windows" icon="albums-outline" iconColor="#0369a1" iconBg="#e0f2fe" onRemove={onRemove}>
+    <ServiceCard serviceId="rpmWindows" displayName="RPM Windows" icon="albums-outline" iconColor="#0369a1" iconBg="#e0f2fe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Windows" qty={numWindows} onQtyChange={v => update({numWindows: v})} rate={ratePerWindow} onRateChange={v => update({ratePerWindow: v})} total={rawCost} />

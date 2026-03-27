@@ -479,6 +479,12 @@ export function useFormFilling() {
       }
     }
 
+    // Determine document status: pending_approval when any active service has manual notes
+    const hasServiceNotes = Object.values(activeServices).some(
+      (sd: any) => sd?.isActive && typeof sd.notes === 'string' && sd.notes.trim().length > 0,
+    );
+    const documentStatus = hasServiceNotes ? 'pending_approval' : 'saved';
+
     const summary: GlobalSummary = {
       contractMonths: form.contractMonths,
       tripCharge: form.tripCharge,
@@ -528,6 +534,7 @@ export function useFormFilling() {
       },
       serviceAgreement: form.serviceAgreement,
       includeProductsTable: form.includeProductsTable,
+      status: documentStatus,
       summary,
     };
   }, [form]);

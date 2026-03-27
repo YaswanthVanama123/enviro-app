@@ -61,7 +61,7 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
   }, [data, freq, areaSqFt, firstUnitRate, additionalUnitRate, perVisitMinimum, applyMinimum, contractMonths, onChange]);
 
   return (
-    <ServiceCard serviceId="carpetclean" displayName="Carpet Cleaning" icon="grid-outline" iconColor="#92400e" iconBg="#fef3c7" onRemove={onRemove}>
+    <ServiceCard serviceId="carpetclean" displayName="Carpet Cleaning" icon="grid-outline" iconColor="#92400e" iconBg="#fef3c7" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Area (sq ft)" value={areaSqFt} onChange={v => update({areaSqFt: v})} suffix="sq ft" decimals={0} />
