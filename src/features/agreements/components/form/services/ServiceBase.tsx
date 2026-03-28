@@ -91,7 +91,7 @@ export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, 
         <Text style={tb.headerText}>Pricing Summary</Text>
       </View>
       {isOneTime ? (
-        <DollarRow label="Total Price" value={perVisit} highlight />
+        <DollarRow label="Total Price" value={contractTotal} highlight />
       ) : (
         <>
           <DollarRow label={isVisitBased ? 'Recurring Visit Total' : 'Per Visit Total'} value={perVisit} />
@@ -111,7 +111,7 @@ export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, 
 
 // ─── Calc totals helper ───────────────────────────────────────────────────────
 
-export function calcTotals(perVisitBase: number, frequency: string, contractMonths: number) {
+export function calcTotals(perVisitBase: number, frequency: string, contractMonths: number, customFieldsTotal: number = 0) {
   const mult = getFreqMultiplier(frequency);
   const isOneTime = frequency === 'oneTime';
   const isVisitBased = ['bimonthly', 'quarterly', 'biannual', 'annual'].includes(frequency);
@@ -119,7 +119,7 @@ export function calcTotals(perVisitBase: number, frequency: string, contractMont
   const perVisit = perVisitBase;
   const monthlyRecurring = isOneTime ? 0 : perVisit * mult;
   const firstMonth = isOneTime ? 0 : perVisit * mult; // simplified: first month = monthly
-  const contractTotal = isOneTime ? perVisit : monthlyRecurring * contractMonths;
+  const contractTotal = (isOneTime ? perVisit : monthlyRecurring * contractMonths) + customFieldsTotal;
 
   return {perVisit, firstMonth, monthlyRecurring, contractTotal};
 }
