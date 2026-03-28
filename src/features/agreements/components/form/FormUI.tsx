@@ -239,7 +239,7 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
         />
         <Text style={ss.calcAt}>=</Text>
         <View style={ss.calcTotal}>
-          <Text style={ss.calcTotalText}>${total.toFixed(2)}</Text>
+          <Text style={ss.calcTotalText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{formatDollar(total)}</Text>
         </View>
       </View>
     </View>
@@ -248,11 +248,15 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
 
 // ─── Dollar Row (display total) ───────────────────────────────────────────────
 
+function formatDollar(value: number): string {
+  return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
 export function DollarRow({label, value, highlight}: {label: string; value: number; highlight?: boolean}) {
   return (
     <View style={[ss.dollarRow, highlight && ss.dollarRowHighlight]}>
-      <Text style={[ss.dollarLabel, highlight && ss.dollarLabelHighlight]}>{label}</Text>
-      <Text style={[ss.dollarValue, highlight && ss.dollarValueHighlight]}>${value.toFixed(2)}</Text>
+      <Text style={[ss.dollarLabel, highlight && ss.dollarLabelHighlight]} numberOfLines={1}>{label}</Text>
+      <Text style={[ss.dollarValue, highlight && ss.dollarValueHighlight]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{formatDollar(value)}</Text>
     </View>
   );
 }
@@ -529,6 +533,8 @@ const ss = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: '500',
+    flex: 1,
+    marginRight: Spacing.sm,
   },
   dollarLabelHighlight: {
     color: Colors.primary,
@@ -538,10 +544,12 @@ const ss = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
     color: Colors.textPrimary,
+    flexShrink: 1,
   },
   dollarValueHighlight: {
     color: Colors.primary,
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
+    flexShrink: 1,
   },
   divider: {
     height: 1,
