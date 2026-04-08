@@ -30,6 +30,154 @@ const SERVICE_META: Record<string, {icon: string; color: string; bg: string}> = 
 };
 const FALLBACK_META = {icon: 'settings-outline', color: '#6b7280', bg: '#f3f4f6'};
 
+// ─── HTML → structured segments ───────────────────────────────────────────────
+type Segment =
+  | {type: 'h1' | 'h2' | 'h3'; text: string}
+  | {type: 'p';       text: string}
+  | {type: 'bullet';  text: string}
+  | {type: 'number';  text: string; index: number}
+  | {type: 'quote';   text: string};
+
+function decodeEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
+function stripInline(html: string): string {
+  // Keep line breaks from <br>, strip everything else
+  return decodeEntities(
+    html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]*>/g, ''),
+  ).trim();
+}
+
+function parseHtmlSegments(html: string): Segment[] {
+  if (!html) {return [];}
+  const segments: Segment[] = [];
+
+  // Normalise: collapse whitespace between tags
+  const normalised = html.replace(/\s*\n\s*/g, '').trim();
+
+  // Extract block-level elements in order
+  const blockRe = /<(h[1-3]|p|li|blockquote)(\s[^>]*)?>[\s\S]*?<\/\1>/gi;
+  let listIndex = 0;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = blockRe.exec(normalised)) !== null) {
+    const tag  = match[1].toLowerCase() as string;
+    const inner = stripInline(match[0].replace(/^<[^>]*>/, '').replace(/<\/[^>]*>$/, ''));
+    if (!inner) {continue;}
+
+    if (tag === 'h1') {segments.push({type: 'h1', text: inner}); listIndex = 0;}
+    else if (tag === 'h2') {segments.push({type: 'h2', text: inner}); listIndex = 0;}
+    else if (tag === 'h3') {segments.push({type: 'h3', text: inner}); listIndex = 0;}
+    else if (tag === 'blockquote') {segments.push({type: 'quote', text: inner}); listIndex = 0;}
+    else if (tag === 'li') {
+      // Detect ordered vs unordered by looking at what wraps the li
+      const before = normalised.slice(0, match.index);
+      const lastOl = before.lastIndexOf('<ol');
+      const lastUl = before.lastIndexOf('<ul');
+      if (lastOl > lastUl) {
+        listIndex += 1;
+        segments.push({type: 'number', text: inner, index: listIndex});
+      } else {
+        listIndex = 0;
+        segments.push({type: 'bullet', text: inner});
+      }
+    } else {
+      listIndex = 0;
+      segments.push({type: 'p', text: inner});
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  // If nothing was parsed (plain text or simple HTML), fall back to stripped text
+  if (segments.length === 0) {
+    const plain = stripInline(normalised);
+    if (plain) {segments.push({type: 'p', text: plain});}
+  }
+
+  return segments;
+}
+
+/** Plain text for the description strip preview (no tags). */
+function htmlToPreview(html: string): string {
+  if (!html) {return '';}
+  return decodeEntities(
+    html
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<\/p>/gi, ' ')
+      .replace(/<\/h[1-6]>/gi, ' ')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, ' ')
+      .replace(/<[^>]*>/g, ''),
+  ).replace(/\s+/g, ' ').trim();
+}
+
+// ─── RichTextView — renders parsed segments ───────────────────────────────────
+function RichTextView({html}: {html: string}) {
+  const segments = useMemo(() => parseHtmlSegments(html), [html]);
+  if (segments.length === 0) {return null;}
+  return (
+    <View style={richStyles.container}>
+      {segments.map((seg, i) => {
+        switch (seg.type) {
+          case 'h1': return <Text key={i} style={richStyles.h1}>{seg.text}</Text>;
+          case 'h2': return <Text key={i} style={richStyles.h2}>{seg.text}</Text>;
+          case 'h3': return <Text key={i} style={richStyles.h3}>{seg.text}</Text>;
+          case 'bullet':
+            return (
+              <View key={i} style={richStyles.listRow}>
+                <Text style={richStyles.bullet}>•</Text>
+                <Text style={richStyles.listText}>{seg.text}</Text>
+              </View>
+            );
+          case 'number':
+            return (
+              <View key={i} style={richStyles.listRow}>
+                <Text style={richStyles.bullet}>{seg.index}.</Text>
+                <Text style={richStyles.listText}>{seg.text}</Text>
+              </View>
+            );
+          case 'quote':
+            return (
+              <View key={i} style={richStyles.quoteBlock}>
+                <Text style={richStyles.quoteText}>{seg.text}</Text>
+              </View>
+            );
+          default:
+            return <Text key={i} style={richStyles.p}>{seg.text}</Text>;
+        }
+      })}
+    </View>
+  );
+}
+
+const richStyles = StyleSheet.create({
+  container: {gap: 6},
+  h1: {fontSize: FontSize.lg, fontWeight: '700', color: '#1e293b', marginTop: 8, marginBottom: 2},
+  h2: {fontSize: FontSize.md, fontWeight: '700', color: '#1e293b', marginTop: 6, marginBottom: 2},
+  h3: {fontSize: FontSize.sm, fontWeight: '700', color: '#1e293b', marginTop: 4, marginBottom: 2},
+  p:  {fontSize: FontSize.sm, color: '#374151', lineHeight: 21},
+  listRow: {flexDirection: 'row', gap: 7, alignItems: 'flex-start'},
+  bullet: {fontSize: FontSize.sm, color: Colors.textMuted, minWidth: 16},
+  listText: {flex: 1, fontSize: FontSize.sm, color: '#374151', lineHeight: 21},
+  quoteBlock: {
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.border,
+    paddingLeft: 10,
+    marginVertical: 2,
+  },
+  quoteText: {fontSize: FontSize.sm, color: Colors.textMuted, fontStyle: 'italic', lineHeight: 20},
+});
+
 // ─── Value type classification ────────────────────────────────────────────────
 type VType = 'dollar' | 'multiplier' | 'percent' | 'months' | 'sqft' | 'bool' | 'text' | 'count';
 
@@ -268,8 +416,25 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
 
   const meta = SERVICE_META[config.serviceId] ?? FALLBACK_META;
   const sections = useMemo(() => buildSections(config.config ?? {}), [config.config]);
-  const activeKey = activeSection ?? sections[0]?.sectionKey ?? null;
+
+  // "__desc__" synthetic tab — only added when a description exists
+  const hasDescription = Boolean(config.description);
+  const allTabs = useMemo(() => {
+    if (!hasDescription) {return sections;}
+    return [
+      {sectionKey: '__desc__', title: 'Description', icon: 'document-text-outline', fields: [], subsections: []},
+      ...sections,
+    ];
+  }, [sections, hasDescription]);
+
+  const activeKey = activeSection ?? allTabs[0]?.sectionKey ?? null;
   const activeSecObj = sections.find(s => s.sectionKey === activeKey) ?? sections[0];
+
+  // Plain-text preview for the strip below the header
+  const descPreview = useMemo(
+    () => (config.description ? htmlToPreview(config.description) : ''),
+    [config.description],
+  );
 
   return (
     <View style={[cardStyles.card, expanded && cardStyles.cardOpen]}>
@@ -319,18 +484,18 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
         </View>
       )}
 
-      {/* Description strip */}
-      {config.description ? (
+      {/* Description strip — plain-text preview, always visible */}
+      {descPreview ? (
         <View style={cardStyles.descStrip}>
           <Ionicons name="information-circle-outline" size={14} color="#93c5fd" />
-          <Text style={cardStyles.descText}>{config.description}</Text>
+          <Text style={cardStyles.descText} numberOfLines={2}>{descPreview}</Text>
         </View>
       ) : null}
 
       {/* Expanded body */}
       {expanded && (
         <View style={cardStyles.body}>
-          {sections.length === 0 ? (
+          {allTabs.length === 0 ? (
             <Text style={cardStyles.emptyText}>No pricing configuration available.</Text>
           ) : (
             <>
@@ -340,7 +505,7 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
                 showsHorizontalScrollIndicator={false}
                 style={cardStyles.tabStrip}
                 contentContainerStyle={cardStyles.tabStripContent}>
-                {sections.map(s => {
+                {allTabs.map(s => {
                   const isActive = activeKey === s.sectionKey;
                   return (
                     <TouchableOpacity
@@ -357,17 +522,26 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
                 })}
               </ScrollView>
 
-              {/* Active section fields */}
-              {activeSecObj && (
+              {/* Description tab body */}
+              {activeKey === '__desc__' ? (
                 <View style={cardStyles.sectionBody}>
-                  {activeSecObj.fields.map(f => <FieldRow key={f.key} {...f} />)}
-                  {activeSecObj.subsections.map(sub => (
-                    <SubSection key={sub.sectionKey} section={sub} />
-                  ))}
-                  {activeSecObj.fields.length === 0 && activeSecObj.subsections.length === 0 && (
-                    <Text style={cardStyles.emptyText}>No fields in this section.</Text>
-                  )}
+                  <View style={cardStyles.descCard}>
+                    <RichTextView html={config.description!} />
+                  </View>
                 </View>
+              ) : (
+                /* Pricing section fields */
+                activeSecObj ? (
+                  <View style={cardStyles.sectionBody}>
+                    {activeSecObj.fields.map(f => <FieldRow key={f.key} {...f} />)}
+                    {activeSecObj.subsections.map(sub => (
+                      <SubSection key={sub.sectionKey} section={sub} />
+                    ))}
+                    {activeSecObj.fields.length === 0 && activeSecObj.subsections.length === 0 && (
+                      <Text style={cardStyles.emptyText}>No fields in this section.</Text>
+                    )}
+                  </View>
+                ) : null
               )}
             </>
           )}
@@ -548,6 +722,13 @@ const cardStyles = StyleSheet.create({
   sectionBody: {
     padding: Spacing.md,
     gap: Spacing.sm,
+  },
+  descCard: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
   },
   emptyText: {
     textAlign: 'center',
