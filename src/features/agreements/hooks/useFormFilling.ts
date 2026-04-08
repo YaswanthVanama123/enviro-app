@@ -16,6 +16,7 @@ export interface SmallProduct {
   qty: number;
   unitPrice: number;
   frequency: string;
+  costType?: 'productCost' | 'warranty';
 }
 
 export interface BigProduct {
@@ -33,6 +34,7 @@ export interface Dispenser {
   warrantyRate: number;
   replacementRate: number;
   frequency: string;
+  costType?: 'productCost' | 'warranty';
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -228,6 +230,7 @@ export function useFormFilling() {
               qty: 1,
               unitPrice: p.basePrice?.amount ?? 0,
               frequency: p.frequency ?? 'monthly',
+              costType: 'warranty' as const,
             }));
             console.log('[FormFilling] Pre-populated', next.smallProducts.length, 'products from catalog');
           }
@@ -244,6 +247,7 @@ export function useFormFilling() {
               warrantyRate: d.warrantyPricePerUnit?.amount ?? 0,
               replacementRate: d.basePrice?.amount ?? 0,
               frequency: d.frequency ?? 'monthly',
+              costType: 'productCost' as const,
             }));
             console.log('[FormFilling] Pre-populated', next.dispensers.length, 'dispensers from catalog');
           }
@@ -336,6 +340,7 @@ export function useFormFilling() {
       qty: 1,
       unitPrice: 0,
       frequency: 'monthly',
+      costType: 'warranty',
     };
     setForm(prev => ({...prev, smallProducts: [...prev.smallProducts, item]}));
   }, []);
@@ -381,6 +386,7 @@ export function useFormFilling() {
       warrantyRate: 0,
       replacementRate: 0,
       frequency: 'monthly',
+      costType: 'productCost',
     };
     setForm(prev => ({...prev, dispensers: [...prev.dispensers, item]}));
   }, []);
@@ -505,6 +511,7 @@ export function useFormFilling() {
           qty: p.qty,
           unitPrice: p.unitPrice,
           frequency: p.frequency,
+          costType: p.costType ?? 'warranty',
           total: p.qty * p.unitPrice,
         })),
         bigProducts: form.bigProducts.map(p => ({
@@ -520,7 +527,8 @@ export function useFormFilling() {
           warrantyRate: d.warrantyRate,
           replacementRate: d.replacementRate,
           frequency: d.frequency,
-          total: d.qty * (d.warrantyRate + d.replacementRate),
+          costType: d.costType ?? 'productCost',
+          total: d.qty * (d.costType === 'warranty' ? d.warrantyRate : d.replacementRate),
         })),
       },
       services: activeServices,

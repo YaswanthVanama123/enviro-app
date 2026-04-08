@@ -14,6 +14,19 @@ interface Step4ReviewProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const FREQ_MULT: Record<string, number> = {
+  daily:     30,
+  weekly:    4.33,
+  biweekly:  2,
+  monthly:   1,
+  quarterly: 1 / 3,
+  yearly:    1 / 12,
+};
+
+function getFreqMult(freq: string): number {
+  return FREQ_MULT[freq] ?? 1;
+}
+
 function SectionCard({icon, title, children}: {icon: string; title: string; children: React.ReactNode}) {
   return (
     <View style={styles.card}>
@@ -74,11 +87,31 @@ export function Step4Review({form}: Step4ReviewProps) {
     if (svc?.contractTotal) {serviceTotal += svc.contractTotal;}
   });
 
-  // Product totals (per-cycle, summed across all rows)
-  const smallProductTotal  = smallProducts.reduce((s, p) => s + p.qty * p.unitPrice, 0);
-  const bigProductTotal    = bigProducts.reduce((s, p) => s + p.qty * p.amount, 0);
-  const dispenserTotal     = dispensers.reduce((s, d) => s + d.qty * (d.warrantyRate + d.replacementRate), 0);
-  const productTotal       = smallProductTotal + bigProductTotal + dispenserTotal;
+  // Product totals — split by costType into one-time vs recurring
+  let smallOnce = 0;
+  let smallMonthly = 0;
+  smallProducts.forEach(p => {
+    const ct = p.costType ?? 'warranty';
+    const base = p.qty * p.unitPrice;
+    if (ct === 'productCost') { smallOnce += base; }
+    else { smallMonthly += base * getFreqMult(p.frequency); }
+  });
+
+  const bigProductMonthly = bigProducts.reduce(
+    (s, p) => s + p.qty * p.amount * getFreqMult(p.frequency), 0,
+  );
+
+  let dispOnce = 0;
+  let dispMonthly = 0;
+  dispensers.forEach(d => {
+    const ct = d.costType ?? 'productCost';
+    if (ct === 'warranty') { dispMonthly += d.qty * d.warrantyRate * getFreqMult(d.frequency); }
+    else { dispOnce += d.qty * d.replacementRate; }
+  });
+
+  const productOnceTotal    = smallOnce + dispOnce;
+  const productMonthlyTotal = smallMonthly + bigProductMonthly + dispMonthly;
+  const productTotal        = productOnceTotal + productMonthlyTotal * contractMonths;
 
   const hasProducts = smallProducts.length > 0 || bigProducts.length > 0 || dispensers.length > 0;
 
@@ -123,15 +156,23 @@ export function Step4Review({form}: Step4ReviewProps) {
       {/* Products */}
       {hasProducts && (
         <SectionCard icon="cube-outline" title="Products">
-          {smallProducts.map(p => (
-            <View key={p.id} style={styles.svcRow}>
-              <View style={styles.svcInfo}>
-                <Text style={styles.svcName}>{p.displayName || '(unnamed)'}</Text>
-                <Text style={styles.svcFreq}>Paper · {p.frequency} · qty {p.qty}</Text>
+          {smallProducts.map(p => {
+            const ct = p.costType ?? 'warranty';
+            const rowTotal = ct === 'productCost'
+              ? p.qty * p.unitPrice
+              : p.qty * p.unitPrice * getFreqMult(p.frequency) * contractMonths;
+            const chargeLabel = ct === 'productCost' ? 'Direct' : 'Warranty';
+            const freqInfo = ct === 'productCost' ? 'one-time' : p.frequency;
+            return (
+              <View key={p.id} style={styles.svcRow}>
+                <View style={styles.svcInfo}>
+                  <Text style={styles.svcName}>{p.displayName || '(unnamed)'}</Text>
+                  <Text style={styles.svcFreq}>Paper · {chargeLabel} · {freqInfo} · qty {p.qty}</Text>
+                </View>
+                <Text style={styles.svcTotal}>${rowTotal.toFixed(2)}</Text>
               </View>
-              <Text style={styles.svcTotal}>${(p.qty * p.unitPrice).toFixed(2)}</Text>
-            </View>
-          ))}
+            );
+          })}
           {bigProducts.map(p => (
             <View key={p.id} style={styles.svcRow}>
               <View style={styles.svcInfo}>
@@ -141,15 +182,23 @@ export function Step4Review({form}: Step4ReviewProps) {
               <Text style={styles.svcTotal}>${(p.qty * p.amount).toFixed(2)}</Text>
             </View>
           ))}
-          {dispensers.map(d => (
-            <View key={d.id} style={styles.svcRow}>
-              <View style={styles.svcInfo}>
-                <Text style={styles.svcName}>{d.displayName || '(unnamed)'}</Text>
-                <Text style={styles.svcFreq}>Dispenser · {d.frequency} · qty {d.qty}</Text>
+          {dispensers.map(d => {
+            const ct = d.costType ?? 'productCost';
+            const rowTotal = ct === 'warranty'
+              ? d.qty * d.warrantyRate * getFreqMult(d.frequency) * contractMonths
+              : d.qty * d.replacementRate;
+            const chargeLabel = ct === 'productCost' ? 'Direct' : 'Warranty';
+            const freqInfo = ct === 'productCost' ? 'one-time' : d.frequency;
+            return (
+              <View key={d.id} style={styles.svcRow}>
+                <View style={styles.svcInfo}>
+                  <Text style={styles.svcName}>{d.displayName || '(unnamed)'}</Text>
+                  <Text style={styles.svcFreq}>Dispenser · {chargeLabel} · {freqInfo} · qty {d.qty}</Text>
+                </View>
+                <Text style={styles.svcTotal}>${rowTotal.toFixed(2)}</Text>
               </View>
-              <Text style={styles.svcTotal}>${(d.qty * (d.warrantyRate + d.replacementRate)).toFixed(2)}</Text>
-            </View>
-          ))}
+            );
+          })}
           <View style={styles.subTotalRow}>
             <Text style={styles.subTotalLabel}>Products Subtotal</Text>
             <Text style={styles.subTotalValue}>${productTotal.toFixed(2)}</Text>

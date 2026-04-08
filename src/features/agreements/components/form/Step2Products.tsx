@@ -298,6 +298,32 @@ function FreqChips({value, onChange}: {value: string; onChange: (v: string) => v
   );
 }
 
+// ─── Cost type toggle ─────────────────────────────────────────────────────────
+
+function CostTypeToggle({value, onChange}: {
+  value: 'productCost' | 'warranty';
+  onChange: (v: 'productCost' | 'warranty') => void;
+}) {
+  return (
+    <View style={styles.costToggleRow}>
+      <TouchableOpacity
+        style={[styles.costToggleBtn, value === 'warranty' && styles.costToggleBtnActive]}
+        onPress={() => onChange('warranty')}>
+        <Text style={[styles.costToggleText, value === 'warranty' && styles.costToggleTextActive]}>
+          Warranty
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.costToggleBtn, value === 'productCost' && styles.costToggleBtnActive]}
+        onPress={() => onChange('productCost')}>
+        <Text style={[styles.costToggleText, value === 'productCost' && styles.costToggleTextActive]}>
+          Direct Price
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── Small Product Row ────────────────────────────────────────────────────────
 
 function SmallProductRow({
@@ -309,6 +335,7 @@ function SmallProductRow({
   onRemove: () => void;
   onOpenCatalog: () => void;
 }) {
+  const costType = product.costType ?? 'warranty';
   const total = product.qty * product.unitPrice;
   return (
     <View style={styles.rowCard}>
@@ -325,6 +352,10 @@ function SmallProductRow({
           <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
       </View>
+      <CostTypeToggle
+        value={costType}
+        onChange={v => onUpdate({costType: v})}
+      />
       <View style={styles.fieldRow}>
         <View style={styles.fieldUnit}>
           <Text style={styles.fieldLabel}>Qty</Text>
@@ -354,7 +385,11 @@ function SmallProductRow({
           <Text style={styles.totalAmt}>${total.toFixed(2)}</Text>
         </View>
       </View>
-      <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+      {costType === 'warranty' ? (
+        <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+      ) : (
+        <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
+      )}
     </View>
   );
 }
@@ -370,7 +405,11 @@ function DispenserRow({
   onRemove: () => void;
   onOpenCatalog: () => void;
 }) {
-  const total = product.qty * (product.warrantyRate + product.replacementRate);
+  const costType = product.costType ?? 'productCost';
+  const total = costType === 'warranty'
+    ? product.qty * product.warrantyRate
+    : product.qty * product.replacementRate;
+
   return (
     <View style={styles.rowCard}>
       <View style={styles.rowTopLine}>
@@ -390,6 +429,10 @@ function DispenserRow({
           <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
       </View>
+      <CostTypeToggle
+        value={costType}
+        onChange={v => onUpdate({costType: v})}
+      />
       <View style={styles.fieldRow}>
         <View style={styles.fieldUnit}>
           <Text style={styles.fieldLabel}>Qty</Text>
@@ -402,34 +445,41 @@ function DispenserRow({
             placeholderTextColor={Colors.textMuted}
           />
         </View>
-        <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
-          <Text style={styles.fieldLabel}>Warranty ($)</Text>
-          <TextInput
-            style={styles.numInput}
-            value={displayNum(product.warrantyRate)}
-            onChangeText={t => onUpdate({warrantyRate: parseNum(t)})}
-            keyboardType="numeric"
-            placeholder="0.00"
-            placeholderTextColor={Colors.textMuted}
-          />
-        </View>
-        <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
-          <Text style={styles.fieldLabel}>Replace ($)</Text>
-          <TextInput
-            style={styles.numInput}
-            value={displayNum(product.replacementRate)}
-            onChangeText={t => onUpdate({replacementRate: parseNum(t)})}
-            keyboardType="numeric"
-            placeholder="0.00"
-            placeholderTextColor={Colors.textMuted}
-          />
-        </View>
+        {costType === 'warranty' ? (
+          <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
+            <Text style={styles.fieldLabel}>Warranty ($)</Text>
+            <TextInput
+              style={styles.numInput}
+              value={displayNum(product.warrantyRate)}
+              onChangeText={t => onUpdate({warrantyRate: parseNum(t)})}
+              keyboardType="numeric"
+              placeholder="0.00"
+              placeholderTextColor={Colors.textMuted}
+            />
+          </View>
+        ) : (
+          <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
+            <Text style={styles.fieldLabel}>Replace ($)</Text>
+            <TextInput
+              style={styles.numInput}
+              value={displayNum(product.replacementRate)}
+              onChangeText={t => onUpdate({replacementRate: parseNum(t)})}
+              keyboardType="numeric"
+              placeholder="0.00"
+              placeholderTextColor={Colors.textMuted}
+            />
+          </View>
+        )}
         <View style={styles.totalCell}>
           <Text style={styles.fieldLabel}>Total</Text>
           <Text style={styles.totalAmt}>${total.toFixed(2)}</Text>
         </View>
       </View>
-      <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+      {costType === 'warranty' ? (
+        <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+      ) : (
+        <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
+      )}
     </View>
   );
 }
@@ -755,6 +805,36 @@ const styles = StyleSheet.create({
   freqTextActive: {
     color: '#fff',
     fontWeight: '700',
+  },
+  costToggleRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  costToggleBtn: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+  },
+  costToggleBtnActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  costToggleText: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  costToggleTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  noFreqNote: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
   },
 });
 
