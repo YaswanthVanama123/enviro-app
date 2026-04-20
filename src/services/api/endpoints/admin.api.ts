@@ -1,7 +1,5 @@
 import {apiClient} from '../client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface DashboardStats {
   manualUploads: number;
   savedDocuments: number;
@@ -19,8 +17,6 @@ export interface AdminDashboardData {
   stats: DashboardStats;
   documentStatus: DashboardStatusCounts;
 }
-
-// ─── API ──────────────────────────────────────────────────────────────────────
 
 export const adminApi = {
   async getDashboard(): Promise<AdminDashboardData | null> {

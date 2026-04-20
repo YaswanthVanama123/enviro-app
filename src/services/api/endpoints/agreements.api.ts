@@ -1,8 +1,6 @@
 import {API_BASE_URL} from '../../../config';
 import {apiClient} from '../client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export type FileType =
   | 'main_pdf'
   | 'attached_pdf'
@@ -70,8 +68,6 @@ export interface SavedFileGroup {
   contractMonths?: number | null;
 }
 
-// Matches the actual backend response shape:
-// { success, total, totalGroups, page, limit, groups: [], _metadata }
 export interface GroupedSavedFilesResult {
   success: boolean;
   total: number;
@@ -92,8 +88,6 @@ export interface GetSavedFilesOptions {
   includeDrafts?: boolean;
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-
 export const agreementsApi = {
   async getGrouped(
     options: GetSavedFilesOptions = {},
@@ -109,7 +103,6 @@ export const agreementsApi = {
     if (options.isTrashView !== undefined) {
       params.set('isTrashView', String(options.isTrashView));
     }
-    // Always include logs and drafts unless explicitly disabled
     params.set('includeLogs', String(options.includeLogs ?? true));
     params.set('includeDrafts', String(options.includeDrafts ?? true));
 
@@ -128,7 +121,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // fileType param is required by the backend to route the delete correctly
   async deleteFile(fileId: string, fileType: FileType): Promise<boolean> {
     const res = await apiClient.patch(
       `/api/pdf/files/${fileId}/delete?fileType=${fileType}`,
@@ -157,8 +149,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // Upload a file attachment to an agreement.
-  // Sends multipart/form-data with fields: file, agreementId, fileType.
   async uploadAttachment(
     agreementId: string,
     file: {uri: string; name: string; type: string},
@@ -176,7 +166,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // Backend endpoint: PATCH /api/pdf/customer-headers/{id}/status
   async updateAgreementStatus(
     agreementId: string,
     status: AgreementStatus,
@@ -188,7 +177,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // Per-file status: version_pdf → PATCH /api/versions/{id}/status
   async updateVersionStatus(
     versionId: string,
     status: AgreementStatus,
@@ -197,7 +185,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // Per-file status: attached_pdf → PATCH /api/manual-upload/{id}/status
   async updateAttachedFileStatus(
     fileId: string,
     status: AgreementStatus,
@@ -206,7 +193,6 @@ export const agreementsApi = {
     return !res.error;
   },
 
-  // Approval-documents grouped endpoint
   async getApprovalDocumentsGrouped(): Promise<GroupedSavedFilesResult & {totalFiles?: number} | null> {
     const res = await apiClient.get<GroupedSavedFilesResult & {totalFiles?: number}>(
       '/api/pdf/approval-documents/grouped',
@@ -214,8 +200,6 @@ export const agreementsApi = {
     return res.data ?? null;
   },
 };
-
-// ─── Zoho/Bigin Upload Types ──────────────────────────────────────────────────
 
 export interface ZohoUploadStatus {
   isFirstTime: boolean;
@@ -256,8 +240,6 @@ export interface ZohoUpdatePayload {
   dealId?: string;
 }
 
-// ─── Zoho/Bigin Upload API ────────────────────────────────────────────────────
-
 export const zohoApi = {
   async getStatus(agreementId: string): Promise<ZohoUploadStatus | null> {
     const res = await apiClient.get<ZohoUploadStatus>(
@@ -297,10 +279,6 @@ export const zohoApi = {
     return res.data ?? {success: false, message: res.error ?? 'Update failed'};
   },
 };
-
-// ─── File Download URL Helper ─────────────────────────────────────────────────
-// Builds the correct per-file-type download URL, appending the Bearer token
-// as a query param so Linking.openURL can access authenticated endpoints.
 
 export function getFileDownloadUrl(
   file: SavedFileListItem,

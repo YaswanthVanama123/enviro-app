@@ -19,8 +19,6 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 function SearchBar({
   value,
   onChange,
@@ -100,8 +98,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export function TrashScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -171,7 +167,6 @@ export function TrashScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Back header */}
       <View style={styles.backHeader}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -182,14 +177,12 @@ export function TrashScreen() {
         <Text style={styles.backHeaderTitle}>Trash</Text>
       </View>
 
-      {/* Sticky search */}
       <View style={styles.stickyTop}>
         <View style={styles.searchContainer}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </View>
       </View>
 
-      {/* Skeleton loading state */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
           {[1, 2, 3, 4].map(i => (
@@ -239,8 +232,6 @@ export function TrashScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const SKELETON_BG = '#e5e7eb';
 
 const styles = StyleSheet.create({
@@ -249,7 +240,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
-  // Back header
   backHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -274,14 +264,12 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  // Sticky top bar
   stickyTop: {
     backgroundColor: Colors.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
 
-  // Search
   searchContainer: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
@@ -305,7 +293,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  // Count line
   countText: {
     fontSize: FontSize.xs,
     color: Colors.textMuted,
@@ -314,13 +301,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // List
   listContent: {
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.sm,
   },
 
-  // Load more
   loadMoreBtn: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
@@ -337,7 +322,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  // Empty state
   emptyState: {
     alignItems: 'center',
     paddingVertical: 64,
@@ -369,7 +353,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Skeleton
   skeletonList: {
     flex: 1,
   },

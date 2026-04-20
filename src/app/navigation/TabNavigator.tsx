@@ -13,15 +13,7 @@ import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsS
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
 
-// ─── Single navigator instance ────────────────────────────────────────────────
-// Using ONE createBottomTabNavigator (no type param) so React Navigation can
-// cleanly swap screens when auth state changes. Two separate navigator instances
-// cannot be reconciled inside the same NavigationContainer, which is what caused
-// logout to silently fail.
-
 const Tab = createBottomTabNavigator();
-
-// ─── Icon map ─────────────────────────────────────────────────────────────────
 
 const TAB_ICON: Record<string, [string, string]> = {
   Home:      ['home-outline',                       'home'],
@@ -34,12 +26,9 @@ const TAB_ICON: Record<string, [string, string]> = {
   Admin:     ['shield-checkmark-outline',           'shield-checkmark'],
 };
 
-// ─── TabNavigator ─────────────────────────────────────────────────────────────
-
 export function TabNavigator() {
   const {isAuthenticated, authReady} = useAdminAuth();
 
-  // While restoring session from AsyncStorage, show a spinner
   if (!authReady) {
     return (
       <View style={styles.loading}>
@@ -70,7 +59,6 @@ export function TabNavigator() {
       })}>
 
       {isAuthenticated ? (
-        // ── Admin tabs ──────────────────────────────────────────────────────
         <>
           <Tab.Screen
             name="Dashboard"
@@ -115,7 +103,6 @@ export function TabNavigator() {
           />
         </>
       ) : (
-        // ── Regular tabs ────────────────────────────────────────────────────
         <>
           <Tab.Screen
             name="Home"
@@ -158,8 +145,6 @@ export function TabNavigator() {
     </Tab.Navigator>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   loading: {

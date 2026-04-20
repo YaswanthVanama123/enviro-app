@@ -53,7 +53,6 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
           />
         }>
 
-        {/* HERO */}
         <View style={[styles.hero, {paddingTop: insets.top + Spacing.lg}]}>
           <View style={styles.heroRow}>
             <View style={styles.heroLogo}>
@@ -81,7 +80,6 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
           </View>
         </View>
 
-        {/* QUICK ACTIONS */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Agreement Management</Text>
           <View style={styles.actionRow}>
@@ -121,7 +119,6 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
           />
         </View>
 
-        {/* ANALYTICS */}
         <View style={styles.section}>
           <View style={styles.analyticsHead}>
             <Text style={styles.sectionTitle}>Analytics</Text>

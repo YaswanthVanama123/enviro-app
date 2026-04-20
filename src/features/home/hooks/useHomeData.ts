@@ -10,7 +10,6 @@ import type {ChartBar} from '../components/BarChart';
 
 export type TimeFilter = 'week' | 'month' | 'year';
 
-/** Maps raw timeSeries from the API to ChartBar[] — mirrors webapp getChartData() */
 function buildChartData(
   filter: TimeFilter,
   timeSeries: TimeSeriesPoint[] | null | undefined,
@@ -18,7 +17,6 @@ function buildChartData(
 ): ChartBar[] {
   const today = new Date();
 
-  // ── Real time-series from backend ──────────────────────────────────────────
   if (timeSeries && timeSeries.length > 0) {
     if (filter === 'week') {
       const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -82,7 +80,6 @@ function buildChartData(
     }
   }
 
-  // ── Fallback: distribute totals across periods ──────────────────────────────
   if (filter === 'week') {
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return dayNames.map((label, i) => ({
@@ -105,7 +102,6 @@ function buildChartData(
     }));
   }
 
-  // year fallback
   const monthNames = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -153,7 +149,6 @@ export function useHomeData(): UseHomeDataResult {
       setApiError(null);
 
       try {
-        // Mirror webapp: calculate date range per filter
         let range: {startDate: string; endDate: string; groupBy: string};
         if (filter === 'week') {range = getWeekRange();}
         else if (filter === 'month') {range = getMonthRange();}
@@ -161,7 +156,6 @@ export function useHomeData(): UseHomeDataResult {
 
         const result = await pdfApi.getDocumentStatusCounts(range);
 
-        // Update totals — guard against unexpected response shapes
         const safeCounts: StatusCounts = {
           done: result?.counts?.done ?? 0,
           pending: result?.counts?.pending ?? 0,
@@ -176,11 +170,9 @@ export function useHomeData(): UseHomeDataResult {
         };
         setCounts(safeCounts);
 
-        // Build chart data (time-series preferred, totals as fallback)
         setChartData(buildChartData(filter, result?.timeSeries, safeCounts));
       } catch (err: any) {
         setApiError(err?.message || 'Failed to load data');
-        // Keep previous data visible on error
       } finally {
         setLoading(false);
         setRefreshing(false);

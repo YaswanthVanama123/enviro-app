@@ -22,26 +22,22 @@ type PricingSubTab = 'products' | 'services';
 export function PricingTablesSection() {
   const [subTab, setSubTab] = useState<PricingSubTab>('products');
 
-  // Products state
   const [catalog, setCatalog] = useState<ProductCatalog | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogRefreshing, setCatalogRefreshing] = useState(false);
   const [activeFamily, setActiveFamily] = useState<string>('');
 
-  // Edit Base modal state
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState(false);
 
-  // Services state
   const [serviceConfigs, setServiceConfigs] = useState<ServiceConfig[]>([]);
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesRefreshing, setServicesRefreshing] = useState(false);
   const servicesLoaded = useRef(false);
 
-  // Load catalog on mount
   const fetchCatalog = useCallback(async (isRefresh = false) => {
     if (isRefresh) {setCatalogRefreshing(true);} else {setCatalogLoading(true);}
     const data = await pricingApi.getProductCatalog();
@@ -56,7 +52,6 @@ export function PricingTablesSection() {
     fetchCatalog();
   }, [fetchCatalog]);
 
-  // Lazy-load services when switching to services sub-tab
   const fetchServices = useCallback(async (isRefresh = false) => {
     if (isRefresh) {setServicesRefreshing(true);} else {setServicesLoading(true);}
     const data = await pricingApi.getServicePricing();
@@ -89,7 +84,6 @@ export function PricingTablesSection() {
     setEditError('');
     setEditSaving(true);
 
-    // Build updated families with new base price for the matching product
     const updatedFamilies = (catalog.families ?? []).map(family => ({
       ...family,
       products: family.products.map(p =>
@@ -107,7 +101,6 @@ export function PricingTablesSection() {
     setEditSaving(false);
     if (result.ok) {
       setEditSuccess(true);
-      // Update local catalog so the new price reflects immediately
       setCatalog(prev => prev ? {...prev, families: updatedFamilies} : prev);
       setTimeout(() => {
         setEditTarget(null);
@@ -124,7 +117,6 @@ export function PricingTablesSection() {
 
   return (
     <View style={styles.sectionShell}>
-      {/* Products / Services toggle */}
       <View style={styles.subTabToggle}>
         <TouchableOpacity
           style={[styles.subTabBtn, subTab === 'products' && styles.subTabBtnActive]}
@@ -154,7 +146,6 @@ export function PricingTablesSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Products sub-view */}
       {subTab === 'products' && (
         <>
           {catalogLoading ? (
@@ -222,7 +213,6 @@ export function PricingTablesSection() {
         </>
       )}
 
-      {/* Services sub-view */}
       {subTab === 'services' && (
         <ServicesPricingSubView
           configs={serviceConfigs}
@@ -232,7 +222,6 @@ export function PricingTablesSection() {
         />
       )}
 
-      {/* ── Edit Base Price Modal ── */}
       <Modal
         visible={editTarget !== null}
         transparent
@@ -243,7 +232,6 @@ export function PricingTablesSection() {
           activeOpacity={1}
           onPress={() => !editSaving && setEditTarget(null)}>
           <TouchableOpacity activeOpacity={1} style={modalStyles.card} onPress={() => {}}>
-            {/* Header */}
             <View style={modalStyles.header}>
               <View style={modalStyles.headerIconBox}>
                 <Ionicons name="pencil" size={16} color="#1d4ed8" />
@@ -259,7 +247,6 @@ export function PricingTablesSection() {
               )}
             </View>
 
-            {/* Body */}
             <View style={modalStyles.body}>
               {editSuccess ? (
                 <View style={modalStyles.successBox}>

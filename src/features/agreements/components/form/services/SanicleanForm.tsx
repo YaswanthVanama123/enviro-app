@@ -19,16 +19,12 @@ interface Props {
   pricingConfig?: any;
 }
 
-// ─── Default included items ───────────────────────────────────────────────────
-
 const DEFAULT_INCLUDED_ITEMS = [
   'SaniClean service',
   'Electrostatic spray (free)',
   'Air freshener service (free)',
   'Soap service (free)',
 ];
-
-// ─── Editable included list ───────────────────────────────────────────────────
 
 function IncludedItemsEditor({
   items,
@@ -160,8 +156,6 @@ function IncludedItemsEditor({
   );
 }
 
-// ─── Main form ────────────────────────────────────────────────────────────────
-
 export function SanicleanForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
@@ -264,8 +258,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     </ServiceCard>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inc = StyleSheet.create({
   container: {

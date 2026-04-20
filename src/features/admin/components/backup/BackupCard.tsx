@@ -21,7 +21,6 @@ export function BackupCard({backup, onRestore, onViewDetails}: BackupCardProps) 
 
   return (
     <View style={bStyles.card}>
-      {/* Header row */}
       <View style={bStyles.cardHeader}>
         <View style={bStyles.cardIconBox}>
           <Ionicons name="save-outline" size={18} color="#3b82f6" />
@@ -39,7 +38,6 @@ export function BackupCard({backup, onRestore, onViewDetails}: BackupCardProps) 
         ) : null}
       </View>
 
-      {/* Data summary */}
       {counts ? (
         <View style={bStyles.cardCounts}>
           {counts.priceFixCount !== undefined && (
@@ -81,7 +79,6 @@ export function BackupCard({backup, onRestore, onViewDetails}: BackupCardProps) 
         </View>
       )}
 
-      {/* Size + status row */}
       <View style={bStyles.cardMeta}>
         {backup.snapshotMetadata?.compressedSize !== undefined && (
           <Text style={bStyles.cardSize}>{formatFileSize(backup.snapshotMetadata.compressedSize)}</Text>
@@ -97,7 +94,6 @@ export function BackupCard({backup, onRestore, onViewDetails}: BackupCardProps) 
         </View>
       </View>
 
-      {/* Action buttons */}
       <View style={bStyles.cardActions}>
         <TouchableOpacity style={bStyles.detailsBtn} onPress={() => onViewDetails(backup)}>
           <Ionicons name="information-circle-outline" size={14} color="#2563eb" />

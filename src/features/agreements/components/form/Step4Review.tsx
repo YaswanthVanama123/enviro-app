@@ -6,13 +6,9 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Step4ReviewProps {
   form: FormState;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const FREQ_MULT: Record<string, number> = {
   daily:     30,
@@ -48,8 +44,6 @@ function ReviewRow({label, value}: {label: string; value: string | number}) {
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function Step4Review({form}: Step4ReviewProps) {
   const {
     headerTitle,
@@ -80,14 +74,12 @@ export function Step4Review({form}: Step4ReviewProps) {
     others: 'Others',
   };
 
-  // Service contract total
   let serviceTotal = 0;
   visibleServices.forEach(id => {
     const svc = services[id];
     if (svc?.contractTotal) {serviceTotal += svc.contractTotal;}
   });
 
-  // Product totals — split by costType into one-time vs recurring
   let smallOnce = 0;
   let smallMonthly = 0;
   smallProducts.forEach(p => {
@@ -119,7 +111,6 @@ export function Step4Review({form}: Step4ReviewProps) {
   const parkingTotal = parkingCharge * parkingChargeFrequency * contractMonths;
   const grandTotal   = serviceTotal  + productTotal + tripTotal + parkingTotal;
 
-  // Pricing indicator (Red / Green Line) — contract-total-based logic
   let totalCurrentContract  = 0;
   let totalOriginalContract = 0;
   visibleServices.forEach(id => {
@@ -137,13 +128,11 @@ export function Step4Review({form}: Step4ReviewProps) {
 
   return (
     <View style={styles.container}>
-      {/* Agreement title */}
       <View style={styles.titleBlock}>
         <Ionicons name="document-text" size={22} color={Colors.primary} />
         <Text style={styles.titleText} numberOfLines={2}>{headerTitle || 'New Agreement'}</Text>
       </View>
 
-      {/* Customer */}
       <SectionCard icon="person-outline" title="Customer Information">
         {customer0.valueLeft  ? <ReviewRow label="Customer Name"    value={customer0.valueLeft}  /> : null}
         {customer0.valueRight ? <ReviewRow label="Customer Contact" value={customer0.valueRight} /> : null}
@@ -153,7 +142,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         {customer2.valueRight ? <ReviewRow label="POC Phone"        value={customer2.valueRight} /> : null}
       </SectionCard>
 
-      {/* Products */}
       {hasProducts && (
         <SectionCard icon="cube-outline" title="Products">
           {smallProducts.map(p => {
@@ -206,7 +194,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         </SectionCard>
       )}
 
-      {/* Services */}
       {visibleServices.length > 0 && (
         <SectionCard icon="construct-outline" title="Services">
           {visibleServices.map(id => {
@@ -227,7 +214,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         </SectionCard>
       )}
 
-      {/* Contract */}
       <SectionCard icon="calendar-outline" title="Service Agreement">
         <ReviewRow label="Duration"       value={`${contractMonths} months`} />
         <ReviewRow label="Start Date"     value={displayDate} />
@@ -237,7 +223,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         {parkingCharge > 0 && <ReviewRow label="Parking Charge" value={`$${parkingCharge.toFixed(2)} / visit`} />}
       </SectionCard>
 
-      {/* Agreement Terms */}
       {serviceAgreement?.includeInPdf && (
         <SectionCard icon="document-text-outline" title="Agreement Terms">
           {serviceAgreement.retainDispensers && (
@@ -262,7 +247,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         </SectionCard>
       )}
 
-      {/* Pricing Indicator (Red / Green Line) */}
       {visibleServices.length > 0 && (
         <View style={[
           styles.pricingBanner,
@@ -298,7 +282,6 @@ export function Step4Review({form}: Step4ReviewProps) {
         </View>
       )}
 
-      {/* Grand total */}
       <View style={styles.grandTotal}>
         <Text style={styles.grandLabel}>Grand Total</Text>
         <Text style={styles.grandValue}>${grandTotal.toFixed(2)}</Text>
@@ -310,8 +293,6 @@ export function Step4Review({form}: Step4ReviewProps) {
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {

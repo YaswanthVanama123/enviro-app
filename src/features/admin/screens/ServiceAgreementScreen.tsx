@@ -12,11 +12,7 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type AgreementTab = 'terms' | 'labels';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TERM_LABELS = [
   'Property Ownership',
@@ -87,8 +83,6 @@ const LABEL_GROUPS: LabelGroup[] = [
   },
 ];
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-
 export function ServiceAgreementScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -137,7 +131,6 @@ export function ServiceAgreementScreen() {
     );
   };
 
-  // ── Loading skeleton ───────────────────────────────────────────────────────
   if (loading) {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
@@ -164,7 +157,6 @@ export function ServiceAgreementScreen() {
     );
   }
 
-  // ── Empty / error ──────────────────────────────────────────────────────────
   if (!draft) {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}]}>
@@ -187,13 +179,11 @@ export function ServiceAgreementScreen() {
     );
   }
 
-  // ── Main view ──────────────────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={[styles.screen, {paddingTop: insets.top}]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-      {/* Screen header */}
       <View style={styles.screenHeader}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -210,7 +200,6 @@ export function ServiceAgreementScreen() {
         )}
       </View>
 
-      {/* Sub-tab bar */}
       <View style={styles.tabBar}>
         {(['terms', 'labels'] as AgreementTab[]).map(tab => (
           <TouchableOpacity
@@ -230,7 +219,6 @@ export function ServiceAgreementScreen() {
         ))}
       </View>
 
-      {/* Info banner */}
       <View style={styles.infoBanner}>
         <Ionicons name="information-circle-outline" size={15} color="#2563eb" />
         <Text style={styles.infoBannerText}>
@@ -240,7 +228,6 @@ export function ServiceAgreementScreen() {
         </Text>
       </View>
 
-      {/* Scrollable content */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -248,7 +235,6 @@ export function ServiceAgreementScreen() {
 
         {activeTab === 'terms' ? (
           <>
-            {/* 7 Agreement terms */}
             <View style={styles.sectionCard}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="list-outline" size={14} color={Colors.primary} />
@@ -278,7 +264,6 @@ export function ServiceAgreementScreen() {
               })}
             </View>
 
-            {/* Agreement note */}
             <View style={styles.sectionCard}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="create-outline" size={14} color={Colors.primary} />
@@ -327,7 +312,6 @@ export function ServiceAgreementScreen() {
         <View style={{height: Spacing.xl}} />
       </ScrollView>
 
-      {/* Save footer — always visible, disabled when no changes */}
       <View style={[styles.saveFooter, {paddingBottom: insets.bottom > 0 ? insets.bottom : Spacing.md}]}>
         <TouchableOpacity
           style={[styles.discardBtn, !isDirty && {opacity: 0.4}]}
@@ -348,8 +332,6 @@ export function ServiceAgreementScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   screen: {
@@ -391,7 +373,6 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
 
-  // Sub-tab bar
   tabBar: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
@@ -420,7 +401,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  // Info banner
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -437,12 +417,10 @@ const styles = StyleSheet.create({
     color: '#1e40af',
   },
 
-  // Scroll
   scrollContent: {
     padding: Spacing.md,
   },
 
-  // Section card
   sectionCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -475,7 +453,6 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
 
-  // Term blocks
   termBlock: {
     gap: Spacing.xs,
     padding: Spacing.md,
@@ -523,7 +500,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // Label fields
   labelField: {
     gap: 5,
     paddingVertical: Spacing.sm,
@@ -555,7 +531,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
 
-  // Save footer
   saveFooter: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -596,7 +571,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Loading skeleton
   loadingBox: {
     flex: 1,
     padding: Spacing.md,
@@ -617,7 +591,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
 
-  // Empty state
   emptyState: {
     flex: 1,
     alignItems: 'center',

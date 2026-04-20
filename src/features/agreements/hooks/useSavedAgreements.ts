@@ -6,8 +6,6 @@ import {
   GetSavedFilesOptions,
 } from '../../../services/api/endpoints/agreements.api';
 
-// ─── Public interface ─────────────────────────────────────────────────────────
-
 export interface UseSavedAgreementsResult {
   agreements: SavedFileGroup[];
   loading: boolean;
@@ -27,8 +25,6 @@ export interface UseSavedAgreementsResult {
 
 const PAGE_SIZE = 20;
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useSavedAgreements(): UseSavedAgreementsResult {
   const [agreements, setAgreements] = useState<SavedFileGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +36,6 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
   const [searchQuery, setSearchQueryState] = useState('');
   const [activeFilter, setActiveFilterState] = useState('all');
 
-  // Refs to capture latest values without stale closures
   const searchRef = useRef('');
   const filterRef = useRef('all');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,7 +76,6 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       }
 
       if (result) {
-        // Backend returns flat: { total, page, limit, groups[] }
         const items = result.groups ?? [];
         setAgreements(prev => (append ? [...prev, ...items] : items));
         setTotal(result.total ?? items.length);
@@ -97,7 +91,6 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
     [],
   );
 
-  // Initial load
   useEffect(() => {
     fetchData({
       pageNum: 1,
@@ -106,7 +99,6 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       append: false,
       isRefresh: false,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setSearchQuery = useCallback(

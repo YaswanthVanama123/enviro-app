@@ -9,8 +9,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Frequency options ────────────────────────────────────────────────────────
-
 const PROD_FREQ = [
   {value: 'daily',     label: 'Daily'},
   {value: 'weekly',    label: 'Weekly'},
@@ -19,8 +17,6 @@ const PROD_FREQ = [
   {value: 'quarterly', label: 'Qtrly'},
   {value: 'yearly',    label: 'Yearly'},
 ];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CatalogItemFlat {
   key: string;
@@ -46,8 +42,6 @@ interface Step2ProductsProps {
   onIncludeProductsTableChange: (v: boolean) => void;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function parseNum(t: string): number {
   const n = parseFloat(t);
   return isNaN(n) ? 0 : n;
@@ -56,8 +50,6 @@ function parseNum(t: string): number {
 function displayNum(n: number): string {
   return n === 0 ? '' : String(n);
 }
-
-// ─── Autocomplete name input ──────────────────────────────────────────────────
 
 function NameAutocompleteInput({
   value,
@@ -88,7 +80,6 @@ function NameAutocompleteInput({
 
   return (
     <View style={auto.wrapper}>
-      {/* Input row */}
       <View style={[auto.inputRow, showDropdown && auto.inputRowOpen]}>
         <TextInput
           style={auto.input}
@@ -104,7 +95,6 @@ function NameAutocompleteInput({
         </TouchableOpacity>
       </View>
 
-      {/* Inline dropdown */}
       {showDropdown && (
         <View style={auto.dropdown}>
           {suggestions.map((item, idx) => (
@@ -124,8 +114,6 @@ function NameAutocompleteInput({
     </View>
   );
 }
-
-// ─── Full catalog picker modal ────────────────────────────────────────────────
 
 type PickCallback = (item: CatalogItemFlat) => void;
 
@@ -185,7 +173,6 @@ function CatalogPickerModal({
             </TouchableOpacity>
           </View>
 
-          {/* Search bar */}
           <View style={cp.searchRow}>
             <Ionicons name="search-outline" size={16} color={Colors.textMuted} />
             <TextInput
@@ -255,8 +242,6 @@ function CatalogPickerModal({
   );
 }
 
-// ─── Section header ───────────────────────────────────────────────────────────
-
 function SectionHeader({title, icon, count, onAdd}: {
   title: string; icon: string; count: number; onAdd: () => void;
 }) {
@@ -279,8 +264,6 @@ function SectionHeader({title, icon, count, onAdd}: {
   );
 }
 
-// ─── Frequency chips ──────────────────────────────────────────────────────────
-
 function FreqChips({value, onChange}: {value: string; onChange: (v: string) => void}) {
   return (
     <View style={styles.freqRow}>
@@ -297,8 +280,6 @@ function FreqChips({value, onChange}: {value: string; onChange: (v: string) => v
     </View>
   );
 }
-
-// ─── Cost type toggle ─────────────────────────────────────────────────────────
 
 function CostTypeToggle({value, onChange}: {
   value: 'productCost' | 'warranty';
@@ -323,8 +304,6 @@ function CostTypeToggle({value, onChange}: {
     </View>
   );
 }
-
-// ─── Small Product Row ────────────────────────────────────────────────────────
 
 function SmallProductRow({
   product, catalogItems, onUpdate, onRemove, onOpenCatalog,
@@ -393,8 +372,6 @@ function SmallProductRow({
     </View>
   );
 }
-
-// ─── Dispenser Row ────────────────────────────────────────────────────────────
 
 function DispenserRow({
   product, catalogItems, onUpdate, onRemove, onOpenCatalog,
@@ -484,8 +461,6 @@ function DispenserRow({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export function Step2Products({
   smallProducts,
   dispensers,
@@ -501,7 +476,6 @@ export function Step2Products({
 }: Step2ProductsProps) {
   const [pickerCallback, setPickerCallback] = useState<PickCallback | null>(null);
 
-  // Flatten catalog — all items for the full picker modal
   const allCatalogItems = useMemo<CatalogItemFlat[]>(() => {
     if (!productCatalog?.families) {return [];}
     const items: CatalogItemFlat[] = [];
@@ -522,7 +496,6 @@ export function Step2Products({
     return items;
   }, [productCatalog]);
 
-  // Separate dispenser items for autocomplete
   const dispenserCatalogItems = useMemo(
     () => allCatalogItems.filter(it => it.warrantyRate > 0),
     [allCatalogItems],
@@ -535,7 +508,6 @@ export function Step2Products({
   return (
     <View style={styles.container}>
 
-      {/* Full catalog picker modal */}
       <CatalogPickerModal
         visible={pickerCallback !== null}
         items={allCatalogItems}
@@ -543,7 +515,6 @@ export function Step2Products({
         onClose={() => setPickerCallback(null)}
       />
 
-      {/* Small Products (Paper / Supplies) */}
       <View style={styles.section}>
         <SectionHeader
           icon="document-outline"
@@ -569,7 +540,6 @@ export function Step2Products({
         )}
       </View>
 
-      {/* Dispensers */}
       <View style={styles.section}>
         <SectionHeader
           icon="cube-outline"
@@ -599,7 +569,6 @@ export function Step2Products({
         )}
       </View>
 
-      {/* Include in PDF checkbox */}
       <TouchableOpacity
         style={styles.includeCheckboxRow}
         onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
@@ -615,8 +584,6 @@ export function Step2Products({
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -838,8 +805,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// ─── Autocomplete styles ──────────────────────────────────────────────────────
-
 const auto = StyleSheet.create({
   wrapper: {
     flex: 1,
@@ -912,8 +877,6 @@ const auto = StyleSheet.create({
     color: Colors.primary,
   },
 });
-
-// ─── Catalog picker styles ────────────────────────────────────────────────────
 
 const cp = StyleSheet.create({
   overlay: {

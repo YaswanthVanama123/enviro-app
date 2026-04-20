@@ -20,25 +20,19 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type ForgotStep = 'developer' | 'reset';
-
-// ─── AdminPanelScreen ─────────────────────────────────────────────────────────
 
 export function AdminPanelScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const {user, isAuthenticated, authReady, login, logout} = useAdminAuth();
 
-  // Login form
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotStep, setForgotStep] = useState<ForgotStep>('developer');
   const [developerName, setDeveloperName] = useState('');
@@ -49,8 +43,6 @@ export function AdminPanelScreen() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
-
-  // ── Login ────────────────────────────────────────────────────────────────
 
   const handleLogin = useCallback(async () => {
     if (!username.trim() || !password) {
@@ -64,16 +56,12 @@ export function AdminPanelScreen() {
     setLoading(false);
   }, [username, password, login]);
 
-  // ── Logout ───────────────────────────────────────────────────────────────
-
   const handleLogout = useCallback(async () => {
     await logout();
     setUsername('');
     setPassword('');
     setLoginError(null);
   }, [logout]);
-
-  // ── Forgot password ──────────────────────────────────────────────────────
 
   const openForgotModal = useCallback(() => {
     setShowForgotModal(true);
@@ -135,8 +123,6 @@ export function AdminPanelScreen() {
     }
   }, [newPassword, confirmPassword, developerName, closeForgotModal]);
 
-  // ── Loading splash ────────────────────────────────────────────────────────
-
   if (!authReady) {
     return (
       <View style={[styles.screen, {paddingTop: insets.top}, styles.center]}>
@@ -144,8 +130,6 @@ export function AdminPanelScreen() {
       </View>
     );
   }
-
-  // ── Logged-in view ────────────────────────────────────────────────────────
 
   if (isAuthenticated && user) {
     return (
@@ -201,8 +185,6 @@ export function AdminPanelScreen() {
       </View>
     );
   }
-
-  // ── Login form ────────────────────────────────────────────────────────────
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
@@ -295,7 +277,6 @@ export function AdminPanelScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ── Forgot Password Modal ── */}
       <Modal
         visible={showForgotModal}
         transparent
@@ -449,8 +430,6 @@ export function AdminPanelScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   flex: {flex: 1},
   screen: {flex: 1, backgroundColor: Colors.background},
@@ -530,7 +509,6 @@ const styles = StyleSheet.create({
   forgotBtn: {marginTop: Spacing.md, alignItems: 'center', paddingVertical: Spacing.sm},
   forgotBtnText: {fontSize: FontSize.sm, color: Colors.primary, fontWeight: '500'},
 
-  // Logged-in profile
   profileCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
@@ -613,7 +591,6 @@ const styles = StyleSheet.create({
   },
   logoutBtnText: {fontSize: FontSize.md, fontWeight: '600', color: Colors.primary},
 
-  // Forgot modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

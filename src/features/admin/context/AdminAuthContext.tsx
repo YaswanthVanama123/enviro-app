@@ -8,8 +8,6 @@ import React, {
 import {apiClient} from '../../../services/api/client';
 import {storage} from '../../../services/storage/storage.service';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface AdminUser {
   id: string;
   username: string;
@@ -23,8 +21,6 @@ interface AdminAuthContextValue {
   logout: () => Promise<void>;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
-
 const AdminAuthContext = createContext<AdminAuthContextValue>({
   user: null,
   isAuthenticated: false,
@@ -33,13 +29,10 @@ const AdminAuthContext = createContext<AdminAuthContextValue>({
   logout: async () => {},
 });
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
-
 export function AdminAuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // Restore persisted session on mount
   useEffect(() => {
     (async () => {
       const token = await storage.getToken();
@@ -89,8 +82,6 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     </AdminAuthContext.Provider>
   );
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useAdminAuth() {
   return useContext(AdminAuthContext);

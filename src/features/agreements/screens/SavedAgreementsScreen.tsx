@@ -19,8 +19,6 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Filter definitions ───────────────────────────────────────────────────────
-
 const FILTERS = [
   {key: 'all', label: 'All'},
   {key: 'saved', label: 'Saved'},
@@ -29,8 +27,6 @@ const FILTERS = [
   {key: 'approved_salesman', label: 'Approved'},
   {key: 'finalized', label: 'Finalized'},
 ];
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SearchBar({
   value,
@@ -141,8 +137,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export function SavedAgreementsScreen() {
   const insets = useSafeAreaInsets();
   const {
@@ -196,7 +190,6 @@ export function SavedAgreementsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Sticky search + filters */}
       <View style={styles.stickyTop}>
         <View style={styles.searchContainer}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
@@ -204,7 +197,6 @@ export function SavedAgreementsScreen() {
         <FilterChips active={activeFilter} onSelect={setActiveFilter} />
       </View>
 
-      {/* Skeleton loading state */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
           {[1, 2, 3, 4].map(i => (
@@ -255,8 +247,6 @@ export function SavedAgreementsScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const SKELETON_BG = '#e5e7eb';
 
 const styles = StyleSheet.create({
@@ -265,14 +255,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
-  // Sticky top bar
   stickyTop: {
     backgroundColor: Colors.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
 
-  // Search
   searchContainer: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
@@ -296,7 +284,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  // Filter chips
   filtersRow: {
     paddingBottom: Spacing.sm,
   },
@@ -331,7 +318,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Count line — matches webapp "185 agreements · 47 files"
   countText: {
     fontSize: FontSize.xs,
     color: Colors.textMuted,
@@ -340,13 +326,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // List — tight, like webapp table rows
   listContent: {
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.sm,
   },
 
-  // Load more
   loadMoreBtn: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
@@ -363,7 +347,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  // Empty state
   emptyState: {
     alignItems: 'center',
     paddingVertical: 64,
@@ -395,7 +378,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Skeleton
   skeletonList: {
     flex: 1,
   },

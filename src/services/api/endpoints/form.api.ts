@@ -1,7 +1,5 @@
 import {apiClient} from '../client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface HeaderRow {
   labelLeft: string;
   valueLeft: string;
@@ -59,15 +57,11 @@ export interface FormPayload {
   status?: string;
 }
 
-// ─── Default header rows matching webapp customer section ─────────────────────
-
 export const DEFAULT_HEADER_ROWS: HeaderRow[] = [
   {labelLeft: 'CUSTOMER NAME:', valueLeft: '', labelRight: 'CUSTOMER CONTACT:', valueRight: ''},
   {labelLeft: 'CUSTOMER NUMBER:', valueLeft: '', labelRight: 'POC EMAIL:', valueRight: ''},
   {labelLeft: 'POC NAME:', valueLeft: '', labelRight: 'POC PHONE:', valueRight: ''},
 ];
-
-// ─── Frequency multipliers (visits per month) ─────────────────────────────────
 
 export const FREQ_MULTIPLIER: Record<string, number> = {
   oneTime:      1,
@@ -95,8 +89,6 @@ export const FREQ_LABELS: Record<string, string> = {
 
 export const FREQ_OPTIONS = Object.entries(FREQ_LABELS).map(([value, label]) => ({value, label}));
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-
 export const formApi = {
   async createAgreement(payload: FormPayload): Promise<{id: string} | null> {
     const res = await apiClient.post<any>('/api/pdf/customer-header', payload);
@@ -117,7 +109,6 @@ export const formApi = {
     return raw ?? null;
   },
 
-  // Returns service pricing configs + service agreement template in one call
   async getAllServicePricing(): Promise<{
     serviceConfigs: any[];
     serviceAgreementTemplate: any | null;
@@ -138,9 +129,7 @@ export const formApi = {
     };
   },
 
-  // Returns the active/first admin header document (for default form template)
   async getAdminHeaders(): Promise<any | null> {
-    // Primary: fetch by known template ID (same approach as webapp)
     const ADMIN_TEMPLATE_ID = '692dc43b3811afcdae0d5547';
     console.log('[API] GET /api/pdf/admin-headers/' + ADMIN_TEMPLATE_ID);
     const directRes = await apiClient.get<any>(`/api/pdf/admin-headers/${ADMIN_TEMPLATE_ID}`);
@@ -150,7 +139,6 @@ export const formApi = {
     }
     console.warn('[API] /api/pdf/admin-headers direct fetch failed, falling back to list:', directRes.error);
 
-    // Fallback: list endpoint — response shape is { total, page, limit, items: [...] }
     console.log('[API] GET /api/pdf/admin-headers (list fallback)');
     const res = await apiClient.get<any>('/api/pdf/admin-headers?page=1&limit=20');
     if (res.error || !res.data) {
@@ -166,7 +154,6 @@ export const formApi = {
     return found;
   },
 
-  // Returns the active product catalog (families + products)
   async getProductCatalog(): Promise<any | null> {
     console.log('[API] GET /api/product-catalog/active');
     const res = await apiClient.get<any>('/api/product-catalog/active');
@@ -178,7 +165,6 @@ export const formApi = {
     return res.data ?? null;
   },
 
-  // Returns all service configs with display/active flags for the service picker
   async getAllServiceConfigs(): Promise<any[] | null> {
     console.log('[API] GET /api/service-configs');
     const res = await apiClient.get<any>('/api/service-configs');

@@ -25,7 +25,6 @@ export function FamilyCard({family, onAddProduct}: FamilyCardProps) {
       style={styles.familyCard}
       activeOpacity={0.8}
       onPress={() => setExpanded(e => !e)}>
-      {/* Card header */}
       <View style={styles.familyCardHeader}>
         <View style={[styles.familyCardIcon, {backgroundColor: color + '18'}]}>
           <Ionicons name={icon} size={20} color={color} />
@@ -43,7 +42,6 @@ export function FamilyCard({family, onAddProduct}: FamilyCardProps) {
         />
       </View>
 
-      {/* Preview chips (collapsed) */}
       {!expanded && (
         <View style={styles.familyCardChips}>
           {preview.map(p => (
@@ -63,7 +61,6 @@ export function FamilyCard({family, onAddProduct}: FamilyCardProps) {
         </View>
       )}
 
-      {/* Expanded product list */}
       {expanded && (
         <View style={styles.familyCardExpanded}>
           {family.products.map((p, idx) => (
@@ -94,7 +91,6 @@ export function FamilyCard({family, onAddProduct}: FamilyCardProps) {
               )}
             </View>
           ))}
-          {/* Add Product button */}
           <TouchableOpacity
             style={[styles.addProductBtn, {borderColor: color + '60', backgroundColor: color + '0d'}]}
             activeOpacity={0.7}
@@ -105,7 +101,6 @@ export function FamilyCard({family, onAddProduct}: FamilyCardProps) {
         </View>
       )}
 
-      {/* Add Product button when collapsed too */}
       {!expanded && (
         <TouchableOpacity
           style={[styles.addProductBtn, {borderColor: color + '60', backgroundColor: color + '0d'}]}

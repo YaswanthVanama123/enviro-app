@@ -58,7 +58,6 @@ export function ServicesPricingSubView({
 
   return (
     <View style={styles.sectionShell}>
-      {/* Service sub-tabs */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

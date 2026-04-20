@@ -1,7 +1,3 @@
-/**
- * Shared service form base component.
- * Each service form wraps this for consistent layout.
- */
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -11,10 +7,7 @@ import {FontSize} from '../../../../../theme/typography';
 import {FREQ_OPTIONS, FREQ_LABELS} from '../../../../../services/api/endpoints/form.api';
 import {DropdownRow, DollarRow, FormDivider, NumberRow, ToggleRow, CalcRow} from '../FormUI';
 
-// ─── Re-export common stuff for service forms ─────────────────────────────────
 export {DropdownRow, DollarRow, FormDivider, NumberRow, ToggleRow, CalcRow, FREQ_OPTIONS, FREQ_LABELS};
-
-// ─── Service Card wrapper ─────────────────────────────────────────────────────
 
 interface ServiceCardProps {
   serviceId: string;
@@ -32,7 +25,6 @@ interface ServiceCardProps {
 export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, onRemove, loading, notes, onNotesChange, children}: ServiceCardProps) {
   return (
     <View style={sc.card}>
-      {/* Header */}
       <View style={sc.header}>
         <View style={[sc.iconBox, {backgroundColor: iconBg}]}>
           <Ionicons name={icon} size={16} color={iconColor} />
@@ -52,7 +44,6 @@ export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, on
 
       {!loading && <View style={sc.body}>{children}</View>}
 
-      {/* Notes field — shown for all services; triggers approval when filled */}
       {!loading && onNotesChange !== undefined && (
         <View style={sc.notesContainer}>
           <Text style={sc.notesLabel}>Service Notes</Text>
@@ -69,8 +60,6 @@ export function ServiceCard({serviceId, displayName, icon, iconColor, iconBg, on
     </View>
   );
 }
-
-// ─── Totals block (shown at bottom of each service form) ─────────────────────
 
 interface TotalsBlockProps {
   frequency: string;
@@ -109,8 +98,6 @@ export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, 
   );
 }
 
-// ─── Calc totals helper ───────────────────────────────────────────────────────
-
 export function calcTotals(perVisitBase: number, frequency: string, contractMonths: number, customFieldsTotal: number = 0) {
   const mult = getFreqMultiplier(frequency);
   const isOneTime = frequency === 'oneTime';
@@ -118,7 +105,7 @@ export function calcTotals(perVisitBase: number, frequency: string, contractMont
 
   const perVisit = perVisitBase;
   const monthlyRecurring = isOneTime ? 0 : perVisit * mult;
-  const firstMonth = isOneTime ? 0 : perVisit * mult; // simplified: first month = monthly
+  const firstMonth = isOneTime ? 0 : perVisit * mult;
   const contractTotal = (isOneTime ? perVisit : monthlyRecurring * contractMonths) + customFieldsTotal;
 
   return {perVisit, firstMonth, monthlyRecurring, contractTotal};

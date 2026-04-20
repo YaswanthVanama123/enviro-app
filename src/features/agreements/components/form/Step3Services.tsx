@@ -5,7 +5,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Service form imports ─────────────────────────────────────────────────────
 import {SanicleanForm}          from './services/SanicleanForm';
 import {SaniscrubForm}          from './services/SaniscrubForm';
 import {FoamingDrainForm}        from './services/FoamingDrainForm';
@@ -18,8 +17,6 @@ import {JanitorialForm}          from './services/JanitorialForm';
 import {StripWaxForm}            from './services/StripWaxForm';
 import {ElectrostaticSprayForm}  from './services/ElectrostaticSprayForm';
 import {RefreshPowerScrubForm}   from './services/RefreshPowerScrubForm';
-
-// ─── Service catalog ──────────────────────────────────────────────────────────
 
 interface ServiceMeta {
   id: string;
@@ -45,8 +42,6 @@ const SERVICE_CATALOG: ServiceMeta[] = [
   {id: 'refreshPowerScrub',  label: 'Refresh Power Scrub',  icon: 'water-outline',            iconColor: '#0891b2', iconBg: '#cffafe', category: 'Specialty'},
 ];
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Step3ServicesProps {
   visibleServices: string[];
   services: Record<string, any>;
@@ -57,8 +52,6 @@ interface Step3ServicesProps {
   onRemoveService: (id: string) => void;
   onUpdateService: (id: string, data: any) => void;
 }
-
-// ─── Picker modal ─────────────────────────────────────────────────────────────
 
 function ServicePickerModal({
   visible,
@@ -113,8 +106,6 @@ function ServicePickerModal({
   );
 }
 
-// ─── Service form renderer ────────────────────────────────────────────────────
-
 function renderServiceForm(
   serviceId: string,
   data: any,
@@ -141,8 +132,6 @@ function renderServiceForm(
   }
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function Step3Services({
   visibleServices,
   services,
@@ -155,21 +144,19 @@ export function Step3Services({
 }: Step3ServicesProps) {
   const [showPicker, setShowPicker] = useState(false);
 
-  // Filter SERVICE_CATALOG using backend list if available
   const activeCatalog = useMemo(() => {
     if (!serviceConfigsList || serviceConfigsList.length === 0) {
       return SERVICE_CATALOG;
     }
     return SERVICE_CATALOG.filter(svc => {
       const sc = serviceConfigsList.find((c: any) => c.serviceId === svc.id);
-      if (!sc) {return true;} // not in backend list → show anyway
+      if (!sc) {return true;}
       return sc.adminByDisplay !== false && sc.isActive !== false;
     });
   }, [serviceConfigsList]);
 
   return (
     <View>
-      {/* Empty state */}
       {visibleServices.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="construct-outline" size={40} color={Colors.textMuted} />
@@ -178,7 +165,6 @@ export function Step3Services({
         </View>
       )}
 
-      {/* Service forms */}
       {visibleServices.map(serviceId =>
         renderServiceForm(
           serviceId,
@@ -190,13 +176,11 @@ export function Step3Services({
         ),
       )}
 
-      {/* Add service button */}
       <TouchableOpacity style={styles.addBtn} onPress={() => setShowPicker(true)}>
         <Ionicons name="add-circle" size={20} color={Colors.primary} />
         <Text style={styles.addBtnText}>Add Service</Text>
       </TouchableOpacity>
 
-      {/* Picker modal */}
       <ServicePickerModal
         visible={showPicker}
         current={visibleServices}
@@ -207,8 +191,6 @@ export function Step3Services({
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   emptyState: {

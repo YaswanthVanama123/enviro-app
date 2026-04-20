@@ -6,8 +6,6 @@ import {
   GetSavedFilesOptions,
 } from '../../../services/api/endpoints/agreements.api';
 
-// ─── Public interface ─────────────────────────────────────────────────────────
-
 export interface UseTrashResult {
   agreements: SavedFileGroup[];
   loading: boolean;
@@ -26,8 +24,6 @@ export interface UseTrashResult {
 }
 
 const PAGE_SIZE = 20;
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useTrash(): UseTrashResult {
   const [agreements, setAgreements] = useState<SavedFileGroup[]>([]);
@@ -92,10 +88,8 @@ export function useTrash(): UseTrashResult {
     [],
   );
 
-  // Initial load
   useEffect(() => {
     fetchData({pageNum: 1, search: '', append: false, isRefresh: false});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setSearchQuery = useCallback(

@@ -6,8 +6,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Built-in customer field definitions ──────────────────────────────────────
-
 const CUSTOMER_FIELDS: Array<{label: string; rowIdx: number; side: 'Left' | 'Right'; placeholder: string}> = [
   {label: 'Customer Name',    rowIdx: 0, side: 'Left',  placeholder: 'Company / Customer Name'},
   {label: 'Customer Contact', rowIdx: 0, side: 'Right', placeholder: 'Contact Person'},
@@ -17,16 +15,12 @@ const CUSTOMER_FIELDS: Array<{label: string; rowIdx: number; side: 'Left' | 'Rig
   {label: 'POC Phone',        rowIdx: 2, side: 'Right', placeholder: 'POC Direct Phone'},
 ];
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Step1CustomerProps {
   headerTitle: string;
   onHeaderTitleChange: (v: string) => void;
   headerRows: HeaderRow[];
   onRowChange: (idx: number, field: keyof HeaderRow, value: string) => void;
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function Step1Customer({
   headerTitle,
@@ -36,7 +30,6 @@ export function Step1Customer({
 }: Step1CustomerProps) {
   return (
     <View>
-      {/* Agreement Title */}
       <FormSection icon="document-text-outline" title="Agreement Title">
         <View style={styles.titleRow}>
           <TextInput
@@ -54,7 +47,6 @@ export function Step1Customer({
 
       <FormDivider />
 
-      {/* Customer Info Fields */}
       <FormSection icon="person-outline" title="Customer Information">
         {CUSTOMER_FIELDS.map(f => {
           const row = headerRows[f.rowIdx] ?? {labelLeft: '', valueLeft: '', labelRight: '', valueRight: ''};
@@ -86,8 +78,6 @@ export function Step1Customer({
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   titleRow: {

@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 
-  // Variants
   primary: {
     backgroundColor: Colors.primary,
   },
@@ -76,7 +75,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
 
-  // Sizes
   size_sm: {
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.md,
@@ -90,7 +88,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
 
-  // Labels
   label: {
     fontWeight: '700',
   },

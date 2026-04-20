@@ -15,8 +15,6 @@ class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    // Token is set explicitly via setToken() after login.
-    // AsyncStorage is only used when persisting login — not needed at construction.
   }
 
   setUnauthorizedCallback(cb: UnauthorizedCallback | null) {
@@ -137,7 +135,6 @@ class ApiClient {
     }
   }
 
-  // Multipart form-data upload — do NOT set Content-Type; fetch sets it with boundary automatically
   async postFormData<T>(endpoint: string, body: FormData): Promise<ApiResponse<T>> {
     try {
       const headers: Record<string, string> = {};

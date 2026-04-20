@@ -22,7 +22,6 @@ export function BackupManagementSection() {
 
   return (
     <View style={{flex: 1}}>
-      {/* Sub-tab bar */}
       <View style={bStyles.subTabBar}>
         {SUB_TABS.map(t => (
           <TouchableOpacity

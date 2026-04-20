@@ -10,7 +10,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Per-service icon + accent colour (Ionicons) ──────────────────────────────
 const SERVICE_META: Record<string, {icon: string; color: string; bg: string}> = {
   rpmWindows:         {icon: 'apps-outline',             color: '#0ea5e9', bg: '#e0f2fe'},
   saniclean:          {icon: 'sparkles-outline',         color: '#7c3aed', bg: '#ede9fe'},
@@ -30,7 +29,6 @@ const SERVICE_META: Record<string, {icon: string; color: string; bg: string}> = 
 };
 const FALLBACK_META = {icon: 'settings-outline', color: '#6b7280', bg: '#f3f4f6'};
 
-// ─── HTML → structured segments ───────────────────────────────────────────────
 type Segment =
   | {type: 'h1' | 'h2' | 'h3'; text: string}
   | {type: 'p';       text: string}
@@ -49,7 +47,6 @@ function decodeEntities(str: string): string {
 }
 
 function stripInline(html: string): string {
-  // Keep line breaks from <br>, strip everything else
   return decodeEntities(
     html
       .replace(/<br\s*\/?>/gi, '\n')
@@ -61,10 +58,8 @@ function parseHtmlSegments(html: string): Segment[] {
   if (!html) {return [];}
   const segments: Segment[] = [];
 
-  // Normalise: collapse whitespace between tags
   const normalised = html.replace(/\s*\n\s*/g, '').trim();
 
-  // Extract block-level elements in order
   const blockRe = /<(h[1-3]|p|li|blockquote)(\s[^>]*)?>[\s\S]*?<\/\1>/gi;
   let listIndex = 0;
   let lastIndex = 0;
@@ -80,7 +75,6 @@ function parseHtmlSegments(html: string): Segment[] {
     else if (tag === 'h3') {segments.push({type: 'h3', text: inner}); listIndex = 0;}
     else if (tag === 'blockquote') {segments.push({type: 'quote', text: inner}); listIndex = 0;}
     else if (tag === 'li') {
-      // Detect ordered vs unordered by looking at what wraps the li
       const before = normalised.slice(0, match.index);
       const lastOl = before.lastIndexOf('<ol');
       const lastUl = before.lastIndexOf('<ul');
@@ -98,7 +92,6 @@ function parseHtmlSegments(html: string): Segment[] {
     lastIndex = match.index + match[0].length;
   }
 
-  // If nothing was parsed (plain text or simple HTML), fall back to stripped text
   if (segments.length === 0) {
     const plain = stripInline(normalised);
     if (plain) {segments.push({type: 'p', text: plain});}
@@ -107,7 +100,6 @@ function parseHtmlSegments(html: string): Segment[] {
   return segments;
 }
 
-/** Plain text for the description strip preview (no tags). */
 function htmlToPreview(html: string): string {
   if (!html) {return '';}
   return decodeEntities(
@@ -121,7 +113,6 @@ function htmlToPreview(html: string): string {
   ).replace(/\s+/g, ' ').trim();
 }
 
-// ─── RichTextView — renders parsed segments ───────────────────────────────────
 function RichTextView({html}: {html: string}) {
   const segments = useMemo(() => parseHtmlSegments(html), [html]);
   if (segments.length === 0) {return null;}
@@ -178,7 +169,6 @@ const richStyles = StyleSheet.create({
   quoteText: {fontSize: FontSize.sm, color: Colors.textMuted, fontStyle: 'italic', lineHeight: 20},
 });
 
-// ─── Value type classification ────────────────────────────────────────────────
 type VType = 'dollar' | 'multiplier' | 'percent' | 'months' | 'sqft' | 'bool' | 'text' | 'count';
 
 const VALUE_COLORS: Record<VType, string> = {
@@ -217,7 +207,6 @@ function formatPrimitive(key: string, value: unknown): {display: string; unit: s
   }
 }
 
-// ─── Section / field types ────────────────────────────────────────────────────
 type FieldEntry = {key: string; label: string; display: string; unit: string; vtype: VType};
 type Section    = {sectionKey: string; title: string; icon: string; fields: FieldEntry[]; subsections: Section[]};
 
@@ -306,7 +295,6 @@ function buildSections(obj: Record<string, unknown>): Section[] {
   return sections;
 }
 
-// ─── FieldRow ─────────────────────────────────────────────────────────────────
 function FieldRow({label, display, unit, vtype}: FieldEntry) {
   return (
     <View style={fieldStyles.row}>
@@ -355,7 +343,6 @@ const fieldStyles = StyleSheet.create({
   },
 });
 
-// ─── SubSection ───────────────────────────────────────────────────────────────
 function SubSection({section}: {section: Section}) {
   const [open, setOpen] = useState(true);
   if (section.fields.length === 0 && section.subsections.length === 0) {return null;}
@@ -409,7 +396,6 @@ const subStyles = StyleSheet.create({
   },
 });
 
-// ─── ServiceReferenceCard ─────────────────────────────────────────────────────
 function ServiceReferenceCard({config}: {config: ServiceConfig}) {
   const [expanded, setExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -417,7 +403,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
   const meta = SERVICE_META[config.serviceId] ?? FALLBACK_META;
   const sections = useMemo(() => buildSections(config.config ?? {}), [config.config]);
 
-  // "__desc__" synthetic tab — only added when a description exists
   const hasDescription = Boolean(config.description);
   const allTabs = useMemo(() => {
     if (!hasDescription) {return sections;}
@@ -430,7 +415,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
   const activeKey = activeSection ?? allTabs[0]?.sectionKey ?? null;
   const activeSecObj = sections.find(s => s.sectionKey === activeKey) ?? sections[0];
 
-  // Plain-text preview for the strip below the header
   const descPreview = useMemo(
     () => (config.description ? htmlToPreview(config.description) : ''),
     [config.description],
@@ -438,17 +422,14 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
 
   return (
     <View style={[cardStyles.card, expanded && cardStyles.cardOpen]}>
-      {/* Header */}
       <TouchableOpacity
         style={[cardStyles.header, {borderLeftColor: meta.color}]}
         onPress={() => setExpanded(e => !e)}
         activeOpacity={0.8}>
-        {/* Icon badge */}
         <View style={[cardStyles.iconWrap, {backgroundColor: meta.bg}]}>
           <Ionicons name={meta.icon} size={18} color={meta.color} />
         </View>
 
-        {/* Name + ID */}
         <View style={cardStyles.titles}>
           <Text style={cardStyles.name} numberOfLines={1}>
             {config.label || config.serviceId}
@@ -456,7 +437,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
           <Text style={cardStyles.id}>{config.serviceId}</Text>
         </View>
 
-        {/* Active badge + chevron */}
         <View style={cardStyles.headerRight}>
           <View style={[cardStyles.activeBadge, !config.isActive && cardStyles.inactiveBadge]}>
             <View style={[cardStyles.dot, !config.isActive && cardStyles.dotInactive]} />
@@ -468,7 +448,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
         </View>
       </TouchableOpacity>
 
-      {/* Tags row */}
       {config.tags && config.tags.length > 0 && (
         <View style={cardStyles.tagsRow}>
           {config.version ? (
@@ -484,7 +463,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
         </View>
       )}
 
-      {/* Description strip — plain-text preview, always visible */}
       {descPreview ? (
         <View style={cardStyles.descStrip}>
           <Ionicons name="information-circle-outline" size={14} color="#93c5fd" />
@@ -492,14 +470,12 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
         </View>
       ) : null}
 
-      {/* Expanded body */}
       {expanded && (
         <View style={cardStyles.body}>
           {allTabs.length === 0 ? (
             <Text style={cardStyles.emptyText}>No pricing configuration available.</Text>
           ) : (
             <>
-              {/* Tab strip */}
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -522,7 +498,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
                 })}
               </ScrollView>
 
-              {/* Description tab body */}
               {activeKey === '__desc__' ? (
                 <View style={cardStyles.sectionBody}>
                   <View style={cardStyles.descCard}>
@@ -530,7 +505,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
                   </View>
                 </View>
               ) : (
-                /* Pricing section fields */
                 activeSecObj ? (
                   <View style={cardStyles.sectionBody}>
                     {activeSecObj.fields.map(f => <FieldRow key={f.key} {...f} />)}
@@ -546,7 +520,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
             </>
           )}
 
-          {/* ── Images gallery ── */}
           {config.images && config.images.length > 0 && (
             <View style={cardStyles.mediaSection}>
               <View style={cardStyles.mediaSectionHeader}>
@@ -564,7 +537,6 @@ function ServiceReferenceCard({config}: {config: ServiceConfig}) {
             </View>
           )}
 
-          {/* ── Links ── */}
           {config.links && config.links.length > 0 && (
             <View style={cardStyles.mediaSection}>
               <View style={cardStyles.mediaSectionHeader}>
@@ -801,7 +773,6 @@ const cardStyles = StyleSheet.create({
   },
 });
 
-// ─── Main export ──────────────────────────────────────────────────────────────
 export function ServicesReferenceSection() {
   const [configs, setConfigs] = useState<ServiceConfig[]>([]);
   const [loading, setLoading] = useState(true);

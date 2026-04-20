@@ -14,7 +14,7 @@ export interface StatusCounts {
 }
 
 export interface TimeSeriesPoint {
-  period: string;   // 'YYYY-MM-DD' | 'YYYY-WW' | 'YYYY-MM'
+  period: string;
   done: number;
   pending: number;
   saved: number;
@@ -28,15 +28,9 @@ export interface DocumentStatusCountsResult {
   _metadata?: any;
 }
 
-// Re-export date helpers so consumers can import from one place if needed
 export {getWeekRange, getMonthRange, getYearRange};
 
-// ─── pdfApi ───────────────────────────────────────────────────────────────────
 export const pdfApi = {
-  /**
-   * Get document status counts + time-series for the Home screen chart.
-   * Mirrors: pdfApi.getDocumentStatusCounts() in the webapp.
-   */
   async getDocumentStatusCounts(options: {
     startDate?: string | null;
     endDate?: string | null;

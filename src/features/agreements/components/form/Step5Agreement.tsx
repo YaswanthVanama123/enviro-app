@@ -8,8 +8,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Term metadata ────────────────────────────────────────────────────────────
-
 const TERM_LABELS = [
   'Property Ownership',
   'Promise of Good Service',
@@ -20,8 +18,6 @@ const TERM_LABELS = [
   'Sale of Customer Business',
 ] as const;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Step5AgreementProps {
   enviroOf: string;
   onEnviroOfChange: (v: string) => void;
@@ -29,8 +25,6 @@ interface Step5AgreementProps {
   onUpdate: (data: Partial<ServiceAgreementData>) => void;
   loading: boolean;
 }
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionCard({icon, title, children}: {
   icon: string;
@@ -72,8 +66,6 @@ function ToggleChip({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export function Step5Agreement({
   enviroOf,
   onEnviroOfChange,
@@ -96,7 +88,6 @@ export function Step5Agreement({
   return (
     <View style={styles.container}>
 
-      {/* Header info */}
       <SectionCard icon="document-text-outline" title="Agreement Info">
         <FieldRow label="Enviro-Master Of">
           <TextInput
@@ -123,7 +114,6 @@ export function Step5Agreement({
         </FieldRow>
       </SectionCard>
 
-      {/* Dispenser options */}
       <SectionCard icon="cube-outline" title="Dispenser Options">
         <View style={styles.dispenserRow}>
           <ToggleChip
@@ -149,7 +139,6 @@ export function Step5Agreement({
         </View>
       </SectionCard>
 
-      {/* 7 Agreement Terms */}
       <SectionCard icon="list-outline" title="Terms & Conditions">
         {TERM_LABELS.map((label, i) => {
           const key = termKey(i + 1);
@@ -175,7 +164,6 @@ export function Step5Agreement({
         })}
       </SectionCard>
 
-      {/* Note text */}
       <SectionCard icon="create-outline" title="Agreement Note">
         <View style={styles.noteBlock}>
           <TextInput
@@ -193,8 +181,6 @@ export function Step5Agreement({
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {

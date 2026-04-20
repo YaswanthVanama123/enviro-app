@@ -46,7 +46,6 @@ export function BackupHealthTab() {
 
   return (
     <ScrollView contentContainerStyle={{padding: Spacing.md, paddingBottom: 40}} showsVerticalScrollIndicator={false}>
-      {/* Overall banner */}
       <View style={[bStyles.healthBanner, {backgroundColor: overallBg, borderColor: overallColor + '40'}]}>
         <Ionicons name={overallIcon} size={28} color={overallColor} />
         <View style={{flex: 1}}>
@@ -57,7 +56,6 @@ export function BackupHealthTab() {
         </View>
       </View>
 
-      {/* Component health cards */}
       {health.checks && (
         <>
           <HealthCard
@@ -87,7 +85,6 @@ export function BackupHealthTab() {
         </>
       )}
 
-      {/* Warnings */}
       {health.warnings && health.warnings.length > 0 && (
         <View style={bStyles.sectionBox}>
           <Text style={bStyles.boxTitle}>System Warnings</Text>
@@ -100,7 +97,6 @@ export function BackupHealthTab() {
         </View>
       )}
 
-      {/* Enforce retention */}
       <TouchableOpacity
         style={[bStyles.enforceBtn, enforcing && {opacity: 0.6}]}
         disabled={enforcing}

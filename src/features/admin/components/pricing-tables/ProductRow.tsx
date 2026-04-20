@@ -66,7 +66,6 @@ export function ProductRow({product, onEditBase}: ProductRowProps) {
         )}
       </TouchableOpacity>
 
-      {/* Edit Base button below the row */}
       {onEditBase && (
         <TouchableOpacity
           style={styles.editBaseBtn}

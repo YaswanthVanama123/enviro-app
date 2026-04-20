@@ -15,7 +15,6 @@ interface ServiceConfigCardProps {
 export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
   return (
     <View style={styles.serviceCard}>
-      {/* Title row */}
       <View style={styles.serviceCardTitleRow}>
         <Text style={styles.serviceCardName} numberOfLines={1}>
           {config.label || config.serviceId}
@@ -28,7 +27,6 @@ export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
         </View>
       </View>
 
-      {/* ID + version row */}
       <View style={styles.serviceCardMeta}>
         <Text style={styles.serviceCardId}>{config.serviceId}</Text>
         {config.version ? (
@@ -41,14 +39,12 @@ export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
         )}
       </View>
 
-      {/* Description */}
       {config.description ? (
         <Text style={styles.serviceCardDesc} numberOfLines={2}>
           {config.description}
         </Text>
       ) : null}
 
-      {/* Tags */}
       {config.tags && config.tags.length > 0 && (
         <View style={styles.serviceCardTags}>
           {config.tags.map(tag => (
@@ -59,7 +55,6 @@ export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
         </View>
       )}
 
-      {/* Edit button */}
       <TouchableOpacity
         style={styles.editConfigBtn}
         onPress={() => onEdit(config)}

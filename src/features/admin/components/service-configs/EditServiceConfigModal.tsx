@@ -42,7 +42,6 @@ export function EditServiceConfigModal({
   const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Images & links state
   const [images, setImages] = useState<Array<{url: string; caption?: string}>>([]);
   const [links, setLinks] = useState<Array<{label: string; url: string}>>([]);
   const [newImageUrl, setNewImageUrl] = useState('');
@@ -51,7 +50,6 @@ export function EditServiceConfigModal({
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [mediaTab, setMediaTab] = useState<'images' | 'links'>('images');
 
-  // Populate form when config changes
   useEffect(() => {
     if (config && visible) {
       setLabel(config.label ?? '');
@@ -121,7 +119,6 @@ export function EditServiceConfigModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={[editStyles.screen, {paddingTop: insets.top}]}>
 
-          {/* Header */}
           <View style={editStyles.header}>
             <View style={editStyles.headerLeft}>
               <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} />
@@ -140,14 +137,12 @@ export function EditServiceConfigModal({
             </TouchableOpacity>
           </View>
 
-          {/* Form */}
           <ScrollView
             style={editStyles.formScroll}
             contentContainerStyle={[editStyles.formContent, {paddingBottom: insets.bottom + 100}]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
 
-            {/* Label */}
             <View style={editStyles.fieldGroup}>
               <Text style={editStyles.fieldLabel}>Label <Text style={editStyles.required}>*</Text></Text>
               <TextInput
@@ -160,7 +155,6 @@ export function EditServiceConfigModal({
               />
             </View>
 
-            {/* Description */}
             <View style={editStyles.fieldGroup}>
               <Text style={editStyles.fieldLabel}>Description</Text>
               <TextInput
@@ -175,7 +169,6 @@ export function EditServiceConfigModal({
               />
             </View>
 
-            {/* Version */}
             <View style={editStyles.fieldGroup}>
               <Text style={editStyles.fieldLabel}>Version</Text>
               <TextInput
@@ -188,7 +181,6 @@ export function EditServiceConfigModal({
               />
             </View>
 
-            {/* Tags */}
             <View style={editStyles.fieldGroup}>
               <Text style={editStyles.fieldLabel}>Tags</Text>
               <Text style={editStyles.fieldHint}>Comma-separated list of tags</Text>
@@ -202,7 +194,6 @@ export function EditServiceConfigModal({
               />
             </View>
 
-            {/* Active toggle */}
             <View style={editStyles.toggleRow}>
               <View style={editStyles.toggleInfo}>
                 <Text style={editStyles.fieldLabel}>Active</Text>
@@ -218,9 +209,7 @@ export function EditServiceConfigModal({
               />
             </View>
 
-            {/* ── Images & Links ── */}
             <View style={editStyles.mediaSection}>
-              {/* Media tab toggle */}
               <View style={editStyles.mediaTabRow}>
                 <TouchableOpacity
                   style={[editStyles.mediaTab, mediaTab === 'images' && editStyles.mediaTabActive]}
@@ -242,7 +231,6 @@ export function EditServiceConfigModal({
                 </TouchableOpacity>
               </View>
 
-              {/* Images panel */}
               {mediaTab === 'images' && (
                 <View style={editStyles.mediaPanel}>
                   <Text style={editStyles.fieldHint}>Paste a public image URL to add it.</Text>
@@ -291,7 +279,6 @@ export function EditServiceConfigModal({
                 </View>
               )}
 
-              {/* Links panel */}
               {mediaTab === 'links' && (
                 <View style={editStyles.mediaPanel}>
                   <View style={editStyles.addMediaRow}>
@@ -348,7 +335,6 @@ export function EditServiceConfigModal({
 
           </ScrollView>
 
-          {/* Action buttons */}
           <View style={[editStyles.footer, {paddingBottom: Math.max(insets.bottom, Spacing.lg)}]}>
             <TouchableOpacity style={editStyles.cancelBtn} onPress={onClose} disabled={saving}>
               <Text style={editStyles.cancelBtnText}>Cancel</Text>

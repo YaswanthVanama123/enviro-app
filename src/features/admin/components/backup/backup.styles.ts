@@ -4,7 +4,6 @@ import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
 export const bStyles = StyleSheet.create({
-  // Sub-tab bar
   subTabBar: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
@@ -33,7 +32,6 @@ export const bStyles = StyleSheet.create({
     color: '#2563eb',
   },
 
-  // List header
   listHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -64,7 +62,6 @@ export const bStyles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Backup card
   card: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -207,7 +204,6 @@ export const bStyles = StyleSheet.create({
     color: '#7c3aed',
   },
 
-  // Statistics
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -236,7 +232,6 @@ export const bStyles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Shared section box
   sectionBox: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -253,7 +248,6 @@ export const bStyles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  // Trigger breakdown
   triggerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -290,7 +284,6 @@ export const bStyles = StyleSheet.create({
     textAlign: 'right',
   },
 
-  // Compression analysis
   compressionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -315,7 +308,6 @@ export const bStyles = StyleSheet.create({
     backgroundColor: Colors.border,
   },
 
-  // Recent row
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -345,7 +337,6 @@ export const bStyles = StyleSheet.create({
     textAlign: 'right',
   },
 
-  // System health
   healthBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -444,7 +435,6 @@ export const bStyles = StyleSheet.create({
     color: '#dc2626',
   },
 
-  // Info / warning boxes
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -478,7 +468,6 @@ export const bStyles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Info rows (used in detail / restore modals)
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -500,7 +489,6 @@ export const bStyles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Modal sheet
   sheet: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -564,7 +552,6 @@ export const bStyles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Form fields
   field: {
     gap: 6,
   },

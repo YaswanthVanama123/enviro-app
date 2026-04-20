@@ -8,7 +8,7 @@ interface ActionCardProps {
   description: string;
   iconBg: string;
   iconColor: string;
-  iconName: string;       // Ionicons icon name
+  iconName: string;
   btnLabel: string;
   btnColor: string;
   onPress: () => void;

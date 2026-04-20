@@ -1,5 +1,3 @@
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference';
 
 export type ServiceSubTab = 'unit' | 'minimums' | 'multipliers' | 'frequencies';
@@ -13,8 +11,6 @@ export interface ConfigField {
   value: string;
   category: ServiceSubTab;
 }
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
   {key: 'pricing',   label: 'Pricing Tables',     icon: 'pricetag-outline'},
@@ -109,8 +105,6 @@ export const SERVICE_COLORS: Record<string, string> = {
 };
 
 export const SKELETON_BG = '#e5e7eb';
-
-// ─── Helper functions ─────────────────────────────────────────────────────────
 
 export function fmt(amount: number | undefined): string {
   if (!amount || amount === 0) {return '—';}

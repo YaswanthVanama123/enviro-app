@@ -17,8 +17,6 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function timeAgo(iso: string): string {
   if (!iso) {return '—';}
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -30,8 +28,6 @@ function timeAgo(iso: string): string {
   if (m < 12) {return `${m} months ago`;}
   return `${Math.floor(m / 12)}y ago`;
 }
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({
   icon,
@@ -57,8 +53,6 @@ function StatCard({
   );
 }
 
-// ─── Status Dot Row ───────────────────────────────────────────────────────────
-
 function StatusRow({
   color,
   label,
@@ -76,8 +70,6 @@ function StatusRow({
     </View>
   );
 }
-
-// ─── Recent Agreement Row ─────────────────────────────────────────────────────
 
 function RecentRow({agreement}: {agreement: SavedFileGroup}) {
   return (
@@ -133,8 +125,6 @@ function getStatusColor(s: string): string {
   return map[s] ?? '#374151';
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
 function SkeletonBlock({width, height}: {width: number | string; height: number}) {
   return (
     <View
@@ -145,8 +135,6 @@ function SkeletonBlock({width, height}: {width: number | string; height: number}
     />
   );
 }
-
-// ─── AdminDashboardScreen ─────────────────────────────────────────────────────
 
 export function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
@@ -188,7 +176,6 @@ export function AdminDashboardScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Header */}
       {refreshing && (
         <View style={styles.refreshIndicator}>
           <ActivityIndicator size="small" color={Colors.primary} />
@@ -210,7 +197,6 @@ export function AdminDashboardScreen() {
           />
         }>
 
-        {/* ── Stat Cards ── */}
         {loading ? (
           <View style={styles.statsRow}>
             {[1, 2, 3].map(i => (
@@ -247,7 +233,6 @@ export function AdminDashboardScreen() {
           </View>
         )}
 
-        {/* ── Document Status ── */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Document Status</Text>
           {loading ? (
@@ -269,7 +254,6 @@ export function AdminDashboardScreen() {
           )}
         </View>
 
-        {/* ── Recent Agreements ── */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Recent Documents</Text>
           {loading ? (
@@ -303,8 +287,6 @@ export function AdminDashboardScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -322,7 +304,6 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
 
-  // Stat cards
   statsRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -360,7 +341,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
 
-  // Section card
   sectionCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
@@ -378,7 +358,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
 
-  // Status rows
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -405,7 +384,6 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xl,
   },
 
-  // Recent rows
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -456,7 +434,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
 
-  // Skeleton
   skeleton: {
     backgroundColor: '#e5e7eb',
     borderRadius: Radius.xs,

@@ -25,8 +25,6 @@ import {FontSize} from '../../../theme/typography';
 import {ConfirmModal, InfoModal, OptionsModal} from '../../../shared/components/ui/AppModal';
 import {BiginUploadModal} from './BiginUploadModal';
 
-// ─── Timeline status ──────────────────────────────────────────────────────────
-
 interface TimelineStatus {
   label: string;
   daysText: string;
@@ -58,10 +56,8 @@ function calcTimelineStatus(
   return {label: 'Active', daysText: `${d} days left`, color: '#065f46', bg: '#d1fae5', dot: '#10b981'};
 }
 
-// ─── File type icon config ────────────────────────────────────────────────────
-
 interface FileIconCfg {
-  name: string;   // Ionicons name
+  name: string;
   color: string;
   bg: string;
 }
@@ -72,8 +68,6 @@ const FILE_ICON: Record<FileType, FileIconCfg> = {
   attached_pdf: {name: 'document',           color: '#16a34a',      bg: '#dcfce7'},
   version_log:  {name: 'receipt-outline',    color: '#92400e',      bg: '#fef3c7'},
 };
-
-// ─── File version / type tag ──────────────────────────────────────────────────
 
 interface FileTag {label: string; bg: string; text: string}
 
@@ -89,8 +83,6 @@ function getFileTag(file: SavedFileListItem): FileTag {
   }
   return {label: '', bg: '', text: ''};
 }
-
-// ─── Status badge config ──────────────────────────────────────────────────────
 
 interface StatusCfg {label: string; bg: string; text: string; dot: string; border?: string}
 
@@ -114,8 +106,6 @@ function getStatusCfg(key: string | null | undefined): StatusCfg {
   return STATUS_MAP[key] ?? {label: key, bg: '#f3f4f6', text: '#374151', dot: '#9ca3af', border: '#d1d5db'};
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function formatFileSize(bytes: number): string {
   if (!bytes) {return '—';}
   if (bytes < 1024) {return `${bytes} B`;}
@@ -135,8 +125,6 @@ function timeAgo(iso: string): string {
   return `${Math.floor(m / 12)}y ago`;
 }
 
-// ─── FileBadge ────────────────────────────────────────────────────────────────
-
 function FileBadge({status}: {status: string | null | undefined}) {
   const cfg = getStatusCfg(status);
   return (
@@ -146,8 +134,6 @@ function FileBadge({status}: {status: string | null | undefined}) {
     </View>
   );
 }
-
-// ─── FileRow ──────────────────────────────────────────────────────────────────
 
 interface FileRowProps {
   file: SavedFileListItem;
@@ -161,7 +147,6 @@ function FileRow({file, onDelete}: FileRowProps) {
   const iconCfg = FILE_ICON[file.fileType] ?? FILE_ICON.main_pdf;
   const tag = getFileTag(file);
 
-  // Build the authenticated download URL for this specific file type
   const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
 
   const handleDelete = useCallback(() => onDelete(file), [file, onDelete]);
@@ -202,12 +187,10 @@ function FileRow({file, onDelete}: FileRowProps) {
 
   return (
     <View style={styles.fileRow}>
-      {/* File type icon */}
       <View style={[styles.fileIconBox, {backgroundColor: iconCfg.bg}]}>
         <Ionicons name={iconCfg.name} size={16} color={iconCfg.color} />
       </View>
 
-      {/* Name + status (flex) */}
       <View style={styles.fileMeta}>
         <View style={styles.fileNameRow}>
           <Text style={styles.fileName} numberOfLines={1}>{file.title || file.fileName}</Text>
@@ -239,7 +222,6 @@ function FileRow({file, onDelete}: FileRowProps) {
         </View>
       </View>
 
-      {/* Action buttons — right side single row */}
       <View style={styles.fileActionsGrid}>
         {file.hasPdf && (
           <>
@@ -259,7 +241,6 @@ function FileRow({file, onDelete}: FileRowProps) {
         </TouchableOpacity>
       </View>
 
-      {/* No PDF modal */}
       <InfoModal
         visible={showNoPdf}
         icon="document-outline"
@@ -270,7 +251,6 @@ function FileRow({file, onDelete}: FileRowProps) {
         onClose={() => setShowNoPdf(false)}
       />
 
-      {/* Cannot open modal */}
       <InfoModal
         visible={showCannotOpen}
         icon="alert-circle-outline"
@@ -284,8 +264,6 @@ function FileRow({file, onDelete}: FileRowProps) {
   );
 }
 
-// ─── AgreementCard ────────────────────────────────────────────────────────────
-
 export interface AgreementCardProps {
   agreement: SavedFileGroup;
   onDelete: (agreement: SavedFileGroup) => void;
@@ -296,18 +274,14 @@ export interface AgreementCardProps {
 export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: AgreementCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Calendar modal
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Bigin upload modal
   const [showBiginModal, setShowBiginModal] = useState(false);
 
-  // Add options modal
   const [showAddOptions, setShowAddOptions] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{ok: boolean; name?: string} | null>(null);
 
-  // Delete confirmation modals
   const [fileToDelete, setFileToDelete] = useState<SavedFileListItem | null>(null);
   const [showDeleteAgreement, setShowDeleteAgreement] = useState(false);
 
@@ -321,15 +295,12 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
     setShowDeleteAgreement(true);
   }, []);
 
-  // ── Calendar: show dates info ──────────────────────────────────────────────
   const handleCalendar = useCallback(() => setShowCalendar(true), []);
 
-  // ── Begin: open Bigin upload modal ────────────────────────────────────────
   const handleBegin = useCallback(() => {
     setShowBiginModal(true);
   }, []);
 
-  // ── Add: add attachment options ────────────────────────────────────────────
   const handleAdd = useCallback(() => {
     setShowAddOptions(true);
   }, []);
@@ -354,14 +325,12 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
       setUploadResult({ok, name: file.name ?? undefined});
     } catch (err: any) {
       setUploading(false);
-      // DocumentPicker.isCancel — user dismissed the picker, do nothing
       if (!DocumentPicker.isCancel(err)) {
         setUploadResult({ok: false});
       }
     }
   }, [agreement.id, onRefresh]);
 
-  // ── Dates modal helpers ────────────────────────────────────────────────────
   const startDateFormatted = agreement.startDate
     ? new Date(agreement.startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : null;
@@ -375,7 +344,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   return (
     <View style={styles.card}>
 
-      {/* ── Top block ── */}
       <View style={styles.topBlock}>
         <TouchableOpacity
           activeOpacity={0.7}
@@ -408,7 +376,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           />
         </TouchableOpacity>
 
-        {/* Action buttons */}
         <View style={styles.cardActions}>
           <TouchableOpacity style={styles.cardActionIconBtn} onPress={handleCalendar}>
             <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
@@ -437,7 +404,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         </View>
       </View>
 
-      {/* ── File list ── */}
       {expanded && (
         <View style={styles.fileListBlock}>
           <View style={styles.fileListHeader}>
@@ -459,7 +425,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         </View>
       )}
 
-      {/* ── Calendar Modal ── */}
       <Modal visible={showCalendar} transparent animationType="fade" onRequestClose={() => setShowCalendar(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowCalendar(false)}>
           <View style={styles.modalCard}>
@@ -514,7 +479,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         </TouchableOpacity>
       </Modal>
 
-      {/* ── Delete file confirm ── */}
       <ConfirmModal
         visible={fileToDelete !== null}
         icon="trash-outline"
@@ -533,7 +497,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         onCancel={() => setFileToDelete(null)}
       />
 
-      {/* ── Delete agreement confirm ── */}
       <ConfirmModal
         visible={showDeleteAgreement}
         icon="trash-outline"
@@ -550,7 +513,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         onCancel={() => setShowDeleteAgreement(false)}
       />
 
-      {/* ── Bigin Upload Modal ── */}
       <BiginUploadModal
         visible={showBiginModal}
         agreementId={agreement.id}
@@ -562,7 +524,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         }}
       />
 
-      {/* ── Add options ── */}
       <OptionsModal
         visible={showAddOptions}
         title={`Add to Agreement`}
@@ -584,7 +545,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         onCancel={() => setShowAddOptions(false)}
       />
 
-      {/* ── Upload result ── */}
       <InfoModal
         visible={uploadResult !== null}
         icon={uploadResult?.ok ? 'checkmark-circle' : 'alert-circle'}
@@ -602,8 +562,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
@@ -615,7 +573,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  // ── Top block (header + actions) ──────────────────────
   topBlock: {
     backgroundColor: Colors.surface,
   },
@@ -647,7 +604,6 @@ const styles = StyleSheet.create({
   timelineLabel: {fontSize: FontSize.xs, fontWeight: '700'},
   timelineDaysText: {fontSize: FontSize.xs, fontWeight: '500'},
 
-  // Card action buttons row
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -710,7 +666,6 @@ const styles = StyleSheet.create({
   },
   deleteCardBtnText: {fontSize: 11, fontWeight: '600', color: Colors.primary},
 
-  // ── File list block ────────────────────────────────────
   fileListBlock: {
     backgroundColor: '#f8fafc',
     borderTopWidth: 2,
@@ -736,7 +691,6 @@ const styles = StyleSheet.create({
   divider: {height: 1, backgroundColor: Colors.border},
   noFilesText: {textAlign: 'center', color: Colors.textMuted, fontSize: FontSize.sm, paddingVertical: Spacing.lg},
 
-  // ── File row ───────────────────────────────────────────
   fileRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -774,7 +728,6 @@ const styles = StyleSheet.create({
   fileActionBtn: {paddingLeft: Spacing.xs, paddingTop: 4},
   fileRowDivider: {height: 1, backgroundColor: Colors.border, marginLeft: Spacing.lg + 32 + Spacing.sm},
 
-  // File action buttons — single row on the right
   fileActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -816,7 +769,6 @@ const styles = StyleSheet.create({
   },
   trashBtnText: {fontSize: FontSize.sm, color: Colors.primary, fontWeight: '500'},
 
-  // ── Calendar Modal ──────────────────────────────────────
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',

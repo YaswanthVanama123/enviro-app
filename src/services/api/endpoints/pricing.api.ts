@@ -1,7 +1,5 @@
 import {apiClient} from '../client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface Product {
   key: string;
   name: string;
@@ -63,12 +61,10 @@ export interface PricingBackupChangedBy {
 export interface PricingBackup {
   changeDayId: string;
   createdAt: string;
-  // Legacy simple fields
   serviceConfigsCount?: number;
   productFamiliesCount?: number;
   totalProducts?: number;
   note?: string;
-  // Full fields
   _id?: string;
   changeDay?: string;
   firstChangeTimestamp?: string;
@@ -153,8 +149,6 @@ export interface ServiceAgreementTemplate {
   updatedAt?: string;
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-
 export const pricingApi = {
   async getProductCatalog(): Promise<ProductCatalog | null> {
     const res = await apiClient.get<ProductCatalog>('/api/product-catalog/active');
@@ -171,12 +165,10 @@ export const pricingApi = {
   },
 
   async getServicePricing(): Promise<ServiceConfig[]> {
-    // /api/service-configs/pricing returns {serviceConfigs, serviceAgreementTemplate}
     const res = await apiClient.get<any>('/api/service-configs/pricing');
     if (!res.error && res.data?.serviceConfigs) {
       return res.data.serviceConfigs;
     }
-    // fallback to /api/service-configs
     const res2 = await apiClient.get<any>('/api/service-configs');
     if (res2.error || !res2.data) {return [];}
     return Array.isArray(res2.data) ? res2.data
@@ -299,7 +291,6 @@ export const pricingApi = {
     caption = '',
   ): Promise<{ok: boolean; url?: string; error?: string}> {
     const formData = new FormData();
-    // React Native FormData accepts {uri, name, type}
     formData.append('image', {uri: fileUri, name: fileName, type: mimeType} as any);
     formData.append('caption', caption);
     const res = await apiClient.postFormData<{url: string; success: boolean}>(

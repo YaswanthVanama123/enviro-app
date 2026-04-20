@@ -1,6 +1,3 @@
-/**
- * Shared UI primitives used across all form steps and service forms.
- */
 import React from 'react';
 import {
   View,
@@ -16,8 +13,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Section Header ───────────────────────────────────────────────────────────
-
 export function FormSection({icon, title, children}: {icon: string; title: string; children?: React.ReactNode}) {
   return (
     <View style={ss.section}>
@@ -31,8 +26,6 @@ export function FormSection({icon, title, children}: {icon: string; title: strin
     </View>
   );
 }
-
-// ─── Text Field Row ───────────────────────────────────────────────────────────
 
 interface FieldRowProps {
   label: string;
@@ -66,8 +59,6 @@ export function FieldRow({label, value, onChangeText, placeholder, keyboardType,
     </View>
   );
 }
-
-// ─── Number Field Row ─────────────────────────────────────────────────────────
 
 interface NumberRowProps {
   label: string;
@@ -105,8 +96,6 @@ export function NumberRow({label, value, onChange, placeholder, prefix, suffix, 
   );
 }
 
-// ─── Select Row (picker-style using buttons) ──────────────────────────────────
-
 interface SelectRowProps {
   label: string;
   value: string;
@@ -134,8 +123,6 @@ export function SelectRow({label, value, options, onChange}: SelectRowProps) {
     </View>
   );
 }
-
-// ─── Select Dropdown Row (compact, for many options) ─────────────────────────
 
 interface DropdownRowProps {
   label: string;
@@ -175,8 +162,6 @@ export function DropdownRow({label, value, options, onChange}: DropdownRowProps)
   );
 }
 
-// ─── Toggle Row ───────────────────────────────────────────────────────────────
-
 interface ToggleRowProps {
   label: string;
   value: boolean;
@@ -200,8 +185,6 @@ export function ToggleRow({label, value, onChange, subtitle}: ToggleRowProps) {
     </View>
   );
 }
-
-// ─── Calc Row (qty @ rate = total) ───────────────────────────────────────────
 
 interface CalcRowProps {
   label: string;
@@ -246,8 +229,6 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
   );
 }
 
-// ─── Dollar Row (display total) ───────────────────────────────────────────────
-
 function formatDollar(value: number): string {
   return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
@@ -261,13 +242,9 @@ export function DollarRow({label, value, highlight}: {label: string; value: numb
   );
 }
 
-// ─── Divider ──────────────────────────────────────────────────────────────────
-
 export function FormDivider() {
   return <View style={ss.divider} />;
 }
-
-// ─── Step Indicator ───────────────────────────────────────────────────────────
 
 export function StepIndicator({current, total}: {current: number; total: number}) {
   return (
@@ -285,8 +262,6 @@ export function StepIndicator({current, total}: {current: number; total: number}
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const ss = StyleSheet.create({
   section: {

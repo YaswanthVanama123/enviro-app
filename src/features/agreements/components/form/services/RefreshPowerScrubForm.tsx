@@ -59,7 +59,6 @@ function AreaSection({label, config, onChange}: AreaSectionProps) {
       </View>
       {enabled && (
         <View style={styles.areaBody}>
-          {/* Pricing type chips */}
           <View style={styles.chips}>
             {PRICING_TYPES.map(p => (
               <TouchableOpacity
@@ -107,7 +106,6 @@ function AreaSection({label, config, onChange}: AreaSectionProps) {
               </View>
             </>
           )}
-          {/* Freq chips */}
           <View style={styles.freqRow}>
             {FREQ_OPTS.map(f => (
               <TouchableOpacity

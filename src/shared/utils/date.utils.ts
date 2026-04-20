@@ -1,4 +1,3 @@
-// ─── Helper: format Date → 'YYYY-MM-DD' (no timezone shift) ──────────────────
 export function formatDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -6,7 +5,6 @@ export function formatDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// ─── Date range calculators (mirrors webapp Home.tsx exactly) ─────────────────
 export function getWeekRange(): {startDate: string; endDate: string; groupBy: string} {
   const today = new Date();
   const dayOfWeek = today.getDay();

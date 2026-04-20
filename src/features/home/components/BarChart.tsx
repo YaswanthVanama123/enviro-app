@@ -21,25 +21,20 @@ export function BarChart({data}: BarChartProps) {
   const allTotals = data.map(d => d.done + d.pending + d.saved + d.drafts);
   const maxTotal = Math.max(...allTotals, 1);
 
-  // Use a sensible scale — if max is tiny, don't stretch a single bar to full height
   const effectiveMax = Math.max(maxTotal, 5);
   const scale = CHART_HEIGHT / effectiveMax;
 
-  // Minimum visible height for any non-zero segment
   const MIN_SEG = 4;
   const segHeight = (val: number) =>
     val > 0 ? Math.max(val * scale, MIN_SEG) : 0;
 
-  // Grid line values (25%, 50%, 75%, 100% of effectiveMax)
   const gridLines = [0.25, 0.5, 0.75, 1].map(pct =>
     Math.round(effectiveMax * pct),
   );
 
   return (
     <View>
-      {/* Chart area with grid lines behind bars */}
       <View style={styles.chartArea}>
-        {/* Horizontal grid lines */}
         {gridLines.map((val, i) => (
           <View
             key={i}
@@ -48,7 +43,6 @@ export function BarChart({data}: BarChartProps) {
           </View>
         ))}
 
-        {/* Bars */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -62,7 +56,6 @@ export function BarChart({data}: BarChartProps) {
 
             return (
               <View key={idx} style={styles.barGroup}>
-                {/* Bar stack — transparent track, only colored when data exists */}
                 <View style={styles.barTrack}>
                   {hasData && (
                     <>

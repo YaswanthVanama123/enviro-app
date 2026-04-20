@@ -24,11 +24,7 @@ import {Step5Agreement}  from '../components/form/Step5Agreement';
 import {Step4Review}     from '../components/form/Step4Review';
 import {useFormFilling}  from '../hooks/useFormFilling';
 
-// ─── Step metadata ────────────────────────────────────────────────────────────
-
 const STEP_LABELS = ['Customer', 'Products', 'Services', 'Agreement', 'Terms', 'Review'];
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function CreateAgreementScreen() {
   const navigation = useNavigation();
@@ -87,8 +83,6 @@ export function CreateAgreementScreen() {
       navigation.goBack();
     }
   };
-
-  // ─── Render step content ──────────────────────────────────────────────────
 
   const renderStep = () => {
     switch (step) {
@@ -167,8 +161,6 @@ export function CreateAgreementScreen() {
     }
   };
 
-  // ─── Bottom bar ───────────────────────────────────────────────────────────
-
   const renderBottomBar = () => {
     const isFirst = step === 1;
     const isLast  = step === 6;
@@ -180,7 +172,6 @@ export function CreateAgreementScreen() {
         ) : null}
 
         <View style={styles.bottomBtns}>
-          {/* Back */}
           {!isFirst && (
             <TouchableOpacity style={styles.backBtn} onPress={handlePrev}>
               <Ionicons name="chevron-back" size={18} color={Colors.textSecondary} />
@@ -188,7 +179,6 @@ export function CreateAgreementScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Save draft (visible on step 3+) */}
           {step >= 3 && (
             <TouchableOpacity
               style={[styles.draftBtn, saving && styles.btnDisabled]}
@@ -205,7 +195,6 @@ export function CreateAgreementScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Next / Generate */}
           <TouchableOpacity
             style={[styles.nextBtn, isLast && styles.generateBtn, saving && styles.btnDisabled]}
             onPress={isLast ? handleGenerate : handleNext}
@@ -230,8 +219,6 @@ export function CreateAgreementScreen() {
     );
   };
 
-  // ─── Main render ──────────────────────────────────────────────────────────
-
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -239,7 +226,6 @@ export function CreateAgreementScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}>
 
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerBack} onPress={() => navigation.goBack()}>
             <Ionicons name="close" size={22} color={Colors.textPrimary} />
@@ -251,7 +237,6 @@ export function CreateAgreementScreen() {
           <View style={styles.headerRight} />
         </View>
 
-        {/* Step indicator */}
         <View style={styles.stepBar}>
           <StepIndicator current={step} total={6} />
           <View style={styles.stepLabels}>
@@ -265,7 +250,6 @@ export function CreateAgreementScreen() {
           </View>
         </View>
 
-        {/* Scrollable content */}
         <ScrollView
           ref={scrollRef}
           style={styles.scroll}
@@ -276,14 +260,11 @@ export function CreateAgreementScreen() {
           <View style={{height: Spacing.xxl}} />
         </ScrollView>
 
-        {/* Bottom navigation bar */}
         {renderBottomBar()}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safe: {

@@ -87,7 +87,6 @@ export function ProductDetailsModal({
       onRequestClose={onClose}>
       <View style={[pdStyles.screen, {paddingTop: insets.top}]}>
 
-        {/* Header */}
         <View style={[pdStyles.header, {borderLeftColor: familyColor}]}>
           <View style={pdStyles.headerLeft}>
             <View style={[pdStyles.headerIcon, {backgroundColor: familyColor + '18'}]}>
@@ -107,7 +106,6 @@ export function ProductDetailsModal({
           contentContainerStyle={[pdStyles.content, {paddingBottom: insets.bottom + 32}]}
           showsVerticalScrollIndicator={false}>
 
-          {/* Detail rows */}
           <View style={pdStyles.section}>
             {rows.map((row, idx) => (
               <View key={row.label}>
@@ -120,7 +118,6 @@ export function ProductDetailsModal({
             ))}
           </View>
 
-          {/* Description */}
           {product.description ? (
             <View style={pdStyles.section}>
               <Text style={pdStyles.descLabel}>Description</Text>
@@ -130,7 +127,6 @@ export function ProductDetailsModal({
 
         </ScrollView>
 
-        {/* Close footer */}
         <View style={[pdStyles.footer, {paddingBottom: Math.max(insets.bottom, Spacing.lg)}]}>
           <TouchableOpacity style={pdStyles.closeFooterBtn} onPress={onClose}>
             <Text style={pdStyles.closeFooterBtnText}>Close</Text>

@@ -62,7 +62,6 @@ export function ProductCatalogSection() {
           colors={[Colors.primary]}
         />
       }>
-      {/* Summary strip */}
       <View style={styles.catalogSummary}>
         <View style={styles.catalogSummaryItem}>
           <Text style={styles.catalogSummaryNum}>{families.length}</Text>
@@ -86,7 +85,6 @@ export function ProductCatalogSection() {
         )}
       </View>
 
-      {/* Family cards */}
       {families.map(f => (
         <FamilyCard key={f.key} family={f} onAddProduct={handleAddProduct} />
       ))}

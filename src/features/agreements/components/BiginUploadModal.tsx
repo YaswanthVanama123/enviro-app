@@ -21,8 +21,6 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface BiginUploadModalProps {
   visible: boolean;
   agreementId: string;
@@ -30,8 +28,6 @@ interface BiginUploadModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
-
-// ─── BiginUploadModal ─────────────────────────────────────────────────────────
 
 export function BiginUploadModal({
   visible,
@@ -46,17 +42,14 @@ export function BiginUploadModal({
   const [status, setStatus] = useState<ZohoUploadStatus | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // First-time fields
   const [companies, setCompanies] = useState<ZohoCompany[]>([]);
   const [companySearch, setCompanySearch] = useState('');
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ZohoCompany | null>(null);
   const [dealName, setDealName] = useState('');
 
-  // Shared field
   const [noteText, setNoteText] = useState('');
 
-  // Reset when opened
   useEffect(() => {
     if (!visible) {return;}
     setStep('loading');
@@ -79,7 +72,6 @@ export function BiginUploadModal({
     });
   }, [visible, agreementId]);
 
-  // Load companies when search changes (first-time flow)
   useEffect(() => {
     if (step !== 'first-time') {return;}
     setLoadingCompanies(true);
@@ -129,8 +121,6 @@ export function BiginUploadModal({
       setStep(status?.isFirstTime ? 'first-time' : 'update');
     }
   }, [step, status, selectedCompany, dealName, noteText, agreementId, onSuccess]);
-
-  // ── Render helpers ─────────────────────────────────────────────────────────
 
   const renderCompanyItem = ({item}: {item: ZohoCompany}) => {
     const selected = selectedCompany?.id === item.id;
@@ -204,10 +194,8 @@ export function BiginUploadModal({
       );
     }
 
-    // first-time or update
     return (
       <View style={styles.formBody}>
-        {/* Update — show existing mapping */}
         {step === 'update' && status?.mapping && (
           <View style={styles.mappingCard}>
             <Ionicons name="link-outline" size={15} color={Colors.primary} />
@@ -223,7 +211,6 @@ export function BiginUploadModal({
           </View>
         )}
 
-        {/* First-time — company picker */}
         {step === 'first-time' && (
           <>
             <Text style={styles.fieldLabel}>Select Company</Text>
@@ -267,7 +254,6 @@ export function BiginUploadModal({
           </>
         )}
 
-        {/* Note text (shared) */}
         <Text style={[styles.fieldLabel, {marginTop: step === 'first-time' ? Spacing.md : 0}]}>
           Note / Description
         </Text>
@@ -281,7 +267,6 @@ export function BiginUploadModal({
           textAlignVertical="top"
         />
 
-        {/* Error */}
         {errorMsg ? (
           <View style={styles.errorBanner}>
             <Ionicons name="alert-circle-outline" size={14} color="#b91c1c" />
@@ -289,7 +274,6 @@ export function BiginUploadModal({
           </View>
         ) : null}
 
-        {/* Submit */}
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.8}>
           <Ionicons name="cloud-upload-outline" size={16} color="#fff" />
           <Text style={styles.submitBtnText}>
@@ -311,10 +295,8 @@ export function BiginUploadModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={step === 'loading' || step === 'submitting' ? undefined : onClose} />
         <View style={styles.sheet}>
-          {/* Handle */}
           <View style={styles.handle} />
 
-          {/* Header */}
           <View style={styles.sheetHeader}>
             <View style={styles.sheetHeaderLeft}>
               <View style={styles.biginIcon}>
@@ -334,15 +316,12 @@ export function BiginUploadModal({
             )}
           </View>
 
-          {/* Content */}
           {renderContent()}
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   overlay: {
@@ -405,7 +384,6 @@ const styles = StyleSheet.create({
     maxWidth: 220,
   },
 
-  // Center box (loading / done / error)
   centerBox: {
     alignItems: 'center',
     padding: Spacing.xxxl,
@@ -451,7 +429,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Form body
   formBody: {
     padding: Spacing.lg,
     gap: Spacing.sm,
@@ -480,7 +457,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
 
-  // Company picker
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -548,7 +524,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
 
-  // Mapping card (update flow)
   mappingCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -579,7 +554,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // Error banner
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -596,7 +570,6 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
   },
 
-  // Submit button
   submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',

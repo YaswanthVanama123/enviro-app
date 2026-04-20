@@ -44,7 +44,6 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
       onRequestClose={onClose}>
       <View style={[detailStyles.screen, {paddingTop: insets.top}]}>
 
-        {/* Purple header */}
         <View style={detailStyles.header}>
           <View style={detailStyles.headerContent}>
             <View style={detailStyles.headerIcon}>
@@ -63,7 +62,6 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
           </TouchableOpacity>
         </View>
 
-        {/* Sub-tab bar */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -94,7 +92,6 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
           })}
         </ScrollView>
 
-        {/* Field cards */}
         <FlatList
           key={activeSubTab}
           data={visibleFields}

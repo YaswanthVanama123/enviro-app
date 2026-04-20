@@ -14,8 +14,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const DURATION_OPTIONS = Array.from({length: 35}, (_, i) => {
   const m = i + 2;
   return {value: String(m), label: `${m} months`};
@@ -38,8 +36,6 @@ const PAYMENT_OPTIONS: {value: PaymentOption; label: string; icon: string}[] = [
   {value: 'others', label: 'Others',  icon: 'ellipsis-horizontal-circle-outline'},
 ];
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Step2ContractProps {
   contractMonths: number;
   onContractMonthsChange: (v: number) => void;
@@ -59,8 +55,6 @@ interface Step2ContractProps {
   onPaymentNoteChange: (v: string) => void;
   allServicesOneTime?: boolean;
 }
-
-// ─── Date Picker (simple inline) ─────────────────────────────────────────────
 
 function SimpleDatePicker({value, onChange}: {value: string; onChange: (v: string) => void}) {
   const [show, setShow] = useState(false);
@@ -118,8 +112,6 @@ function SimpleDatePicker({value, onChange}: {value: string; onChange: (v: strin
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function Step2Contract({
   contractMonths,
   onContractMonthsChange,
@@ -141,7 +133,6 @@ export function Step2Contract({
 }: Step2ContractProps) {
   return (
     <View>
-      {/* Duration — hidden when all services are one-time */}
       {!allServicesOneTime && (
       <FormSection icon="calendar-outline" title="Contract Duration">
         <DropdownRow
@@ -158,7 +149,6 @@ export function Step2Contract({
       )}
       {!allServicesOneTime && <FormDivider />}
 
-      {/* Charges */}
       <FormSection icon="car-outline" title="Trip & Parking Charges">
         <NumberRow
           label="Trip Charge"
@@ -195,7 +185,6 @@ export function Step2Contract({
 
       <FormDivider />
 
-      {/* Payment */}
       <FormSection icon="card-outline" title="Payment Method">
         <View style={styles.paymentRow}>
           {PAYMENT_OPTIONS.map(opt => (
@@ -226,7 +215,6 @@ export function Step2Contract({
 
       <FormDivider />
 
-      {/* Pricing Summary */}
       <FormSection icon="calculator-outline" title="Pricing Summary">
         <DollarRow label="Trip Charge / visit" value={tripCharge} />
         <DollarRow label="Parking / visit" value={parkingCharge} />
@@ -235,8 +223,6 @@ export function Step2Contract({
     </View>
   );
 }
-
-// ─── Date Picker styles ───────────────────────────────────────────────────────
 
 const dp = StyleSheet.create({
   container: {marginHorizontal: Spacing.lg, marginVertical: Spacing.sm},
@@ -264,8 +250,6 @@ const dp = StyleSheet.create({
   closeBtn: {marginTop: Spacing.lg, paddingVertical: Spacing.md, alignItems: 'center'},
   closeBtnText: {fontSize: FontSize.md, color: Colors.textMuted},
 });
-
-// ─── Main styles ──────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   startDateRow: {

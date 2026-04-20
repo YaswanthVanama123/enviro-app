@@ -1,31 +1,3 @@
-/**
- * AppModal — reusable modal components matching the webapp dialog style.
- *
- * Usage:
- *   <ConfirmModal
- *     visible={showDelete}
- *     icon="trash-outline"
- *     iconColor="#ef4444"
- *     iconBg="#fef2f2"
- *     title="Move to Trash"
- *     subtitle='Move "Agreement name" to trash?'
- *     confirmLabel="Move to Trash"
- *     confirmColor="#ef4444"
- *     onConfirm={handleDelete}
- *     onCancel={() => setShowDelete(false)}
- *   />
- *
- *   <InfoModal
- *     visible={showInfo}
- *     icon="checkmark-circle"
- *     iconColor="#16a34a"
- *     iconBg="#f0fdf4"
- *     title="Success"
- *     subtitle="Status updated successfully."
- *     onClose={() => setShowInfo(false)}
- *   />
- */
-
 import React from 'react';
 import {
   Modal,
@@ -37,8 +9,6 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
-
-// ─── ConfirmModal ─────────────────────────────────────────────────────────────
 
 export interface ConfirmModalProps {
   visible: boolean;
@@ -73,16 +43,13 @@ export function ConfirmModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Icon */}
           <View style={[styles.iconCircle, {backgroundColor: iconBg}]}>
             <Ionicons name={icon} size={28} color={iconColor} />
           </View>
 
-          {/* Text */}
           <Text style={styles.title}>{title}</Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
 
-          {/* Buttons */}
           <View style={styles.btnRow}>
             <TouchableOpacity
               style={[styles.btn, styles.cancelBtn]}
@@ -102,8 +69,6 @@ export function ConfirmModal({
     </Modal>
   );
 }
-
-// ─── InfoModal ────────────────────────────────────────────────────────────────
 
 export interface InfoModalProps {
   visible: boolean;
@@ -157,8 +122,6 @@ export function InfoModal({
   );
 }
 
-// ─── OptionsModal ─────────────────────────────────────────────────────────────
-
 export interface ModalOption {
   label: string;
   icon?: string;
@@ -188,14 +151,11 @@ export function OptionsModal({
       <View style={styles.sheetOverlay}>
         <TouchableOpacity style={styles.sheetBg} activeOpacity={1} onPress={onCancel} />
         <View style={styles.sheet}>
-          {/* Handle */}
           <View style={styles.sheetHandle} />
 
-          {/* Header */}
           <Text style={styles.sheetTitle}>{title}</Text>
           {subtitle ? <Text style={styles.sheetSubtitle}>{subtitle}</Text> : null}
 
-          {/* Options */}
           <ScrollView style={styles.sheetOptions} showsVerticalScrollIndicator={false}>
             {options.map((opt, idx) => (
               <TouchableOpacity
@@ -228,7 +188,6 @@ export function OptionsModal({
             ))}
           </ScrollView>
 
-          {/* Cancel */}
           <TouchableOpacity style={styles.sheetCancel} onPress={onCancel}>
             <Text style={styles.sheetCancelText}>Cancel</Text>
           </TouchableOpacity>
@@ -238,10 +197,7 @@ export function OptionsModal({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  // ConfirmModal / InfoModal
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -318,7 +274,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // OptionsModal (bottom sheet)
   sheetOverlay: {
     flex: 1,
     justifyContent: 'flex-end',

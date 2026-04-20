@@ -8,8 +8,6 @@ import {
   formApi,
 } from '../../../services/api/endpoints/form.api';
 
-// ─── Product Types ─────────────────────────────────────────────────────────────
-
 export interface SmallProduct {
   id: string;
   displayName: string;
@@ -37,26 +35,17 @@ export interface Dispenser {
   costType?: 'productCost' | 'warranty';
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export type FormStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PaymentOption = 'online' | 'cash' | 'others';
 
 export interface FormState {
-  // Navigation
   step: FormStep;
-
-  // Step 1: Customer info
   headerTitle: string;
   headerRows: HeaderRow[];
-
-  // Step 2: Products
   smallProducts: SmallProduct[];
   bigProducts: BigProduct[];
   dispensers: Dispenser[];
-
-  // Step 4: Contract / Service Agreement settings
   contractMonths: number;
   startDate: string;
   tripCharge: number;
@@ -66,30 +55,18 @@ export interface FormState {
   paymentOption: PaymentOption;
   paymentNote: string;
   includeProductsTable: boolean;
-
-  // Step 3: Services
   visibleServices: string[];
   services: Record<string, any>;
-
-  // Step 5: Agreement terms & conditions
   enviroOf: string;
   serviceAgreement: ServiceAgreementData;
-
-  // Remote data (loaded on mount)
   pricingConfigs: Record<string, any>;
   productCatalog: any | null;
   serviceConfigsList: any[];
-
-  // Loading flags
   initialLoading: boolean;
-
-  // Misc
   saving: boolean;
   saveError: string | null;
   savedId: string | null;
 }
-
-// ─── Defaults ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
   includeInPdf: true,
@@ -136,12 +113,9 @@ const INITIAL_STATE: FormState = {
   savedId: null,
 };
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useFormFilling() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
 
-  // ── Initial load: all 4 APIs in parallel ──────────────────────────────────
   useEffect(() => {
     setForm(prev => ({...prev, initialLoading: true}));
 
@@ -154,7 +128,6 @@ export function useFormFilling() {
       formApi.getAllServiceConfigs(),   // [3] service configs list
     ]).then(([adminRes, pricingRes, catalogRes, svcConfigsRes]) => {
 
-      // ── [0] Admin Headers ─────────────────────────────────────────────────
       if (adminRes.status === 'fulfilled') {
         console.log('[FormFilling][1] Admin Headers OK:', adminRes.value
           ? `id=${adminRes.value._id}, title="${adminRes.value.headerTitle}"`
@@ -163,7 +136,6 @@ export function useFormFilling() {
         console.warn('[FormFilling][1] Admin Headers FAILED:', adminRes.reason);
       }
 
-      // ── [1] Service Pricing ───────────────────────────────────────────────
       if (pricingRes.status === 'fulfilled') {
         const val = pricingRes.value;
         console.log('[FormFilling][2] Service Pricing OK:', val
@@ -173,7 +145,6 @@ export function useFormFilling() {
         console.warn('[FormFilling][2] Service Pricing FAILED:', pricingRes.reason);
       }
 
-      // ── [2] Product Catalog ───────────────────────────────────────────────
       if (catalogRes.status === 'fulfilled') {
         const val = catalogRes.value;
         const familyCount = val?.families?.length ?? 0;
@@ -185,7 +156,6 @@ export function useFormFilling() {
         console.warn('[FormFilling][3] Product Catalog FAILED:', catalogRes.reason);
       }
 
-      // ── [3] Service Configs List ──────────────────────────────────────────
       if (svcConfigsRes.status === 'fulfilled') {
         console.log('[FormFilling][4] Service Configs OK:', Array.isArray(svcConfigsRes.value)
           ? `${svcConfigsRes.value.length} configs`
@@ -197,7 +167,6 @@ export function useFormFilling() {
       setForm(prev => {
         const next: FormState = {...prev, initialLoading: false};
 
-        // ── Admin header: pre-populate header template ──────────────────────
         if (adminRes.status === 'fulfilled' && adminRes.value) {
           const ah = adminRes.value;
           if (ah.headerTitle) {
@@ -211,7 +180,6 @@ export function useFormFilling() {
           }
         }
 
-        // ── Product catalog: pre-populate rows where displayByAdmin !== false ─
         if (catalogRes.status === 'fulfilled' && catalogRes.value) {
           const catalog = catalogRes.value;
           const allProducts: any[] = (catalog.families ?? []).flatMap((f: any) =>
@@ -219,7 +187,6 @@ export function useFormFilling() {
           );
           const ts = Date.now();
 
-          // Non-dispenser products → smallProducts (unitPrice = basePrice.amount)
           const catalogSmall = allProducts.filter(
             p => p.familyKey !== 'dispensers' && p.displayByAdmin !== false,
           );
@@ -235,7 +202,6 @@ export function useFormFilling() {
             console.log('[FormFilling] Pre-populated', next.smallProducts.length, 'products from catalog');
           }
 
-          // Dispenser products → dispensers (warrantyRate = warrantyPricePerUnit.amount, replacementRate = basePrice.amount)
           const catalogDispensers = allProducts.filter(
             p => p.familyKey === 'dispensers' && p.displayByAdmin !== false,
           );
@@ -253,11 +219,9 @@ export function useFormFilling() {
           }
         }
 
-        // ── Pricing: service configs + service agreement template ───────────
         if (pricingRes.status === 'fulfilled' && pricingRes.value) {
           const {serviceConfigs, serviceAgreementTemplate} = pricingRes.value;
 
-          // Backend serviceId → mobile app serviceId aliases (where they differ)
           const SERVICE_ID_ALIASES: Record<string, string> = {
             carpetCleaning: 'carpetclean',
             stripWax:       'stripwax',
@@ -290,12 +254,10 @@ export function useFormFilling() {
           }
         }
 
-        // ── Product catalog ─────────────────────────────────────────────────
         if (catalogRes.status === 'fulfilled' && catalogRes.value) {
           next.productCatalog = catalogRes.value;
         }
 
-        // ── Service configs list (for service picker filter) ────────────────
         if (svcConfigsRes.status === 'fulfilled' && svcConfigsRes.value) {
           next.serviceConfigsList = svcConfigsRes.value;
         }
@@ -306,7 +268,6 @@ export function useFormFilling() {
     });
   }, []);
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
   const goToStep = useCallback((step: FormStep) => {
     setForm(prev => ({...prev, step}));
   }, []);
@@ -319,7 +280,6 @@ export function useFormFilling() {
     setForm(prev => ({...prev, step: Math.max(1, prev.step - 1) as FormStep}));
   }, []);
 
-  // ── Customer ───────────────────────────────────────────────────────────────
   const setHeaderTitle = useCallback((headerTitle: string) => {
     setForm(prev => ({...prev, headerTitle}));
   }, []);
@@ -332,7 +292,6 @@ export function useFormFilling() {
     });
   }, []);
 
-  // ── Products ───────────────────────────────────────────────────────────────
   const addSmallProduct = useCallback(() => {
     const item: SmallProduct = {
       id: Date.now().toString(),
@@ -402,7 +361,6 @@ export function useFormFilling() {
     }));
   }, []);
 
-  // ── Contract ───────────────────────────────────────────────────────────────
   const setContractMonths = useCallback((contractMonths: number) => {
     setForm(prev => ({...prev, contractMonths}));
   }, []);
@@ -439,7 +397,6 @@ export function useFormFilling() {
     setForm(prev => ({...prev, includeProductsTable}));
   }, []);
 
-  // ── Services ───────────────────────────────────────────────────────────────
   const addService = useCallback((serviceId: string) => {
     setForm(prev => {
       if (prev.visibleServices.includes(serviceId)) {return prev;}
@@ -464,7 +421,6 @@ export function useFormFilling() {
     }));
   }, []);
 
-  // ── Agreement terms ────────────────────────────────────────────────────────
   const setEnviroOf = useCallback((enviroOf: string) => {
     setForm(prev => ({...prev, enviroOf}));
   }, []);
@@ -476,7 +432,6 @@ export function useFormFilling() {
     }));
   }, []);
 
-  // ── Build payload ──────────────────────────────────────────────────────────
   const buildPayload = useCallback((): FormPayload => {
     const activeServices: Record<string, any> = {};
     for (const id of form.visibleServices) {
@@ -485,7 +440,6 @@ export function useFormFilling() {
       }
     }
 
-    // Determine document status: pending_approval when any active service has manual notes
     const hasServiceNotes = Object.values(activeServices).some(
       (sd: any) => sd?.isActive && typeof sd.notes === 'string' && sd.notes.trim().length > 0,
     );
@@ -547,7 +501,6 @@ export function useFormFilling() {
     };
   }, [form]);
 
-  // ── Save draft ─────────────────────────────────────────────────────────────
   const saveDraft = useCallback(async (): Promise<boolean> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
     const payload = buildPayload();
@@ -569,17 +522,14 @@ export function useFormFilling() {
     return ok;
   }, [form.savedId, buildPayload]);
 
-  // ── Generate ───────────────────────────────────────────────────────────────
   const generate = useCallback(async (): Promise<boolean> => {
     return saveDraft();
   }, [saveDraft]);
 
-  // ── Reset ──────────────────────────────────────────────────────────────────
   const reset = useCallback(() => {
     setForm(INITIAL_STATE);
   }, []);
 
-  // ── Derived: are all active services one-time? ─────────────────────────────
   const allServicesOneTime: boolean = (() => {
     const activeEntries = form.visibleServices
       .map(id => form.services[id])

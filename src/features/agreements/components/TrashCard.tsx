@@ -11,8 +11,6 @@ import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 import {ConfirmModal} from '../../../shared/components/ui/AppModal';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) {return '—';}
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -39,8 +37,6 @@ const FILE_TYPE_COLORS: Record<FileType, {bg: string; text: string}> = {
   version_log:  {bg: '#fef3c7', text: '#92400e'},
 };
 
-// ─── TrashFileRow ─────────────────────────────────────────────────────────────
-
 interface TrashFileRowProps {
   file: SavedFileListItem;
   onRestore: (file: SavedFileListItem) => void;
@@ -53,7 +49,6 @@ function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
 
   return (
     <View style={styles.fileRow}>
-      {/* Type tag + name */}
       <View style={[styles.fileTypeTag, {backgroundColor: typeColors.bg}]}>
         <Text style={[styles.fileTypeTagText, {color: typeColors.text}]}>{typeLabel}</Text>
       </View>
@@ -66,7 +61,6 @@ function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
         ) : null}
       </View>
 
-      {/* File-level icon buttons */}
       <TouchableOpacity
         style={[styles.fileIconBtn, styles.fileIconBtnGreen]}
         onPress={() => onRestore(file)}
@@ -82,8 +76,6 @@ function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
     </View>
   );
 }
-
-// ─── TrashCard ────────────────────────────────────────────────────────────────
 
 export interface TrashCardProps {
   agreement: SavedFileGroup;
@@ -102,10 +94,8 @@ export function TrashCard({
 }: TrashCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Agreement-level confirm modals
   const [showDeleteAgreement, setShowDeleteAgreement] = useState(false);
 
-  // File-level confirm modals
   const [fileToDelete, setFileToDelete] = useState<SavedFileListItem | null>(null);
 
   const handleRestoreAgreement = useCallback(() => {
@@ -129,7 +119,6 @@ export function TrashCard({
 
   return (
     <View style={styles.card}>
-      {/* ── Header row ── */}
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setExpanded(p => !p)}
@@ -154,7 +143,6 @@ export function TrashCard({
         />
       </TouchableOpacity>
 
-      {/* ── Action buttons row ── */}
       <View style={styles.cardActions}>
         <TouchableOpacity
           style={styles.restoreBtn}
@@ -171,7 +159,6 @@ export function TrashCard({
         </TouchableOpacity>
       </View>
 
-      {/* ── Expanded file list ── */}
       {expanded && (
         <View style={styles.fileListBlock}>
           <View style={styles.fileListHeader}>
@@ -199,7 +186,6 @@ export function TrashCard({
         </View>
       )}
 
-      {/* ── Delete agreement forever confirm ── */}
       <ConfirmModal
         visible={showDeleteAgreement}
         icon="trash-outline"
@@ -216,7 +202,6 @@ export function TrashCard({
         onCancel={() => setShowDeleteAgreement(false)}
       />
 
-      {/* ── Delete file forever confirm ── */}
       <ConfirmModal
         visible={fileToDelete !== null}
         icon="trash-outline"
@@ -242,8 +227,6 @@ export function TrashCard({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
@@ -255,7 +238,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  // Header
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -287,7 +269,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Action buttons
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -332,7 +313,6 @@ const styles = StyleSheet.create({
     color: '#ef4444',
   },
 
-  // File list block
   fileListBlock: {
     backgroundColor: '#f8fafc',
     borderTopWidth: 2,
@@ -362,7 +342,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
 
-  // File rows
   fileRow: {
     flexDirection: 'row',
     alignItems: 'center',

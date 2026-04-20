@@ -42,7 +42,6 @@ export function BackupStatsTab() {
 
   return (
     <ScrollView contentContainerStyle={{padding: Spacing.md, paddingBottom: 40}} showsVerticalScrollIndicator={false}>
-      {/* 4 stat cards */}
       <View style={bStyles.statsGrid}>
         <View style={bStyles.statCard}>
           <Ionicons name="cloud-outline" size={22} color="#3b82f6" />
@@ -66,7 +65,6 @@ export function BackupStatsTab() {
         </View>
       </View>
 
-      {/* Trigger breakdown */}
       {stats.triggerBreakdown && stats.triggerBreakdown.length > 0 && (
         <View style={bStyles.sectionBox}>
           <Text style={bStyles.boxTitle}>Backup Triggers</Text>
@@ -86,7 +84,6 @@ export function BackupStatsTab() {
         </View>
       )}
 
-      {/* Compression analysis */}
       {stats.compressionAnalysis && (
         <View style={bStyles.sectionBox}>
           <Text style={bStyles.boxTitle}>Compression Analysis</Text>
@@ -115,7 +112,6 @@ export function BackupStatsTab() {
         </View>
       )}
 
-      {/* Recent backups */}
       {stats.recentBackups && stats.recentBackups.length > 0 && (
         <View style={bStyles.sectionBox}>
           <Text style={bStyles.boxTitle}>Recent Backups</Text>

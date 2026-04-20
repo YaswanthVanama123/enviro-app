@@ -106,7 +106,6 @@ export function AddProductModal({
       <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={[addStyles.screen, {paddingTop: insets.top}]}>
 
-          {/* Header */}
           <View style={addStyles.header}>
             <View style={addStyles.headerLeft}>
               <Ionicons name="cube-outline" size={20} color={Colors.textPrimary} />
@@ -126,7 +125,6 @@ export function AddProductModal({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
 
-            {/* Product Name */}
             <View style={addStyles.fieldGroup}>
               <Text style={addStyles.label}>Product Name <Text style={addStyles.required}>*</Text></Text>
               <TextInput
@@ -139,7 +137,6 @@ export function AddProductModal({
               />
             </View>
 
-            {/* Product Key */}
             <View style={addStyles.fieldGroup}>
               <Text style={addStyles.label}>Product Key <Text style={addStyles.required}>*</Text></Text>
               <Text style={addStyles.hint}>Auto-generated · only letters, numbers, hyphens, underscores</Text>
@@ -154,7 +151,6 @@ export function AddProductModal({
               />
             </View>
 
-            {/* Kind */}
             <View style={addStyles.fieldGroup}>
               <Text style={addStyles.label}>Kind</Text>
               <PickerField
@@ -165,7 +161,6 @@ export function AddProductModal({
               />
             </View>
 
-            {/* Base Price + UOM */}
             <View style={addStyles.row}>
               <View style={[addStyles.fieldGroup, {flex: 1}]}>
                 <Text style={addStyles.label}>Base Price ($)</Text>
@@ -190,7 +185,6 @@ export function AddProductModal({
               </View>
             </View>
 
-            {/* Warranty Price + Billing Period */}
             <View style={addStyles.row}>
               <View style={[addStyles.fieldGroup, {flex: 1}]}>
                 <Text style={addStyles.label}>Warranty Price ($)</Text>
@@ -215,7 +209,6 @@ export function AddProductModal({
               </View>
             </View>
 
-            {/* Display in Admin Panel */}
             <View style={addStyles.toggleRow}>
               <View style={{flex: 1, gap: 3}}>
                 <Text style={addStyles.label}>Display in Admin Panel</Text>
@@ -229,7 +222,6 @@ export function AddProductModal({
               />
             </View>
 
-            {/* Description */}
             <View style={addStyles.fieldGroup}>
               <Text style={addStyles.label}>Description</Text>
               <TextInput
@@ -246,7 +238,6 @@ export function AddProductModal({
 
           </ScrollView>
 
-          {/* Footer */}
           <View style={[addStyles.footer, {paddingBottom: Math.max(insets.bottom, Spacing.lg)}]}>
             <TouchableOpacity style={addStyles.cancelBtn} onPress={onClose} disabled={saving}>
               <Text style={addStyles.cancelBtnText}>Cancel</Text>

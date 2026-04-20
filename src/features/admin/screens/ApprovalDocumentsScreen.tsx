@@ -24,8 +24,6 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function timeAgo(iso: string): string {
   if (!iso) {return '—';}
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -60,12 +58,9 @@ async function updateFileStatus(
   if (file.fileType === 'attached_pdf') {
     return agreementsApi.updateAttachedFileStatus(file.id, status);
   }
-  // main_pdf — use the agreement-level endpoint
   const agreementId = file.agreementId ?? file.id;
   return agreementsApi.updateAgreementStatus(agreementId, status);
 }
-
-// ─── Status pill ──────────────────────────────────────────────────────────────
 
 const STATUS_META: Record<string, {label: string; bg: string; color: string; dot: string}> = {
   pending_approval:   {label: 'Pending Approval',     bg: '#fef3c7', color: '#92400e', dot: '#f59e0b'},
@@ -86,8 +81,6 @@ function StatusPill({status}: {status: string}) {
   );
 }
 
-// ─── File row ─────────────────────────────────────────────────────────────────
-
 interface FileRowProps {
   file: SavedFileListItem;
   selected: boolean;
@@ -102,10 +95,8 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
   const label = fileTypeLabel(file.fileType, file.versionNumber);
   return (
     <View style={styles.fileRow}>
-      {/* Indent line */}
       <View style={styles.fileIndentLine} />
 
-      {/* Checkbox */}
       <TouchableOpacity
         onPress={onToggleSelect}
         style={[styles.checkbox, selected && styles.checkboxChecked]}
@@ -113,12 +104,10 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
         {selected && <Ionicons name="checkmark" size={11} color="#fff" />}
       </TouchableOpacity>
 
-      {/* Doc icon */}
       <View style={[styles.fileIcon, {backgroundColor: color + '20'}]}>
         <Ionicons name="document-text" size={14} color={color} />
       </View>
 
-      {/* Info */}
       <View style={styles.fileInfo}>
         <Text style={styles.fileName} numberOfLines={1}>
           {file.title || file.fileName}
@@ -132,7 +121,6 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
         <StatusPill status={file.status} />
       </View>
 
-      {/* Actions */}
       {updating ? (
         <ActivityIndicator size="small" color={Colors.primary} style={{marginLeft: 4}} />
       ) : (
@@ -154,8 +142,6 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
     </View>
   );
 }
-
-// ─── Agreement row ────────────────────────────────────────────────────────────
 
 interface AgreementRowProps {
   agreement: SavedFileGroup;
@@ -184,9 +170,7 @@ function AgreementRow({
 }: AgreementRowProps) {
   return (
     <View style={styles.agreementBlock}>
-      {/* Agreement header row */}
       <View style={styles.agreementRow}>
-        {/* Checkbox */}
         <TouchableOpacity
           onPress={onToggleSelectAll}
           style={[styles.checkbox, allSelected && styles.checkboxChecked]}
@@ -194,7 +178,6 @@ function AgreementRow({
           {allSelected && <Ionicons name="checkmark" size={11} color="#fff" />}
         </TouchableOpacity>
 
-        {/* Folder + expand */}
         <TouchableOpacity
           style={styles.agreementHeaderTap}
           activeOpacity={0.7}
@@ -215,14 +198,12 @@ function AgreementRow({
           </View>
         </TouchableOpacity>
 
-        {/* Type + updated (right side) */}
         <View style={styles.agreementRight}>
           <Text style={styles.agreementType}>Agreement</Text>
           <Text style={styles.agreementUpdated}>{timeAgo(agreement.latestUpdate)}</Text>
         </View>
       </View>
 
-      {/* File rows */}
       {expanded && agreement.files.map((file, idx) => (
         <View key={file.id}>
           <FileRow
@@ -241,8 +222,6 @@ function AgreementRow({
     </View>
   );
 }
-
-// ─── Approval Status strip ────────────────────────────────────────────────────
 
 interface StatusStripProps {
   pending: number;
@@ -284,32 +263,25 @@ function StatusStrip({pending, salesman, admin, total}: StatusStripProps) {
   );
 }
 
-// ─── ApprovalDocumentsScreen ──────────────────────────────────────────────────
-
 export function ApprovalDocumentsScreen() {
   const insets = useSafeAreaInsets();
 
-  // All data from API (unfiltered)
   const [allAgreements, setAllAgreements] = useState<SavedFileGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Expand / select state
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
 
-  // Per-file updating
   const [updatingFileId, setUpdatingFileId] = useState<string | null>(null);
 
-  // Confirm modals
   const [confirmFile, setConfirmFile] = useState<{file: SavedFileListItem; action: 'approve' | 'return'} | null>(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Client-side filtered list ─────────────────────────────────────────────
   const agreements = useMemo(() => {
     if (!searchQuery.trim()) {return allAgreements;}
     const q = searchQuery.toLowerCase();
@@ -319,7 +291,6 @@ export function ApprovalDocumentsScreen() {
     );
   }, [allAgreements, searchQuery]);
 
-  // ── Approval status counts (computed from all data, not filtered) ─────────
   const statusCounts = useMemo(() => {
     let pending = 0, salesman = 0, admin = 0, total = 0;
     allAgreements.forEach(ag => {
@@ -338,8 +309,6 @@ export function ApprovalDocumentsScreen() {
     () => allAgreements.reduce((acc, ag) => acc + ag.fileCount, 0),
     [allAgreements],
   );
-
-  // ── Fetch ────────────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async (isRefresh: boolean) => {
     if (isRefresh) {setRefreshing(true);}
@@ -378,8 +347,6 @@ export function ApprovalDocumentsScreen() {
     fetchData(true);
   }, [fetchData]);
 
-  // ── Select helpers ───────────────────────────────────────────────────────
-
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
@@ -409,8 +376,6 @@ export function ApprovalDocumentsScreen() {
     [selectedFileIds],
   );
 
-  // ── Remove file from local state after status change ─────────────────────
-
   const removeFileFromState = useCallback((fileId: string) => {
     setAllAgreements(prev =>
       prev.reduce<SavedFileGroup[]>((acc, ag) => {
@@ -428,8 +393,6 @@ export function ApprovalDocumentsScreen() {
     });
   }, []);
 
-  // ── Per-file approve / return ────────────────────────────────────────────
-
   const doFileAction = useCallback(
     async (file: SavedFileListItem, action: 'approve' | 'return') => {
       const status: AgreementStatus =
@@ -441,8 +404,6 @@ export function ApprovalDocumentsScreen() {
     },
     [removeFileFromState],
   );
-
-  // ── Bulk approve ─────────────────────────────────────────────────────────
 
   const doBulkApprove = useCallback(async () => {
     const allFiles = allAgreements.flatMap(ag => ag.files);
@@ -457,8 +418,6 @@ export function ApprovalDocumentsScreen() {
   }, [allAgreements, selectedFileIds, removeFileFromState]);
 
   const selectedCount = selectedFileIds.size;
-
-  // ── Render item ──────────────────────────────────────────────────────────
 
   const renderItem = useCallback(
     ({item}: {item: SavedFileGroup}) => {
@@ -482,11 +441,8 @@ export function ApprovalDocumentsScreen() {
     [expandedIds, selectedFileIds, updatingFileId, toggleExpand, toggleAgreementSelectAll, toggleFileSelect],
   );
 
-  // ── List header ──────────────────────────────────────────────────────────
-
   const ListHeader = (
     <View>
-      {/* Stats + Approve Selected bar */}
       {!loading && (
         <View style={styles.statsBar}>
           <View style={styles.statsBarLeft}>
@@ -509,7 +465,6 @@ export function ApprovalDocumentsScreen() {
         </View>
       )}
 
-      {/* Approval Status strip */}
       {!loading && (
         <StatusStrip
           pending={statusCounts.pending}
@@ -519,7 +474,6 @@ export function ApprovalDocumentsScreen() {
         />
       )}
 
-      {/* Column header */}
       {!loading && agreements.length > 0 && (
         <View style={styles.columnHeader}>
           <View style={styles.columnCheckboxPlaceholder} />
@@ -533,11 +487,8 @@ export function ApprovalDocumentsScreen() {
 
   const ListFooter = null;
 
-  // ── Render ───────────────────────────────────────────────────────────────
-
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Sticky search */}
       <View style={styles.stickyTop}>
         <View style={styles.searchContainer}>
           <View style={styles.searchRow}>
@@ -556,7 +507,6 @@ export function ApprovalDocumentsScreen() {
         </View>
       </View>
 
-      {/* Skeleton */}
       {loading && agreements.length === 0 ? (
         <View style={styles.skeletonList}>
           <View style={styles.skeletonStatsBar} />
@@ -618,7 +568,6 @@ export function ApprovalDocumentsScreen() {
         />
       )}
 
-      {/* Per-file confirm */}
       <ConfirmModal
         visible={confirmFile !== null}
         icon={confirmFile?.action === 'approve' ? 'checkmark-circle-outline' : 'refresh-outline'}
@@ -640,7 +589,6 @@ export function ApprovalDocumentsScreen() {
         onCancel={() => setConfirmFile(null)}
       />
 
-      {/* Bulk approve confirm */}
       <ConfirmModal
         visible={confirmBulk}
         icon="checkmark-done-outline"
@@ -660,21 +608,17 @@ export function ApprovalDocumentsScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const SKELETON_BG = '#e5e7eb';
 
 const styles = StyleSheet.create({
   screen: {flex: 1, backgroundColor: Colors.background},
 
-  // Sticky top bar
   stickyTop: {
     backgroundColor: Colors.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
 
-  // Search
   searchContainer: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
@@ -693,7 +637,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {flex: 1, fontSize: FontSize.md, color: Colors.textPrimary, padding: 0},
 
-  // Stats + Approve Selected bar
   statsBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -724,7 +667,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Approval status strip
   statusStrip: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
@@ -758,7 +700,6 @@ const styles = StyleSheet.create({
   statusStripCount: {fontSize: FontSize.md, fontWeight: '800'},
   statusStripDivider: {width: 1, height: 32, backgroundColor: Colors.border},
 
-  // Column header
   columnHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -779,10 +720,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // List
   listContent: {paddingTop: 0},
 
-  // Agreement block
   agreementBlock: {
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
@@ -810,7 +749,6 @@ const styles = StyleSheet.create({
   agreementType: {fontSize: 10, color: Colors.textMuted, fontWeight: '500'},
   agreementUpdated: {fontSize: 10, color: Colors.textMuted},
 
-  // Checkbox
   checkbox: {
     width: 18,
     height: 18,
@@ -827,7 +765,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
 
-  // File row
   fileRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -881,7 +818,6 @@ const styles = StyleSheet.create({
   fileActionReturn:  {borderColor: '#fde68a', backgroundColor: '#fffbeb'},
   fileDivider: {height: 1, backgroundColor: Colors.borderLight, marginLeft: Spacing.lg},
 
-  // Status pill
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -894,7 +830,6 @@ const styles = StyleSheet.create({
   statusDot: {width: 6, height: 6, borderRadius: 3},
   statusPillText: {fontSize: 10, fontWeight: '600', maxWidth: 140},
 
-  // Load more
   loadMoreBtn: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
@@ -907,7 +842,6 @@ const styles = StyleSheet.create({
   },
   loadMoreText: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.primary},
 
-  // Empty state
   emptyState: {
     alignItems: 'center',
     paddingVertical: 64,
@@ -925,7 +859,6 @@ const styles = StyleSheet.create({
   },
   retryText: {color: Colors.textWhite, fontSize: FontSize.md, fontWeight: '600'},
 
-  // Skeleton
   skeletonList: {flex: 1},
   skeletonSearch: {height: 44, backgroundColor: SKELETON_BG, borderRadius: Radius.lg},
   skeletonStatsBar: {
