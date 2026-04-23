@@ -44,8 +44,6 @@ export function PricingTabBar({active, onSelect}: PricingTabBarProps) {
 const styles = StyleSheet.create({
   mainTabBar: {
     backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
     maxHeight: 46,
   },
   mainTabBarContent: {

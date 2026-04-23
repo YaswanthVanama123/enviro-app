@@ -1,4 +1,5 @@
 import {apiClient} from '../client';
+import {API_BASE_URL} from '../../../config';
 import {
   getWeekRange,
   getMonthRange,
@@ -49,5 +50,12 @@ export const pdfApi = {
       throw new Error(res.error || 'Failed to fetch status counts');
     }
     return res.data;
+  },
+
+  getPricingCatalogExportUrl(): string {
+    const token = apiClient.getToken();
+    const base = API_BASE_URL.replace(/\/+$/, '');
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+    return `${base}/api/pdf/pricing-catalog/export${tokenParam}`;
   },
 };
