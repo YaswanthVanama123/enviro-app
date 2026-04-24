@@ -64,27 +64,29 @@ export const DEFAULT_HEADER_ROWS: HeaderRow[] = [
 ];
 
 export const FREQ_MULTIPLIER: Record<string, number> = {
-  oneTime:      1,
-  weekly:       4.33,
-  biweekly:     2.165,
-  twicePerMonth:2.0,
-  monthly:      1.0,
-  bimonthly:    0.5,
-  quarterly:    0.33,
-  biannual:     0.17,
-  annual:       1 / 12,
+  oneTime:       1,
+  weekly:        4.33,
+  biweekly:      2.165,
+  twicePerMonth: 2.0,
+  monthly:       1.0,
+  everyFourWeeks:1.0833,
+  bimonthly:     0.5,
+  quarterly:     0.33,
+  biannual:      0.17,
+  annual:        1 / 12,
 };
 
 export const FREQ_LABELS: Record<string, string> = {
-  oneTime:      'One Time',
-  weekly:       'Weekly',
-  biweekly:     'Bi-Weekly',
-  twicePerMonth:'2× / Month',
-  monthly:      'Monthly',
-  bimonthly:    'Bi-Monthly',
-  quarterly:    'Quarterly',
-  biannual:     'Bi-Annual',
-  annual:       'Annual',
+  oneTime:       'One Time',
+  weekly:        'Weekly',
+  biweekly:      'Bi-Weekly',
+  twicePerMonth: '2× / Month',
+  monthly:       'Monthly',
+  everyFourWeeks:'Every 4 Weeks',
+  bimonthly:     'Bi-Monthly',
+  quarterly:     'Quarterly',
+  biannual:      'Bi-Annual',
+  annual:        'Annual',
 };
 
 export const FREQ_OPTIONS = Object.entries(FREQ_LABELS).map(([value, label]) => ({value, label}));

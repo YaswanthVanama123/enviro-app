@@ -16,9 +16,10 @@ interface Props {
 }
 
 const FREQ_OPTS = [
-  {value: 'weekly',    label: 'Weekly'},
-  {value: 'biweekly',  label: 'Bi-weekly'},
-  {value: 'monthly',   label: 'Monthly'},
+  {value: 'weekly',         label: 'Weekly'},
+  {value: 'biweekly',       label: 'Bi-weekly'},
+  {value: 'monthly',        label: 'Monthly'},
+  {value: 'everyFourWeeks', label: 'Every 4 Weeks'},
 ];
 
 const PRICING_TYPES = [

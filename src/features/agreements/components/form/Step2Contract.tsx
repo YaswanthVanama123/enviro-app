@@ -20,14 +20,15 @@ const DURATION_OPTIONS = Array.from({length: 35}, (_, i) => {
 });
 
 const FREQ_OPTIONS = [
-  {value: '0',    label: 'One-time'},
-  {value: '4',    label: 'Weekly (4×/mo)'},
-  {value: '2',    label: 'Bi-weekly (2×/mo)'},
-  {value: '1',    label: 'Monthly'},
-  {value: '0.5',  label: 'Every 2 months'},
-  {value: '0.33', label: 'Quarterly'},
-  {value: '0.17', label: 'Bi-annually'},
-  {value: '0.08', label: 'Annually'},
+  {value: '0',      label: 'One-time'},
+  {value: '4',      label: 'Weekly (4×/mo)'},
+  {value: '2',      label: 'Bi-weekly (2×/mo)'},
+  {value: '1',      label: 'Monthly'},
+  {value: '1.0833', label: 'Every 4 Weeks (1.08×/mo)'},
+  {value: '0.5',    label: 'Every 2 months'},
+  {value: '0.33',   label: 'Quarterly'},
+  {value: '0.17',   label: 'Bi-annually'},
+  {value: '0.08',   label: 'Annually'},
 ];
 
 const PAYMENT_OPTIONS: {value: PaymentOption; label: string; icon: string}[] = [

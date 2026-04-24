@@ -11,12 +11,13 @@ interface Step4ReviewProps {
 }
 
 const FREQ_MULT: Record<string, number> = {
-  daily:     30,
-  weekly:    4.33,
-  biweekly:  2,
-  monthly:   1,
-  quarterly: 1 / 3,
-  yearly:    1 / 12,
+  daily:          30,
+  weekly:         4.33,
+  biweekly:       2,
+  monthly:        1,
+  everyFourWeeks: 1.0833,
+  quarterly:      1 / 3,
+  yearly:         1 / 12,
 };
 
 function getFreqMult(freq: string): number {

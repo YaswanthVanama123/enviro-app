@@ -72,6 +72,7 @@ interface TotalsBlockProps {
 
 export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, contractMonths, contractTotal}: TotalsBlockProps) {
   const isOneTime = frequency === 'oneTime';
+  const isEveryFourWeeks = frequency === 'everyFourWeeks';
   const isVisitBased = ['bimonthly', 'quarterly', 'biannual', 'annual'].includes(frequency);
 
   return (
@@ -81,6 +82,13 @@ export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, 
       </View>
       {isOneTime ? (
         <DollarRow label="Total Price" value={contractTotal} highlight />
+      ) : isEveryFourWeeks ? (
+        <>
+          <DollarRow label="First Visit Total" value={perVisit} />
+          <DollarRow label="Recurring Visit Total" value={perVisit} />
+          <FormDivider />
+          <DollarRow label={`Contract Total (${contractMonths} mo)`} value={contractTotal} highlight />
+        </>
       ) : (
         <>
           <DollarRow label={isVisitBased ? 'Recurring Visit Total' : 'Per Visit Total'} value={perVisit} />
@@ -114,6 +122,7 @@ export function calcTotals(perVisitBase: number, frequency: string, contractMont
 export function getFreqMultiplier(frequency: string): number {
   const map: Record<string, number> = {
     weekly: 4.33, biweekly: 2.165, twicePerMonth: 2.0, monthly: 1.0,
+    everyFourWeeks: 1.0833,
     bimonthly: 0.5, quarterly: 0.33, biannual: 0.17, annual: 1 / 12,
   };
   return map[frequency] ?? 1.0;
