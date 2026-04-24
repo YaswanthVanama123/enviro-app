@@ -5,8 +5,19 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "web": "webpack serve --config webpack.config.js --mode development",
+    "web:build": "webpack --config webpack.config.js --mode production",
+    "windows": "react-native run-windows",
+    "windows:release": "react-native run-windows --release",
+    "windows:x64": "react-native run-windows --arch x64",
+    "windows:init": "react-native-windows-init --overwrite",
+    "macos": "react-native run-macos",
+    "macos:release": "react-native run-macos --configuration Release",
+    "macos:init": "react-native-macos-init --overwrite",
     "lint": "eslint .",
     "start": "react-native start",
+    "start:windows": "react-native start --platforms windows",
+    "start:macos": "react-native start --platforms macos",
     "test": "jest"
   },
   "dependencies": {
@@ -16,11 +27,13 @@
     "@react-navigation/native": "^7.1.33",
     "@react-navigation/native-stack": "^7.14.4",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.84.1",
     "react-native-document-picker": "^9.3.1",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.24.0",
-    "react-native-vector-icons": "^10.3.0"
+    "react-native-vector-icons": "^10.3.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -30,8 +30,14 @@ target 'EnviroApp' do
     react_native_post_install(
       installer,
       config[:reactNativePath],
-      :mac_catalyst_enabled => false,
+      :mac_catalyst_enabled => true,
       # :ccache_enabled => true
     )
+    # Fix Xcode 15+ user script sandboxing blocking CocoaPods phase scripts
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
   end
 end

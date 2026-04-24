@@ -432,15 +432,22 @@ export function AdminPanelScreen() {
 
 const styles = StyleSheet.create({
   flex: {flex: 1},
-  screen: {flex: 1, backgroundColor: Colors.background},
+  screen: {flex: 1, backgroundColor: '#f9fafb'},
   center: {alignItems: 'center', justifyContent: 'center'},
 
   scrollContent: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
+    alignItems: 'center',
   },
 
-  heroRow: {alignItems: 'center', marginBottom: Spacing.xl, gap: Spacing.sm},
+  heroRow: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+    width: '100%',
+    maxWidth: 520,
+  },
   heroIcon: {
     width: 72,
     height: 72,
@@ -459,6 +466,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 520,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.06,
@@ -470,9 +479,9 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? Spacing.md : Spacing.sm,
@@ -500,14 +509,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: Spacing.lg,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: Radius.lg,
     backgroundColor: Colors.primary,
   },
   signInBtnText: {fontSize: FontSize.md, fontWeight: '700', color: '#fff'},
 
   forgotBtn: {marginTop: Spacing.md, alignItems: 'center', paddingVertical: Spacing.sm},
-  forgotBtnText: {fontSize: FontSize.sm, color: Colors.primary, fontWeight: '500'},
+  forgotBtnText: {fontSize: FontSize.sm, color: Colors.primary, fontWeight: '600'},
 
   profileCard: {
     backgroundColor: Colors.surface,
@@ -517,6 +526,8 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     alignItems: 'center',
     gap: Spacing.sm,
+    width: '100%',
+    maxWidth: 520,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.06,
@@ -558,6 +569,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     marginTop: Spacing.sm,
+    width: '100%',
+    maxWidth: 520,
   },
   menuRowLeft: {
     flexDirection: 'row',
@@ -588,6 +601,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.primary,
     backgroundColor: Colors.primaryLight,
+    width: '100%',
+    maxWidth: 520,
   },
   logoutBtnText: {fontSize: FontSize.md, fontWeight: '600', color: Colors.primary},
 
