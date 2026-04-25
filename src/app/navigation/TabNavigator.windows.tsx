@@ -104,7 +104,7 @@ export function TabNavigator() {
                 activeOpacity={0.8}>
                 <Ionicons
                   name={item.icon}
-                  size={15}
+                  size={20}
                   color={isActive ? C.navTextActive : C.navText}
                   style={ss.navIcon}
                 />
@@ -126,7 +126,7 @@ export function TabNavigator() {
   );
 }
 
-const NAV_HEIGHT = 56;
+const NAV_HEIGHT = 72;
 
 const ss = StyleSheet.create({
   shell: {
@@ -135,48 +135,47 @@ const ss = StyleSheet.create({
     backgroundColor: C.bg,
   },
 
-  // ── Top Nav (matches web: height 56, white, border-bottom #e6e6e6) ──
+  // ── Top Nav ──
   topnav: {
-    height:          NAV_HEIGHT,
-    flexDirection:   'row',
-    alignItems:      'center',
-    paddingHorizontal: 16,
-    backgroundColor: C.navBg,
+    height:            NAV_HEIGHT,
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingHorizontal: 24,
+    backgroundColor:   C.navBg,
     borderBottomWidth: 1,
     borderBottomColor: C.navBorder,
-    gap: 12,
-    // shadow (web: box-shadow not used on topnav, just border)
+    gap: 16,
   },
 
   // Brand
   brand: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap: 8,
+    gap: 10,
     flexShrink: 0,
   },
   logoBox: {
-    width:           42,
-    height:          42,
-    borderRadius:    6,
+    width:           52,
+    height:          52,
+    borderRadius:    8,
     backgroundColor: C.primary,
     alignItems:      'center',
     justifyContent:  'center',
   },
   logoText: {
     color:      '#ffffff',
-    fontSize:   16,
+    fontSize:   20,
     fontWeight: '800',
     fontFamily: 'Arial',
   },
   brandName: {
-    fontSize:   17,
+    fontSize:   21,
     fontWeight: '700',
     color:      C.textPrimary,
     fontFamily: 'Arial',
   },
 
-  // Nav scroll + items (margin-left: auto → flex: 1 + justify end)
+  // Nav scroll + items
   navScroll: {
     flex: 1,
   },
@@ -185,26 +184,23 @@ const ss = StyleSheet.create({
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'flex-end',
-    gap: 10,
+    gap: 6,
     paddingLeft: 8,
   },
   navItem: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical:   8,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical:   12,
     borderRadius:      8,
-    // default: no background
   },
   navItemActive: {
     backgroundColor: C.navItemActive,
   },
-  navIcon: {
-    // matches web icon display
-  },
+  navIcon: {},
   navLabel: {
-    fontSize:   15,
+    fontSize:   17,
     fontWeight: '600',
     color:      C.navText,
     fontFamily: 'Arial',

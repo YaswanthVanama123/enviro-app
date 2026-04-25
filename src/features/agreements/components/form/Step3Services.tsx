@@ -51,6 +51,8 @@ interface Step3ServicesProps {
   onAddService: (id: string) => void;
   onRemoveService: (id: string) => void;
   onUpdateService: (id: string, data: any) => void;
+  /** Desktop mode: show per-service tab navigation row (web app ServicesSection style) */
+  showServiceTabs?: boolean;
 }
 
 function ServicePickerModal({
@@ -141,8 +143,15 @@ export function Step3Services({
   onAddService,
   onRemoveService,
   onUpdateService,
+  showServiceTabs = false,
 }: Step3ServicesProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [activeServiceTab, setActiveServiceTab] = useState<string | null>(null);
+
+  // Reset active tab when a service is removed and it was selected
+  const filteredServices = activeServiceTab && !visibleServices.includes(activeServiceTab)
+    ? visibleServices
+    : visibleServices.filter(sid => !activeServiceTab || sid === activeServiceTab);
 
   const activeCatalog = useMemo(() => {
     if (!serviceConfigsList || serviceConfigsList.length === 0) {
@@ -157,6 +166,39 @@ export function Step3Services({
 
   return (
     <View>
+      {/* ── Per-service tab row (desktop mode, matches web app .svc-tabs) ── */}
+      {showServiceTabs && visibleServices.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={stab.scroll}
+          contentContainerStyle={stab.row}>
+          {/* All Services tab */}
+          <TouchableOpacity
+            style={[stab.tab, !activeServiceTab && stab.tabActive]}
+            onPress={() => setActiveServiceTab(null)}
+            activeOpacity={0.8}>
+            <Text style={[stab.tabText, !activeServiceTab && stab.tabTextActive]}>All Services</Text>
+          </TouchableOpacity>
+          {/* One tab per active service */}
+          {visibleServices.map(serviceId => {
+            const meta = SERVICE_CATALOG.find(s => s.id === serviceId);
+            const isActive = activeServiceTab === serviceId;
+            return (
+              <TouchableOpacity
+                key={serviceId}
+                style={[stab.tab, isActive && stab.tabActive]}
+                onPress={() => setActiveServiceTab(serviceId)}
+                activeOpacity={0.8}>
+                <Text style={[stab.tabText, isActive && stab.tabTextActive]}>
+                  {meta?.label ?? serviceId}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
       {visibleServices.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="construct-outline" size={40} color={Colors.textMuted} />
@@ -165,7 +207,7 @@ export function Step3Services({
         </View>
       )}
 
-      {visibleServices.map(serviceId =>
+      {filteredServices.map(serviceId =>
         renderServiceForm(
           serviceId,
           services[serviceId],
@@ -229,6 +271,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.primary,
   },
+});
+
+// ── Per-service tab navigation (desktop mode, exact web app .svc-tabs style) ──
+const stab = StyleSheet.create({
+  scroll: {marginBottom: 10},
+  row: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexWrap: 'wrap',
+  },
+  tab: {
+    borderWidth: 1,
+    borderColor: '#c00000',
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  tabActive: {backgroundColor: '#c00000'},
+  tabText: {fontSize: 13, fontWeight: '600', color: '#c00000'},
+  tabTextActive: {color: '#ffffff'},
 });
 
 const pm = StyleSheet.create({

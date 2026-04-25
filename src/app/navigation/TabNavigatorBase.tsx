@@ -1,6 +1,6 @@
-import React from 'react';
-import {View, StyleSheet, Platform, ActivityIndicator} from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet, Platform, ActivityIndicator} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../../features/home/screens/HomeScreen';
 import {SavedAgreementsScreen} from '../../features/agreements/screens/SavedAgreementsScreen';
@@ -13,21 +13,37 @@ import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsS
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
 
-const Tab = createBottomTabNavigator();
+interface TabItem {
+  name: string;
+  label: string;
+  icon: string;
+  iconFocused: string;
+  component: React.ComponentType<any>;
+}
 
-const TAB_ICON: Record<string, [string, string]> = {
-  Home:      ['home-outline',                       'home'],
-  Saved:     ['document-text-outline',              'document-text'],
-  Trash:     ['trash-outline',                      'trash'],
-  More:      ['ellipsis-horizontal-circle-outline', 'ellipsis-horizontal-circle'],
-  Dashboard: ['grid-outline',                       'grid'],
-  Approvals: ['checkmark-circle-outline',           'checkmark-circle'],
-  Pricing:   ['pricetag-outline',                   'pricetag'],
-  Admin:     ['shield-checkmark-outline',           'shield-checkmark'],
-};
+const PUBLIC_TABS: TabItem[] = [
+  {name: 'Home',  label: 'Home',  icon: 'home-outline',                       iconFocused: 'home',                       component: HomeScreen},
+  {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 iconFocused: 'add-circle',                 component: CreateAgreementScreen},
+  {name: 'Saved', label: 'Saved', icon: 'document-text-outline',              iconFocused: 'document-text',              component: SavedAgreementsScreen},
+  {name: 'Trash', label: 'Trash', icon: 'trash-outline',                      iconFocused: 'trash',                      component: TrashScreen},
+  {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', iconFocused: 'ellipsis-horizontal-circle', component: AdminPanelScreen},
+];
+
+const AUTH_TABS: TabItem[] = [
+  {name: 'Dashboard', label: 'Dash',      icon: 'grid-outline',              iconFocused: 'grid',              component: AdminDashboardScreen},
+  {name: 'New',       label: 'New',       icon: 'add-circle-outline',        iconFocused: 'add-circle',        component: CreateAgreementScreen},
+  {name: 'Saved',     label: 'Saved',     icon: 'document-text-outline',     iconFocused: 'document-text',     component: SavedAgreementsScreen},
+  {name: 'Approvals', label: 'Approvals', icon: 'checkmark-circle-outline',  iconFocused: 'checkmark-circle',  component: ApprovalDocumentsScreen},
+  {name: 'Pricing',   label: 'Pricing',   icon: 'pricetag-outline',          iconFocused: 'pricetag',          component: PricingDetailsScreen},
+  {name: 'Admin',     label: 'Admin',     icon: 'shield-checkmark-outline',  iconFocused: 'shield-checkmark',  component: AdminPanelScreen},
+];
+
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 50 : 56;
 
 export function TabNavigator() {
   const {isAuthenticated, authReady} = useAdminAuth();
+  const [activeTab, setActiveTab] = useState(0);
+  const insets = useSafeAreaInsets();
 
   if (!authReady) {
     return (
@@ -37,112 +53,57 @@ export function TabNavigator() {
     );
   }
 
-  return (
-    <Tab.Navigator
-      screenOptions={({route}) => ({
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
-        tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: ({focused, color, size}) => {
-          const icons = TAB_ICON[route.name];
-          if (!icons) {return null;}
-          return (
-            <Ionicons
-              name={focused ? icons[1] : icons[0]}
-              size={size ?? 22}
-              color={color}
-            />
-          );
-        },
-      })}>
+  const tabs = isAuthenticated ? AUTH_TABS : PUBLIC_TABS;
+  const ActiveScreen = tabs[activeTab]?.component ?? tabs[0].component;
 
-      {isAuthenticated ? (
-        <>
-          <Tab.Screen
-            name="Dashboard"
-            component={AdminDashboardScreen}
-            options={{tabBarLabel: 'Dash'}}
-          />
-          <Tab.Screen
-            name="New"
-            component={CreateAgreementScreen}
-            options={{
-              tabBarLabel: 'New',
-              tabBarIcon: ({focused}) => (
+  // Total height of the tab bar including the bottom safe-area inset
+  const tabBarTotalHeight = TAB_BAR_HEIGHT + insets.bottom;
+
+  return (
+    <View style={styles.shell}>
+
+      {/* ── Screen content — padded so it never slides under the tab bar ── */}
+      <View style={[styles.content, {paddingBottom: tabBarTotalHeight}]}>
+        <ActiveScreen />
+      </View>
+
+      {/* ── Bottom tab bar (absolutely positioned, always on top) ── */}
+      <View style={[styles.tabBar, {height: tabBarTotalHeight, paddingBottom: insets.bottom}]}>
+        {tabs.map((tab, idx) => {
+          const focused = idx === activeTab;
+          const isNew = tab.name === 'New';
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              style={styles.tabItem}
+              onPress={() => setActiveTab(idx)}
+              activeOpacity={0.7}>
+              {isNew ? (
                 <View style={[styles.newBtn, focused && styles.newBtnActive]}>
                   <Ionicons
-                    name="add"
+                    name={focused ? tab.iconFocused : tab.icon}
                     size={26}
                     color={focused ? Colors.textWhite : Colors.primary}
                   />
                 </View>
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Saved"
-            component={SavedAgreementsScreen}
-            options={{tabBarLabel: 'Saved'}}
-          />
-          <Tab.Screen
-            name="Approvals"
-            component={ApprovalDocumentsScreen}
-            options={{tabBarLabel: 'Approvals'}}
-          />
-          <Tab.Screen
-            name="Pricing"
-            component={PricingDetailsScreen}
-            options={{tabBarLabel: 'Pricing'}}
-          />
-          <Tab.Screen
-            name="Admin"
-            component={AdminPanelScreen}
-            options={{tabBarLabel: 'Admin'}}
-          />
-        </>
-      ) : (
-        <>
-          <Tab.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{tabBarLabel: 'Home'}}
-          />
-          <Tab.Screen
-            name="New"
-            component={CreateAgreementScreen}
-            options={{
-              tabBarLabel: 'New',
-              tabBarIcon: ({focused}) => (
-                <View style={[styles.newBtn, focused && styles.newBtnActive]}>
+              ) : (
+                <>
                   <Ionicons
-                    name="add"
-                    size={26}
-                    color={focused ? Colors.textWhite : Colors.primary}
+                    name={focused ? tab.iconFocused : tab.icon}
+                    size={22}
+                    color={focused ? Colors.primary : Colors.textMuted}
                   />
-                </View>
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Saved"
-            component={SavedAgreementsScreen}
-            options={{tabBarLabel: 'Saved'}}
-          />
-          <Tab.Screen
-            name="Trash"
-            component={TrashScreen}
-            options={{tabBarLabel: 'Trash'}}
-          />
-          <Tab.Screen
-            name="More"
-            component={AdminPanelScreen}
-            options={{tabBarLabel: 'More'}}
-          />
-        </>
-      )}
-    </Tab.Navigator>
+                  <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+                    {tab.label}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+    </View>
   );
 }
 
@@ -153,18 +114,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.background,
   },
+  shell: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  content: {
+    flex: 1,
+  },
   tabBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
     backgroundColor: Colors.surface,
     borderTopColor: '#e5e7eb',
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 84 : 64,
+    zIndex: 999,
+    elevation: 8,          // Android shadow
     paddingTop: Spacing.sm,
-    paddingBottom: Platform.OS === 'ios' ? Spacing.xl : Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: TAB_BAR_HEIGHT - Spacing.sm,
   },
   tabLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    color: Colors.textMuted,
     marginTop: 2,
+  },
+  tabLabelActive: {
+    color: Colors.primary,
   },
   newBtn: {
     width: 44,
@@ -173,7 +157,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
   },
   newBtnActive: {
     backgroundColor: Colors.primary,
