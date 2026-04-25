@@ -240,6 +240,22 @@ export interface ZohoUpdatePayload {
   dealId?: string;
 }
 
+export interface ZohoCreateTaskPayload {
+  subject: string;
+  dueDate?: string;
+  status?: 'Not Started' | 'In Progress' | 'Completed' | 'Waiting' | 'Deferred';
+  priority?: 'High' | 'Medium' | 'Low';
+  description?: string;
+}
+
+export interface ZohoTask {
+  id: string;
+  subject: string;
+  dueDate?: string;
+  status: string;
+  priority: string;
+}
+
 export const zohoApi = {
   async getStatus(agreementId: string): Promise<ZohoUploadStatus | null> {
     const res = await apiClient.get<ZohoUploadStatus>(
@@ -277,6 +293,17 @@ export const zohoApi = {
       payload,
     );
     return res.data ?? {success: false, message: res.error ?? 'Update failed'};
+  },
+
+  async createTask(
+    agreementId: string,
+    payload: ZohoCreateTaskPayload,
+  ): Promise<{success: boolean; task?: ZohoTask; error?: string}> {
+    const res = await apiClient.post<{success: boolean; task?: ZohoTask; error?: string}>(
+      `/api/zoho-upload/${agreementId}/tasks`,
+      payload,
+    );
+    return res.data ?? {success: false, error: res.error ?? 'Task creation failed'};
   },
 };
 

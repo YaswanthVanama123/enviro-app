@@ -10,14 +10,14 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   zohoApi,
   ZohoUploadStatus,
   ZohoCompany,
-} from '../../../services/api/endpoints/agreements.api';
-import {Colors} from '../../../theme/colors';
+} from '../../../services/api/endpoints/agreements.api';import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
@@ -49,6 +49,9 @@ export function BiginUploadModal({
   const [dealName, setDealName] = useState('');
 
   const [noteText, setNoteText] = useState('');
+  const [taskSubject, setTaskSubject] = useState('');
+  const [taskDueDate, setTaskDueDate] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
 
   useEffect(() => {
     if (!visible) {return;}
@@ -58,6 +61,9 @@ export function BiginUploadModal({
     setSelectedCompany(null);
     setDealName('');
     setNoteText('');
+    setTaskSubject('');
+    setTaskDueDate('');
+    setTaskDescription('');
     setCompanySearch('');
     setCompanies([]);
 
@@ -114,13 +120,21 @@ export function BiginUploadModal({
     }
 
     if (result.success) {
+      // If a task subject was provided, also create the task
+      if (taskSubject.trim()) {
+        await zohoApi.createTask(agreementId, {
+          subject: taskSubject.trim(),
+          dueDate: taskDueDate.trim() || undefined,
+          description: taskDescription.trim() || undefined,
+        });
+      }
       setStep('done');
       onSuccess();
     } else {
       setErrorMsg(result.message || result.error || 'Upload failed.');
       setStep(status?.isFirstTime ? 'first-time' : 'update');
     }
-  }, [step, status, selectedCompany, dealName, noteText, agreementId, onSuccess]);
+  }, [step, status, selectedCompany, dealName, noteText, taskSubject, taskDueDate, taskDescription, agreementId, onSuccess]);
 
   const renderCompanyItem = ({item}: {item: ZohoCompany}) => {
     const selected = selectedCompany?.id === item.id;
@@ -195,7 +209,11 @@ export function BiginUploadModal({
     }
 
     return (
-      <View style={styles.formBody}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={{maxHeight: 480}}>
+        <View style={styles.formBody}>
         {step === 'update' && status?.mapping && (
           <View style={styles.mappingCard}>
             <Ionicons name="link-outline" size={15} color={Colors.primary} />
@@ -267,6 +285,41 @@ export function BiginUploadModal({
           textAlignVertical="top"
         />
 
+        <View style={styles.sectionDivider} />
+        <Text style={styles.sectionHeader}>
+          <Ionicons name="checkbox-outline" size={13} color={Colors.textMuted} />
+          {'  '}Create Task (optional)
+        </Text>
+        <Text style={[styles.fieldLabel, {marginTop: Spacing.xs}]}>Task Subject</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="e.g. Follow up with client…"
+          placeholderTextColor={Colors.textMuted}
+          value={taskSubject}
+          onChangeText={setTaskSubject}
+          autoCapitalize="sentences"
+        />
+        <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Due Date (optional)</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={Colors.textMuted}
+          value={taskDueDate}
+          onChangeText={setTaskDueDate}
+          keyboardType="numbers-and-punctuation"
+          maxLength={10}
+        />
+        <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Task Description (optional)</Text>
+        <TextInput
+          style={[styles.textInput, styles.textInputMulti]}
+          placeholder="Enter task details…"
+          placeholderTextColor={Colors.textMuted}
+          value={taskDescription}
+          onChangeText={setTaskDescription}
+          multiline
+          textAlignVertical="top"
+        />
+
         {errorMsg ? (
           <View style={styles.errorBanner}>
             <Ionicons name="alert-circle-outline" size={14} color="#b91c1c" />
@@ -280,7 +333,8 @@ export function BiginUploadModal({
             {status?.isFirstTime ? 'Upload to Bigin' : 'Update Bigin Deal'}
           </Text>
         </TouchableOpacity>
-      </View>
+        </View>
+      </ScrollView>
     );
   };
 
@@ -317,8 +371,7 @@ export function BiginUploadModal({
           </View>
 
           {renderContent()}
-        </View>
-      </KeyboardAvoidingView>
+        </View>      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -568,6 +621,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FontSize.xs,
     color: '#b91c1c',
+  },
+
+  sectionDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.sm,
+  },
+  sectionHeader: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 4,
   },
 
   submitBtn: {
