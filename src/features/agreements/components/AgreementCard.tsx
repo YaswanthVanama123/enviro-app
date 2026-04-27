@@ -24,6 +24,7 @@ import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 import {ConfirmModal, InfoModal, OptionsModal} from '../../../shared/components/ui/AppModal';
 import {BiginUploadModal} from './BiginUploadModal';
+import {BiginTaskModal} from './BiginTaskModal';
 
 interface TimelineStatus {
   label: string;
@@ -277,6 +278,7 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   const [showCalendar, setShowCalendar] = useState(false);
 
   const [showBiginModal, setShowBiginModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const [showAddOptions, setShowAddOptions] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -299,6 +301,10 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
 
   const handleBegin = useCallback(() => {
     setShowBiginModal(true);
+  }, []);
+
+  const handleTask = useCallback(() => {
+    setShowTaskModal(true);
   }, []);
 
   const handleAdd = useCallback(() => {
@@ -388,6 +394,13 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             onPress={handleBegin}>
             <Ionicons name="play-circle-outline" size={13} color="#fff" />
             <Text style={styles.beginBtnText}>Begin</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.taskBtn}
+            onPress={handleTask}>
+            <Ionicons name="checkbox-outline" size={13} color="#fff" />
+            <Text style={styles.taskBtnText}>Task</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.addBtn} onPress={handleAdd} disabled={uploading}>
@@ -524,6 +537,17 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         }}
       />
 
+      <BiginTaskModal
+        visible={showTaskModal}
+        agreementId={agreement.id}
+        agreementTitle={agreement.agreementTitle}
+        onClose={() => setShowTaskModal(false)}
+        onSuccess={() => {
+          setShowTaskModal(false);
+          onRefresh?.();
+        }}
+      />
+
       <OptionsModal
         visible={showAddOptions}
         title={`Add to Agreement`}
@@ -640,6 +664,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#ea580c',
   },
   beginBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
+  taskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: '#16a34a',
+  },
+  taskBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',

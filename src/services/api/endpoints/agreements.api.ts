@@ -240,12 +240,28 @@ export interface ZohoUpdatePayload {
   dealId?: string;
 }
 
+export interface ZohoUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface ZohoCreateTaskPayload {
   subject: string;
   dueDate?: string;
   status?: 'Not Started' | 'In Progress' | 'Completed' | 'Waiting' | 'Deferred';
   priority?: 'High' | 'Medium' | 'Low';
   description?: string;
+  ownerId?: string;
+  seModule?: string;
+  reminder?: boolean;
+  reminderWhen?: string;
+  reminderTime?: string;
+  repeat?: boolean;
+  repeatFrequency?: string;
+  repeatUntil?: string;
+  companyName?: string;
+  agreementId?: string;
 }
 
 export interface ZohoTask {
@@ -295,12 +311,30 @@ export const zohoApi = {
     return res.data ?? {success: false, message: res.error ?? 'Update failed'};
   },
 
+  async getUsers(): Promise<ZohoUser[]> {
+    const res = await apiClient.get<{success: boolean; users: ZohoUser[]}>(
+      '/api/zoho-upload/users',
+    );
+    return res.data?.users ?? [];
+  },
+
   async createTask(
     agreementId: string,
     payload: ZohoCreateTaskPayload,
   ): Promise<{success: boolean; task?: ZohoTask; error?: string}> {
     const res = await apiClient.post<{success: boolean; task?: ZohoTask; error?: string}>(
       `/api/zoho-upload/${agreementId}/tasks`,
+      payload,
+    );
+    return res.data ?? {success: false, error: res.error ?? 'Task creation failed'};
+  },
+
+  async createTaskForCompany(
+    companyId: string,
+    payload: ZohoCreateTaskPayload,
+  ): Promise<{success: boolean; task?: ZohoTask; error?: string}> {
+    const res = await apiClient.post<{success: boolean; task?: ZohoTask; error?: string}>(
+      `/api/zoho-upload/companies/${companyId}/tasks`,
       payload,
     );
     return res.data ?? {success: false, error: res.error ?? 'Task creation failed'};
