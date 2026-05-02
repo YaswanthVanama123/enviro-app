@@ -108,7 +108,7 @@ export const SKELETON_BG = '#e5e7eb';
 
 export function fmt(amount: number | undefined): string {
   if (!amount || amount === 0) {return '—';}
-  return `$${amount}`;
+  return '$' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
 export function timeAgo(iso: string | undefined): string {
@@ -146,7 +146,7 @@ export function formatConfigValue(key: string, val: any): string {
     if (lk.includes('price') || lk.includes('charge') || lk.includes('cost') ||
         lk.includes('fee') || lk.includes('minimum') || lk.includes('rate') ||
         lk.includes('base') || lk.includes('additional') || lk.includes('amount')) {
-      return `$${val % 1 === 0 ? val.toFixed(2) : val}`;
+      return '$' + Number(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     if (lk.includes('sqft') || lk.includes('sq_ft') || lk.includes('unit') && lk.includes('sq')) {
       return `${val.toFixed ? val.toFixed(2) : val} sq ft`;

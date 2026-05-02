@@ -8,6 +8,7 @@ import {SmallProduct, Dispenser} from '../../hooks/useFormFilling';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
+import {formatCurrency} from '../../../../shared/utils/format.utils';
 
 const PROD_FREQ = [
   {value: 'daily',     label: 'Daily'},
@@ -106,7 +107,7 @@ function NameAutocompleteInput({
                 setFocused(false);
               }}>
               <Text style={auto.dropName} numberOfLines={1}>{item.name}</Text>
-              <Text style={auto.dropPrice}>${item.basePrice.toFixed(2)}</Text>
+              <Text style={auto.dropPrice}>{formatCurrency(item.basePrice)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -228,7 +229,7 @@ function CatalogPickerModal({
                       ) : null}
                     </View>
                     <View style={cp.productPrices}>
-                      <Text style={cp.priceText}>${it.basePrice.toFixed(2)}</Text>
+                      <Text style={cp.priceText}>{formatCurrency(it.basePrice)}</Text>
                       <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
                     </View>
                   </TouchableOpacity>
@@ -361,7 +362,7 @@ function SmallProductRow({
         </View>
         <View style={styles.totalCell}>
           <Text style={styles.fieldLabel}>Total</Text>
-          <Text style={styles.totalAmt}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalAmt}>{formatCurrency(total)}</Text>
         </View>
       </View>
       {costType === 'warranty' ? (
@@ -449,7 +450,7 @@ function DispenserRow({
         )}
         <View style={styles.totalCell}>
           <Text style={styles.fieldLabel}>Total</Text>
-          <Text style={styles.totalAmt}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalAmt}>{formatCurrency(total)}</Text>
         </View>
       </View>
       {costType === 'warranty' ? (

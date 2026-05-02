@@ -6,6 +6,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {pricingApi, ServiceConfig} from '../../../../services/api/endpoints/pricing.api';
 import {camelToLabel} from '../../utils/pricing.utils';
+import {formatCurrency} from '../../../../shared/utils/format.utils';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
@@ -198,7 +199,7 @@ function formatPrimitive(key: string, value: unknown): {display: string; unit: s
   if (typeof value !== 'number')  {return {display: String(value), unit: '', vtype: 'text'};}
   const vtype = classifyKey(key);
   switch (vtype) {
-    case 'dollar':     return {display: `$${value.toFixed(2)}`, unit: 'per visit',  vtype};
+    case 'dollar':     return {display: `${formatCurrency(value)}`, unit: 'per visit',  vtype};
     case 'multiplier': return {display: `${value}×`,            unit: 'multiplier', vtype};
     case 'percent':    return {display: `${value}%`,            unit: 'percent',    vtype};
     case 'months':     return {display: String(value),          unit: 'months',     vtype};

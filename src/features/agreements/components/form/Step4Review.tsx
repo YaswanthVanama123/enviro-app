@@ -5,6 +5,7 @@ import {FormState} from '../../hooks/useFormFilling';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
+import {formatCurrency} from '../../../../shared/utils/format.utils';
 
 interface Step4ReviewProps {
   form: FormState;
@@ -158,17 +159,13 @@ export function Step4Review({form}: Step4ReviewProps) {
                   <Text style={styles.svcName}>{p.displayName || '(unnamed)'}</Text>
                   <Text style={styles.svcFreq}>Paper · {chargeLabel} · {freqInfo} · qty {p.qty}</Text>
                 </View>
-                <Text style={styles.svcTotal}>${rowTotal.toFixed(2)}</Text>
-              </View>
-            );
-          })}
-          {bigProducts.map(p => (
+                <Text style={styles.svcTotal}>{formatCurrency(rowTotal)}</Text>
             <View key={p.id} style={styles.svcRow}>
               <View style={styles.svcInfo}>
                 <Text style={styles.svcName}>{p.displayName || '(unnamed)'}</Text>
                 <Text style={styles.svcFreq}>Chemical · {p.frequency} · qty {p.qty}</Text>
               </View>
-              <Text style={styles.svcTotal}>${(p.qty * p.amount).toFixed(2)}</Text>
+              <Text style={styles.svcTotal}>{formatCurrency(p.qty * p.amount)}</Text>
             </View>
           ))}
           {dispensers.map(d => {
@@ -184,13 +181,13 @@ export function Step4Review({form}: Step4ReviewProps) {
                   <Text style={styles.svcName}>{d.displayName || '(unnamed)'}</Text>
                   <Text style={styles.svcFreq}>Dispenser · {chargeLabel} · {freqInfo} · qty {d.qty}</Text>
                 </View>
-                <Text style={styles.svcTotal}>${rowTotal.toFixed(2)}</Text>
+                <Text style={styles.svcTotal}>{formatCurrency(rowTotal)}</Text>
               </View>
             );
           })}
           <View style={styles.subTotalRow}>
             <Text style={styles.subTotalLabel}>Products Subtotal</Text>
-            <Text style={styles.subTotalValue}>${productTotal.toFixed(2)}</Text>
+            <Text style={styles.subTotalValue}>{formatCurrency(productTotal)}</Text>
           </View>
         </SectionCard>
       )}
@@ -201,7 +198,7 @@ export function Step4Review({form}: Step4ReviewProps) {
             const svc = services[id];
             const name = svc?.displayName ?? id;
             const freq = svc?.frequency   ?? '—';
-            const total = svc?.contractTotal ? `$${svc.contractTotal.toFixed(2)}` : '—';
+            const total = svc?.contractTotal ? formatCurrency(svc.contractTotal) : '—';
             return (
               <View key={id} style={styles.svcRow}>
                 <View style={styles.svcInfo}>
@@ -220,8 +217,8 @@ export function Step4Review({form}: Step4ReviewProps) {
         <ReviewRow label="Start Date"     value={displayDate} />
         <ReviewRow label="Payment"        value={paymentLabel[paymentOption] ?? paymentOption} />
         {enviroOf ? <ReviewRow label="Enviro-Master Of" value={enviroOf} /> : null}
-        {tripCharge > 0    && <ReviewRow label="Trip Charge"    value={`$${tripCharge.toFixed(2)} / visit`}    />}
-        {parkingCharge > 0 && <ReviewRow label="Parking Charge" value={`$${parkingCharge.toFixed(2)} / visit`} />}
+        {tripCharge > 0    && <ReviewRow label="Trip Charge"    value={`${formatCurrency(tripCharge)} / visit`}    />}
+        {parkingCharge > 0 && <ReviewRow label="Parking Charge" value={`${formatCurrency(parkingCharge)} / visit`} />}
       </SectionCard>
 
       {serviceAgreement?.includeInPdf && (
@@ -272,11 +269,11 @@ export function Step4Review({form}: Step4ReviewProps) {
           </View>
           <View style={styles.pricingBannerRight}>
             <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
-              ${totalCurrentContract.toFixed(2)}
+              {formatCurrency(totalCurrentContract)}
             </Text>
             <Text style={styles.pricingBannerLabel}>Current Contract</Text>
             <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
-              ${greenThreshold.toFixed(2)}
+              {formatCurrency(greenThreshold)}
             </Text>
             <Text style={styles.pricingBannerLabel}>Target (Original ×1.20)</Text>
           </View>
@@ -285,7 +282,7 @@ export function Step4Review({form}: Step4ReviewProps) {
 
       <View style={styles.grandTotal}>
         <Text style={styles.grandLabel}>Grand Total</Text>
-        <Text style={styles.grandValue}>${grandTotal.toFixed(2)}</Text>
+        <Text style={styles.grandValue}>{formatCurrency(grandTotal)}</Text>
       </View>
 
       <Text style={styles.footer}>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SmallProduct, Dispenser} from '../../hooks/useFormFilling';
+import {formatCurrency} from '../../../../shared/utils/format.utils';
 
 // ── Web app palette ───────────────────────────────────────
 const C = {
@@ -114,7 +115,7 @@ function NameInput({
               style={[ai.dropItem, idx === suggestions.length - 1 && ai.dropItemLast]}
               onPress={() => {onSelectItem(item); setFocused(false);}}>
               <Text style={ai.dropName} numberOfLines={1}>{item.name}</Text>
-              <Text style={ai.dropPrice}>${item.basePrice.toFixed(2)}</Text>
+              <Text style={ai.dropPrice}>{formatCurrency(item.basePrice)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -256,7 +257,7 @@ function CatalogModal({visible, items, onSelect, onClose}: {
                         <Text style={cm.prodDesc} numberOfLines={1}>{it.description}</Text>
                       ) : null}
                     </View>
-                    <Text style={cm.prodPrice}>${it.basePrice.toFixed(2)}</Text>
+                    <Text style={cm.prodPrice}>{formatCurrency(it.basePrice)}</Text>
                     <Ionicons name="chevron-forward" size={14} color={C.textMuted} />
                   </TouchableOpacity>
                 );
@@ -431,7 +432,7 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
         </View>
         <View style={s.totalCell}>
           <Text style={s.calcLabel}>Total</Text>
-          <Text style={s.totalAmt}>${total.toFixed(2)}</Text>
+          <Text style={s.totalAmt}>{formatCurrency(total)}</Text>
         </View>
       </View>
 
@@ -522,7 +523,7 @@ function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}
         )}
         <View style={s.totalCell}>
           <Text style={s.calcLabel}>Total</Text>
-          <Text style={s.totalAmt}>${total.toFixed(2)}</Text>
+          <Text style={s.totalAmt}>{formatCurrency(total)}</Text>
         </View>
       </View>
 

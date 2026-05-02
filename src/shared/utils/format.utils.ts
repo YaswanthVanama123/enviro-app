@@ -11,3 +11,7 @@ export function truncate(str: string, maxLength: number): string {
 export function formatNumber(n: number): string {
   return n.toLocaleString();
 }
+
+export function formatCurrency(amount: number): string {
+  return '$' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}

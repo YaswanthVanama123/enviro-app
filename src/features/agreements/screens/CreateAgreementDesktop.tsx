@@ -16,6 +16,7 @@ import {Step2ProductsDesktop} from '../components/form/Step2ProductsDesktop';
 import {Step3Services}         from '../components/form/Step3Services';
 import {Step5Agreement}        from '../components/form/Step5Agreement';
 import {Step4Review}           from '../components/form/Step4Review';
+import {formatCurrency} from '../../../shared/utils/format.utils';
 
 // ── Exact web-app palette ────────────────────────────────
 const C = {
@@ -394,10 +395,10 @@ function ReferenceTable({
             <Text style={[ref.cell, {flex: 3}]} numberOfLines={3}>{p.description ?? '—'}</Text>
             <Text style={[ref.cell, {flex: 1.2}]}>{p.familyKey ?? '—'}</Text>
             <Text style={[ref.cell, ref.cellGreen, {flex: 1}]}>
-              {p.basePrice?.amount != null ? `$${p.basePrice.amount}` : '—'}
+              {p.basePrice?.amount != null ? formatCurrency(p.basePrice.amount) : '—'}
             </Text>
             <Text style={[ref.cell, ref.cellGreen, {flex: 1}]}>
-              {p.warrantyPricePerUnit?.amount != null ? `$${p.warrantyPricePerUnit.amount}` : '—'}
+              {p.warrantyPricePerUnit?.amount != null ? formatCurrency(p.warrantyPricePerUnit.amount) : '—'}
             </Text>
           </View>
         ))}
