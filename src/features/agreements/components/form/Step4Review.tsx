@@ -124,6 +124,19 @@ export function Step4Review({form}: Step4ReviewProps) {
   const greenThreshold = totalOriginalContract * 1.30;
   const pricingLine: 'red' | 'green' = totalCurrentContract > greenThreshold ? 'green' : 'red';
 
+  const CROSS_SERVICE_MIN_PER_VISIT = 50;
+  let totalPerVisit = 0;
+  visibleServices.forEach(id => {
+    const svc = services[id];
+    if (!svc) {return;}
+    const isOneTime = svc.frequency === 'oneTime';
+    if (!isOneTime && typeof svc.perVisit === 'number' && svc.perVisit > 0) {
+      totalPerVisit += svc.perVisit;
+    }
+  });
+  const hasRecurringServices = totalPerVisit > 0;
+  const perVisitMeetsMinimum = totalPerVisit >= CROSS_SERVICE_MIN_PER_VISIT;
+
   const displayDate = startDate
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
@@ -276,6 +289,42 @@ export function Step4Review({form}: Step4ReviewProps) {
               {formatCurrency(greenThreshold)}
             </Text>
             <Text style={styles.pricingBannerLabel}>Target (Original ×1.30)</Text>
+          </View>
+        </View>
+      )}
+
+      {hasRecurringServices && (
+        <View style={[
+          styles.crossMinBanner,
+          perVisitMeetsMinimum ? styles.crossMinBannerGreen : styles.crossMinBannerRed,
+        ]}>
+          <View style={styles.crossMinHeader}>
+            <Ionicons
+              name={perVisitMeetsMinimum ? 'checkmark-circle' : 'warning'}
+              size={18}
+              color={perVisitMeetsMinimum ? '#16a34a' : '#dc2626'}
+            />
+            <Text style={styles.crossMinTitle}>Cross-Service Per Visit Minimum</Text>
+          </View>
+          <View style={styles.crossMinRows}>
+            <View style={styles.crossMinRow}>
+              <Text style={styles.crossMinLabel}>Total Per Visit (all services)</Text>
+              <Text style={[styles.crossMinValue, perVisitMeetsMinimum ? styles.crossMinValueOk : styles.crossMinValueWarn]}>
+                {formatCurrency(totalPerVisit)}
+              </Text>
+            </View>
+            <View style={styles.crossMinRow}>
+              <Text style={styles.crossMinLabel}>Required Minimum Per Visit</Text>
+              <Text style={styles.crossMinValueTarget}>{formatCurrency(CROSS_SERVICE_MIN_PER_VISIT)}</Text>
+            </View>
+          </View>
+          <View style={[styles.crossMinStatus, perVisitMeetsMinimum ? styles.crossMinStatusOk : styles.crossMinStatusWarn]}>
+            <Text style={[styles.crossMinStatusText, perVisitMeetsMinimum ? styles.crossMinStatusOkText : styles.crossMinStatusWarnText]}>
+              {perVisitMeetsMinimum
+                ? `Meets minimum — ${formatCurrency(totalPerVisit - CROSS_SERVICE_MIN_PER_VISIT)} above $50.00`
+                : `Below minimum — ${formatCurrency(CROSS_SERVICE_MIN_PER_VISIT - totalPerVisit)} short of $50.00`
+              }
+            </Text>
           </View>
         </View>
       )}
@@ -491,5 +540,83 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: Spacing.md,
     marginHorizontal: Spacing.lg,
+  },
+  crossMinBanner: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    gap: Spacing.sm,
+  },
+  crossMinBannerGreen: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  crossMinBannerRed: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  crossMinHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  crossMinTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    color: Colors.textPrimary,
+  },
+  crossMinRows: {
+    gap: Spacing.xs,
+  },
+  crossMinRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  crossMinLabel: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  crossMinValue: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  crossMinValueOk: {
+    color: '#16a34a',
+  },
+  crossMinValueWarn: {
+    color: '#dc2626',
+  },
+  crossMinValueTarget: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  crossMinStatus: {
+    borderRadius: Radius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  crossMinStatusOk: {
+    backgroundColor: '#dcfce7',
+  },
+  crossMinStatusWarn: {
+    backgroundColor: '#fee2e2',
+  },
+  crossMinStatusText: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+  },
+  crossMinStatusOkText: {
+    color: '#166534',
+  },
+  crossMinStatusWarnText: {
+    color: '#991b1b',
   },
 });
