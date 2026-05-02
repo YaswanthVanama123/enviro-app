@@ -121,7 +121,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     totalCurrentContract  += svc.contractTotal         ?? 0;
     totalOriginalContract += svc.originalContractTotal ?? svc.contractTotal ?? 0;
   });
-  const greenThreshold = totalOriginalContract * 1.20;
+  const greenThreshold = totalOriginalContract * 1.30;
   const pricingLine: 'red' | 'green' = totalCurrentContract > greenThreshold ? 'green' : 'red';
 
   const displayDate = startDate
@@ -262,8 +262,8 @@ export function Step4Review({form}: Step4ReviewProps) {
               </Text>
               <Text style={styles.pricingBannerSub}>
                 {pricingLine === 'green'
-                  ? '20%+ above original – auto approved'
-                  : 'Below 20% above original – requires approval'}
+                  ? '30%+ above original – auto approved'
+                  : 'Below 30% above original – requires approval'}
               </Text>
             </View>
           </View>
@@ -275,7 +275,7 @@ export function Step4Review({form}: Step4ReviewProps) {
             <Text style={[styles.pricingBannerAmount, pricingLine === 'green' ? styles.pricingGreenText : styles.pricingRedText]}>
               {formatCurrency(greenThreshold)}
             </Text>
-            <Text style={styles.pricingBannerLabel}>Target (Original ×1.20)</Text>
+            <Text style={styles.pricingBannerLabel}>Target (Original ×1.30)</Text>
           </View>
         </View>
       )}
