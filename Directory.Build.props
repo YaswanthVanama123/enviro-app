@@ -1,0 +1,17 @@
+﻿<Project>
+  <PropertyGroup>    <RnwNewArch Condition="''$(RnwNewArch)''==''''">true</RnwNewArch>
+    <!-- Ensure Windows App SDK MSBuild props resolve architecture-specific paths correctly.
+         Some targets derive paths from $(_WindowsAppSDKFoundationPlatform); if it is empty
+         they generate paths like `runtimes\win-\native\...` and `lib\native\...`. -->
+    <_WindowsAppSDKFoundationPlatform Condition="'$(_WindowsAppSDKFoundationPlatform)'=='' and '$(Platform)'=='Win32'">x86</_WindowsAppSDKFoundationPlatform>
+    <_WindowsAppSDKFoundationPlatform Condition="'$(_WindowsAppSDKFoundationPlatform)'=='' and '$(Platform)'!='' and '$(Platform)'!='Win32'">$(Platform)</_WindowsAppSDKFoundationPlatform>
+  </PropertyGroup>
+
+  <!-- Ensure C++/WinRT authoring codegen runs for RNW framework projects.
+       If CppWinRTGenerateWindowsMetadata is left empty, the default can be false and the build
+       will fail with missing `*.g.h` and `winrt/*.h` generated headers. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Microsoft.ReactNative'">
+    <CppWinRTGenerateWindowsMetadata Condition="'$(CppWinRTGenerateWindowsMetadata)' == ''">true</CppWinRTGenerateWindowsMetadata>
+  </PropertyGroup>
+</Project>
+
