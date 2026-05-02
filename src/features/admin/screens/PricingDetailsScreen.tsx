@@ -1,5 +1,5 @@
 import React, {useState, useCallback} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Linking, Alert} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {MainTab} from '../utils/pricing.utils';
@@ -20,15 +20,21 @@ export function PricingDetailsScreen() {
   const handleExportPdf = useCallback(async () => {
     setExporting(true);
     try {
-      const url = pdfApi.getPricingCatalogExportUrl();
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
+      await pdfApi.exportPricingCatalogPdf();
+    } catch (err: any) {
+      if (err?.code === 'PUPPETEER_BUSY') {
+        Alert.alert(
+          'Export In Progress',
+          'A PDF export is already being generated. Please wait a moment and try again.',
+          [{text: 'OK'}],
+        );
       } else {
-        Alert.alert('Cannot open URL', 'Unable to open the PDF export link.');
+        Alert.alert(
+          'Export Failed',
+          'Could not generate the pricing catalog PDF. Please try again.',
+          [{text: 'OK'}],
+        );
       }
-    } catch {
-      Alert.alert('Export Failed', 'Could not generate the pricing catalog PDF.');
     } finally {
       setExporting(false);
     }

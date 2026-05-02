@@ -58,4 +58,27 @@ export const pdfApi = {
     const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
     return `${base}/api/pdf/pricing-catalog/export${tokenParam}`;
   },
+
+  async exportPricingCatalogPdf(): Promise<void> {
+    const url = this.getPricingCatalogExportUrl();
+    let status = 200;
+    try {
+      const res = await fetch(url, {method: 'GET'});
+      status = res.status;
+      if (!res.ok) {
+        if (res.status === 429) {
+          const body = await res.json().catch(() => ({}));
+          const err = new Error(body.error || 'A PDF export is already in progress. Please wait and try again.');
+          (err as any).code = 'PUPPETEER_BUSY';
+          throw err;
+        }
+        throw new Error(`Export failed: ${res.status}`);
+      }
+    } catch (err: any) {
+      if (err.code === 'PUPPETEER_BUSY') {throw err;}
+      if (status !== 200) {throw err;}
+      throw err;
+    }
+    await import('react-native').then(({Linking}) => Linking.openURL(url));
+  },
 };
