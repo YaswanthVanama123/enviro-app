@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "postinstall": "powershell -ExecutionPolicy Bypass -File scripts/patch-rnw-x64.ps1",
     "ios": "react-native run-ios",
     "web": "webpack serve --config webpack.config.js --mode development",
     "web:build": "webpack --config webpack.config.js --mode production",
@@ -52,6 +53,7 @@
     "@types/react-test-renderer": "^19.0.0",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
+    "patch-package": "^8.0.1",
     "prettier": "2.8.8",
     "react-test-renderer": "19.1.1",
     "typescript": "^5.8.3"
