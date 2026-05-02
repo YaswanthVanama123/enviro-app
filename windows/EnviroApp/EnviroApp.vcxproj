@@ -125,6 +125,12 @@
     <Image Include="EnviroApp.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Fonts\Ionicons.ttf">
+      <DeploymentContent>true</DeploymentContent>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ReactNativeWindowsTargets">
     <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.targets" Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.targets')" />
@@ -137,5 +143,19 @@
     </PropertyGroup>
     <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.props')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.props'))" />
     <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.Composition.CppApp.targets'))" />
+  </Target>
+
+  <Target Name="CopyIoniconsFont" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <IoniconsSource>$(MSBuildThisFileDirectory)..\..\src\assets\fonts\Ionicons.ttf</IoniconsSource>
+      <IoniconsDestDir>$(MSBuildThisFileDirectory)Assets\Fonts</IoniconsDestDir>
+      <IoniconsDest>$(IoniconsDestDir)\Ionicons.ttf</IoniconsDest>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(IoniconsDestDir)" Condition="Exists('$(IoniconsSource)') and !Exists('$(IoniconsDestDir)')" />
+    <Copy SourceFiles="$(IoniconsSource)"
+          DestinationFiles="$(IoniconsDest)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(IoniconsSource)')" />
   </Target>
 </Project>

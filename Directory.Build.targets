@@ -1,0 +1,22 @@
+﻿<Project>
+  <Target Name="RnwForceMicrosoftReactNativePlatformArtifacts"
+          BeforeTargets="ResolveReferences"
+          Condition="'$(MSBuildProjectName)' == 'Microsoft.ReactNative.Managed'">
+    <PropertyGroup>
+      <_RnwArtifactsRoot>$(MSBuildThisFileDirectory)node_modules\react-native-windows\target</_RnwArtifactsRoot>
+      <_RnwSrcDir>$(_RnwArtifactsRoot)\$(Platform)\$(Configuration)\Microsoft.ReactNative</_RnwSrcDir>
+      <_RnwDstDir>$(_RnwArtifactsRoot)\Microsoft.ReactNative</_RnwDstDir>
+      <_RnwSrcDll>$(_RnwSrcDir)\Microsoft.ReactNative.dll</_RnwSrcDll>
+      <_RnwSrcWinmd>$(_RnwSrcDir)\Microsoft.ReactNative.winmd</_RnwSrcWinmd>
+    </PropertyGroup>
+
+    <Message Importance="High"
+             Text="RNW: Forcing Microsoft.ReactNative artifacts for Platform=$(Platform) Configuration=$(Configuration) from '$(_RnwSrcDir)' into '$(_RnwDstDir)'." />
+
+    <MakeDir Directories="$(_RnwDstDir)" Condition="!Exists('$(_RnwDstDir)')" />
+    <Copy SourceFiles="$(_RnwSrcDll)" DestinationFiles="$(_RnwDstDir)\Microsoft.ReactNative.dll"
+          SkipUnchangedFiles="true" Condition="Exists('$(_RnwSrcDll)')" />
+    <Copy SourceFiles="$(_RnwSrcWinmd)" DestinationFiles="$(_RnwDstDir)\Microsoft.ReactNative.winmd"
+          SkipUnchangedFiles="true" Condition="Exists('$(_RnwSrcWinmd)')" />
+  </Target>
+</Project>

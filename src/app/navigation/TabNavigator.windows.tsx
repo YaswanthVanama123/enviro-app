@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+﻿import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocu
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 
-// ── Exact web app color palette ──────────────────────────
+// â”€â”€ Exact web app color palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   primary:        '#c00000',
   navBg:          '#ffffff',
@@ -78,7 +78,7 @@ export function TabNavigator() {
   return (
     <View style={ss.shell}>
 
-      {/* ── Top Nav Bar — exact web app layout ── */}
+      {/* â”€â”€ Top Nav Bar â€” exact web app layout â”€â”€ */}
       <View style={ss.topnav}>
         {/* Brand / Logo */}
         <View style={ss.brand}>
@@ -88,7 +88,7 @@ export function TabNavigator() {
           <Text style={ss.brandName}>EnviroMaster</Text>
         </View>
 
-        {/* Nav links — right-aligned, exact web app style */}
+        {/* Nav links â€” right-aligned, exact web app style */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -117,7 +117,7 @@ export function TabNavigator() {
         </ScrollView>
       </View>
 
-      {/* ── Page Body ── */}
+      {/* â”€â”€ Page Body â”€â”€ */}
       <View style={ss.pageBody}>
         <ActiveScreen />
       </View>
@@ -135,7 +135,7 @@ const ss = StyleSheet.create({
     backgroundColor: C.bg,
   },
 
-  // ── Top Nav ──
+  // â”€â”€ Top Nav â”€â”€
   topnav: {
     height:            NAV_HEIGHT,
     flexDirection:     'row',
@@ -222,3 +222,4 @@ const ss = StyleSheet.create({
     backgroundColor: C.bg,
   },
 });
+
