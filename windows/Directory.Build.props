@@ -1,13 +1,11 @@
 <Project>
   <PropertyGroup>
-    <!-- Force NuGet restore to use nuget.org only.
-         Some dependencies ship a NuGet.Config that adds extra feeds which may be unreachable in certain networks. -->
     <RestoreSources>https://api.nuget.org/v3/index.json;https://www.nuget.org/api/v2/</RestoreSources>
     <RestoreIgnoreFailedSources>true</RestoreIgnoreFailedSources>
 
-    <!-- Work around occasional empty Platform propagation into Windows App SDK buildTransitive props,
-         which can result in link inputs like `...\lib\native\\Microsoft.WindowsAppRuntime.Bootstrap.lib`. -->
     <_WindowsAppSDKFoundationPlatform Condition="'$(_WindowsAppSDKFoundationPlatform)'=='' and '$(Platform)'=='Win32'">x86</_WindowsAppSDKFoundationPlatform>
     <_WindowsAppSDKFoundationPlatform Condition="'$(_WindowsAppSDKFoundationPlatform)'=='' and '$(Platform)'!='' and '$(Platform)'!='Win32'">$(Platform)</_WindowsAppSDKFoundationPlatform>
+
+    <ReactNativeTargetDir>$(SolutionDir)..\node_modules\react-native-windows\target\x64\Debug\Microsoft.ReactNative\</ReactNativeTargetDir>
   </PropertyGroup>
 </Project>

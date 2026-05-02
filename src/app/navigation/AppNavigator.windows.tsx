@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createStackNavigator} from '@react-navigation/stack';
 import {TabNavigator} from './TabNavigator';
 import {AdminLoginScreen} from '../../features/auth/screens/AdminLoginScreen';
 import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
@@ -8,7 +8,7 @@ import {ServiceAgreementScreen} from '../../features/admin/screens/ServiceAgreem
 import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
 import type {RootStackParamList} from './types';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
 
 // Match web app colors exactly
 const WebTheme = {
@@ -37,3 +37,4 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
