@@ -7,11 +7,6 @@ module.exports = {
         windows: null,
       },
     },
-    '@react-native-async-storage/async-storage': {
-      platforms: {
-        windows: null,
-      },
-    },
     'react-native-screens': {
       platforms: {
         windows: null,
