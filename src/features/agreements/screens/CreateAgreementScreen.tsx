@@ -23,6 +23,7 @@ import {Step2Contract}   from '../components/form/Step2Contract';
 import {Step5Agreement}  from '../components/form/Step5Agreement';
 import {Step4Review}     from '../components/form/Step4Review';
 import {useFormFilling}  from '../hooks/useFormFilling';
+import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 
 const STEP_LABELS = ['Customer', 'Products', 'Services', 'Agreement', 'Terms', 'Review'];
 
@@ -78,8 +79,11 @@ export function CreateAgreementScreen() {
   };
 
   const handleGenerate = async () => {
-    const ok = await generate();
+    const {ok, agreementId, status} = await generate();
     if (ok) {
+      if (status === 'pending_approval' && agreementId) {
+        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+      }
       navigation.goBack();
     }
   };

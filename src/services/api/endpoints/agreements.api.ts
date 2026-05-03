@@ -339,6 +339,17 @@ export const zohoApi = {
     );
     return res.data ?? {success: false, error: res.error ?? 'Task creation failed'};
   },
+
+  async createAutoApprovalTask(
+    agreementId: string,
+    agreementTitle: string,
+  ): Promise<{success: boolean; skipped?: boolean; task?: ZohoTask}> {
+    const res = await apiClient.post<{success: boolean; skipped?: boolean; task?: ZohoTask}>(
+      `/api/zoho-upload/${agreementId}/auto-approval-task`,
+      {agreementTitle},
+    );
+    return res.data ?? {success: false};
+  },
 };
 
 export function getFileDownloadUrl(

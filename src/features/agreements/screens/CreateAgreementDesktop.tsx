@@ -12,6 +12,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import {useFormFilling} from '../hooks/useFormFilling';
+import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 import {Step2ProductsDesktop} from '../components/form/Step2ProductsDesktop';
 import {Step3Services}         from '../components/form/Step3Services';
 import {Step5Agreement}        from '../components/form/Step5Agreement';
@@ -486,8 +487,13 @@ export function CreateAgreementDesktop() {
   };
 
   const handleGenerate = async () => {
-    const ok = await generate();
-    if (ok) {goBack();}
+    const {ok, agreementId, status} = await generate();
+    if (ok) {
+      if (status === 'pending_approval' && agreementId) {
+        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+      }
+      goBack();
+    }
   };
 
   // Simple totals for pricing breakdown

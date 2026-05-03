@@ -21,6 +21,7 @@ import {Step2Contract}  from '../components/form/Step2Contract';
 import {Step5Agreement} from '../components/form/Step5Agreement';
 import {Step4Review}    from '../components/form/Step4Review';
 import {useFormFilling} from '../hooks/useFormFilling';
+import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 
 // ── Web app exact palette ────────────────────────────────
 const C = {
@@ -84,8 +85,13 @@ export function CreateAgreementSinglePage() {
   const {saving, saveError, savedId} = form;
 
   const handleGenerate = async () => {
-    const ok = await generate();
-    if (ok) {navigation.goBack();}
+    const {ok, agreementId, status} = await generate();
+    if (ok) {
+      if (status === 'pending_approval' && agreementId) {
+        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+      }
+      navigation.goBack();
+    }
   };
 
   return (

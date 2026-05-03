@@ -501,15 +501,18 @@ export function useFormFilling() {
     };
   }, [form]);
 
-  const saveDraft = useCallback(async (): Promise<boolean> => {
+  const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
     const payload = buildPayload();
+    const docStatus = (payload.status ?? 'saved') as 'saved' | 'pending_approval';
     let ok = false;
+    let agreementId: string | null = form.savedId ?? null;
     if (form.savedId) {
       ok = await formApi.updateAgreement(form.savedId, payload);
     } else {
       const result = await formApi.createAgreement(payload);
       if (result) {
+        agreementId = result.id;
         setForm(prev => ({...prev, savedId: result.id}));
         ok = true;
       }
@@ -519,10 +522,10 @@ export function useFormFilling() {
       saving: false,
       saveError: ok ? null : 'Failed to save. Please try again.',
     }));
-    return ok;
+    return {ok, agreementId, status: docStatus};
   }, [form.savedId, buildPayload]);
 
-  const generate = useCallback(async (): Promise<boolean> => {
+  const generate = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     return saveDraft();
   }, [saveDraft]);
 
