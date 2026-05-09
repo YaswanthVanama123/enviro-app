@@ -109,10 +109,19 @@ export function TotalsBlock({frequency, perVisit, firstMonth, monthlyRecurring, 
 export function calcTotals(perVisitBase: number, frequency: string, contractMonths: number, customFieldsTotal: number = 0) {
   const mult = getFreqMultiplier(frequency);
   const isOneTime = frequency === 'oneTime';
+  const isEveryFourWeeks = frequency === 'everyFourWeeks';
   const perVisit = perVisitBase;
   const monthlyRecurring = isOneTime ? 0 : perVisit * mult;
   const firstMonth = isOneTime ? 0 : perVisit * mult;
-  const contractTotal = (isOneTime ? perVisit : monthlyRecurring * contractMonths) + customFieldsTotal;
+  let contractTotal: number;
+  if (isOneTime) {
+    contractTotal = perVisit + customFieldsTotal;
+  } else if (isEveryFourWeeks) {
+    const totalVisits = Math.round(contractMonths * 1.0833);
+    contractTotal = totalVisits * perVisit + customFieldsTotal;
+  } else {
+    contractTotal = monthlyRecurring * contractMonths + customFieldsTotal;
+  }
   return {perVisit, firstMonth, monthlyRecurring, contractTotal};
 }
 
