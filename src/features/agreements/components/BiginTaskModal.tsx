@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -127,14 +127,17 @@ export function BiginTaskModal({
   useEffect(() => {
     if (step !== 'select-company') {return;}
     setLoadingCompanies(true);
-    const timer = setTimeout(() => {
-      zohoApi.getCompanies(companySearch || undefined).then(list => {
-        setCompanies(list);
-        setLoadingCompanies(false);
-      });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [companySearch, step]);
+    zohoApi.getCompanies().then(list => {
+      setCompanies(list);
+      setLoadingCompanies(false);
+    }).catch(() => setLoadingCompanies(false));
+  }, [step]);
+
+  const filteredCompanies = useMemo(() => {
+    if (!companySearch.trim()) {return companies;}
+    const q = companySearch.toLowerCase();
+    return companies.filter(c => c.name.toLowerCase().includes(q));
+  }, [companies, companySearch]);
 
   const handleSelectCompany = useCallback((company: ZohoCompany) => {
     setSelectedCompany(company);
@@ -292,13 +295,20 @@ export function BiginTaskModal({
               autoCapitalize="none"
             />
             {loadingCompanies && <ActivityIndicator size="small" color={Colors.textMuted} />}
+            {!loadingCompanies && companies.length > 0 && (
+              <Text style={styles.companyCount}>
+                {companySearch.trim() ? `${filteredCompanies.length}/${companies.length}` : String(companies.length)}
+              </Text>
+            )}
           </View>
           <View style={styles.listBox}>
-            {companies.length === 0 && !loadingCompanies ? (
-              <Text style={styles.emptyText}>No companies found</Text>
+            {filteredCompanies.length === 0 && !loadingCompanies ? (
+              <Text style={styles.emptyText}>
+                {companySearch.trim() ? 'No companies match your search' : 'No companies found'}
+              </Text>
             ) : (
               <FlatList
-                data={companies}
+                data={filteredCompanies}
                 keyExtractor={item => item.id}
                 scrollEnabled
                 nestedScrollEnabled
@@ -775,6 +785,7 @@ const styles = StyleSheet.create({
   },
   listItemText: {flex: 1, fontSize: FontSize.sm, color: Colors.textPrimary},
   emptyText: {textAlign: 'center', fontSize: FontSize.sm, color: Colors.textMuted, paddingVertical: Spacing.lg},
+  companyCount: {fontSize: FontSize.xs, color: Colors.textMuted, flexShrink: 0},
 
   checkRow: {
     flexDirection: 'row',

@@ -280,11 +280,12 @@ export const zohoApi = {
     return res.data ?? null;
   },
 
-  async getCompanies(search?: string, page = 1): Promise<ZohoCompany[]> {
-    const params = new URLSearchParams({page: String(page)});
+  async getCompanies(search?: string): Promise<ZohoCompany[]> {
+    const params = new URLSearchParams();
     if (search) {params.set('search', search);}
+    const query = params.toString();
     const res = await apiClient.get<{companies: ZohoCompany[]}>(
-      `/api/zoho-upload/companies?${params.toString()}`,
+      `/api/zoho-upload/companies${query ? `?${query}` : ''}`,
     );
     return res.data?.companies ?? [];
   },
