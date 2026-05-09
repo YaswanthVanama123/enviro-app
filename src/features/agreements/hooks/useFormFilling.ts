@@ -443,7 +443,20 @@ export function useFormFilling() {
     const hasServiceNotes = Object.values(activeServices).some(
       (sd: any) => sd?.isActive && typeof sd.notes === 'string' && sd.notes.trim().length > 0,
     );
-    const documentStatus = hasServiceNotes ? 'pending_approval' : 'saved';
+
+    const totalCurrentContract = Object.values(activeServices).reduce(
+      (sum: number, sd: any) => sum + (sd?.isActive ? (Number(sd.contractTotal) || 0) : 0),
+      0,
+    );
+    const totalOriginalContract = Object.values(activeServices).reduce(
+      (sum: number, sd: any) => sum + (sd?.isActive ? (Number(sd.originalContractTotal) || 0) : 0),
+      0,
+    );
+
+    const documentStatus =
+      hasServiceNotes || totalOriginalContract > totalCurrentContract
+        ? 'pending_approval'
+        : 'saved';
 
     const summary: GlobalSummary = {
       contractMonths: form.contractMonths,
