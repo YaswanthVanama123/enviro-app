@@ -6,6 +6,7 @@ import {AdminLoginScreen} from '../../features/auth/screens/AdminLoginScreen';
 import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
 import {ServiceAgreementScreen} from '../../features/admin/screens/ServiceAgreementScreen';
 import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
+import {EditAgreementScreen} from '../../features/agreements/screens/EditAgreementScreen';
 import type {RootStackParamList} from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,6 +20,7 @@ export default function AppNavigator() {
         <Stack.Screen name="AdminPanel" component={AdminPanelScreen} />
         <Stack.Screen name="Agreement" component={ServiceAgreementScreen} />
         <Stack.Screen name="Trash" component={TrashScreen} />
+        <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

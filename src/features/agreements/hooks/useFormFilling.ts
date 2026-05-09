@@ -113,20 +113,25 @@ const INITIAL_STATE: FormState = {
   savedId: null,
 };
 
-export function useFormFilling() {
+export function useFormFilling(editAgreementId?: string) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
 
   useEffect(() => {
     setForm(prev => ({...prev, initialLoading: true}));
 
-    console.log('[FormFilling] Starting initial API load...');
+    console.log('[FormFilling] Starting initial API load...', editAgreementId ? `editMode=${editAgreementId}` : 'createMode');
 
-    Promise.allSettled([
+    const apiCalls: Promise<any>[] = [
       formApi.getAdminHeaders(),       // [0] header template
       formApi.getAllServicePricing(),   // [1] pricing + service agreement template
       formApi.getProductCatalog(),     // [2] product catalog
       formApi.getAllServiceConfigs(),   // [3] service configs list
-    ]).then(([adminRes, pricingRes, catalogRes, svcConfigsRes]) => {
+    ];
+    if (editAgreementId) {
+      apiCalls.push(formApi.getAgreementForEdit(editAgreementId)); // [4] saved agreement
+    }
+
+    Promise.allSettled(apiCalls).then(([adminRes, pricingRes, catalogRes, svcConfigsRes, editRes]) => {
 
       if (adminRes.status === 'fulfilled') {
         console.log('[FormFilling][1] Admin Headers OK:', adminRes.value
@@ -162,6 +167,14 @@ export function useFormFilling() {
           : 'null');
       } else {
         console.warn('[FormFilling][4] Service Configs FAILED:', svcConfigsRes.reason);
+      }
+
+      if (editRes) {
+        if (editRes.status === 'fulfilled') {
+          console.log('[FormFilling][5] Edit Agreement OK:', editRes.value ? `id=${editRes.value._id}` : 'null');
+        } else {
+          console.warn('[FormFilling][5] Edit Agreement FAILED:', (editRes as PromiseRejectedResult).reason);
+        }
       }
 
       setForm(prev => {
@@ -260,6 +273,79 @@ export function useFormFilling() {
 
         if (svcConfigsRes.status === 'fulfilled' && svcConfigsRes.value) {
           next.serviceConfigsList = svcConfigsRes.value;
+        }
+
+        // ── Edit mode: override state with saved agreement data ──────────
+        if (editRes && editRes.status === 'fulfilled' && editRes.value) {
+          const doc = editRes.value;
+          const payload = doc.payload ?? {};
+          const ts = Date.now();
+
+          next.savedId = doc._id ?? doc.id ?? editAgreementId!;
+
+          if (doc.headerTitle) {next.headerTitle = doc.headerTitle;}
+          if (Array.isArray(doc.headerRows) && doc.headerRows.length > 0) {next.headerRows = doc.headerRows;}
+
+          const savedProducts = payload.products ?? {};
+          if (Array.isArray(savedProducts.smallProducts)) {
+            next.smallProducts = savedProducts.smallProducts.map((p: any, i: number) => ({
+              id: `edit_sp_${ts}_${i}`,
+              displayName: p.displayName ?? '',
+              qty: p.qty ?? 1,
+              unitPrice: p.unitPrice ?? 0,
+              frequency: p.frequency ?? 'monthly',
+              costType: p.costType ?? 'warranty',
+            }));
+          }
+          if (Array.isArray(savedProducts.dispensers)) {
+            next.dispensers = savedProducts.dispensers.map((d: any, i: number) => ({
+              id: `edit_dp_${ts}_${i}`,
+              displayName: d.displayName ?? '',
+              qty: d.qty ?? 1,
+              warrantyRate: d.warrantyRate ?? 0,
+              replacementRate: d.replacementRate ?? 0,
+              frequency: d.frequency ?? 'monthly',
+              costType: d.costType ?? 'productCost',
+            }));
+          }
+          if (Array.isArray(savedProducts.bigProducts)) {
+            next.bigProducts = savedProducts.bigProducts.map((p: any, i: number) => ({
+              id: `edit_bp_${ts}_${i}`,
+              displayName: p.displayName ?? '',
+              qty: p.qty ?? 1,
+              amount: p.amount ?? 0,
+              frequency: p.frequency ?? 'monthly',
+            }));
+          }
+
+          if (payload.services && typeof payload.services === 'object') {
+            next.services = payload.services;
+            next.visibleServices = Object.keys(payload.services).filter(
+              k => payload.services[k]?.isActive !== false,
+            );
+          }
+
+          const savedSummary = payload.summary ?? {};
+          if (typeof savedSummary.contractMonths === 'number') {next.contractMonths = savedSummary.contractMonths;}
+          if (typeof savedSummary.tripCharge === 'number') {next.tripCharge = savedSummary.tripCharge;}
+          if (typeof savedSummary.tripChargeFrequency === 'number') {next.tripChargeFrequency = savedSummary.tripChargeFrequency;}
+          if (typeof savedSummary.parkingCharge === 'number') {next.parkingCharge = savedSummary.parkingCharge;}
+          if (typeof savedSummary.parkingChargeFrequency === 'number') {next.parkingChargeFrequency = savedSummary.parkingChargeFrequency;}
+
+          const savedAgreement = payload.agreement ?? {};
+          if (savedAgreement.enviroOf) {next.enviroOf = savedAgreement.enviroOf;}
+          if (savedAgreement.paymentOption) {next.paymentOption = savedAgreement.paymentOption;}
+          if (typeof savedAgreement.paymentNote === 'string') {next.paymentNote = savedAgreement.paymentNote;}
+          if (savedAgreement.startDate) {next.startDate = savedAgreement.startDate;}
+
+          if (payload.serviceAgreement && typeof payload.serviceAgreement === 'object') {
+            next.serviceAgreement = {...DEFAULT_SERVICE_AGREEMENT, ...payload.serviceAgreement};
+          }
+          if (typeof payload.includeProductsTable === 'boolean') {
+            next.includeProductsTable = payload.includeProductsTable;
+          }
+
+          console.log('[FormFilling] Edit mode populated — services:', Object.keys(next.services), '| contractMonths:', next.contractMonths);
         }
 
         console.log('[FormFilling] State updated — pricingConfigs keys:', Object.keys(next.pricingConfigs));

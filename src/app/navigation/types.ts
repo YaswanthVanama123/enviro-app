@@ -4,6 +4,7 @@ export type RootStackParamList = {
   AdminPanel: undefined;
   Agreement: undefined;
   Trash: undefined;
+  EditAgreement: { agreementId: string };
 };
 
 export type TabParamList = {

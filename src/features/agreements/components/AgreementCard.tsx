@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import DocumentPicker, {types} from 'react-native-document-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
+import type {RootStackParamList} from '../../../app/navigation/types';
 import {
   SavedFileGroup,
   SavedFileListItem,
@@ -273,6 +275,7 @@ export interface AgreementCardProps {
 }
 
 export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: AgreementCardProps) {
+  const navigation = useNavigation<any>();
   const [expanded, setExpanded] = useState(false);
 
   const [showCalendar, setShowCalendar] = useState(false);
@@ -298,6 +301,10 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   }, []);
 
   const handleCalendar = useCallback(() => setShowCalendar(true), []);
+
+  const handleEdit = useCallback(() => {
+    navigation.navigate('EditAgreement', {agreementId: agreement.id});
+  }, [navigation, agreement.id]);
 
   const handleBegin = useCallback(() => {
     setShowBiginModal(true);
@@ -388,6 +395,11 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           </TouchableOpacity>
 
           <View style={styles.cardActionDivider} />
+
+          <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
+            <Ionicons name="create-outline" size={13} color="#fff" />
+            <Text style={styles.editBtnText}>Edit</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.beginBtn}
@@ -664,6 +676,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#ea580c',
   },
   beginBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: '#2563eb',
+  },
+  editBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
   taskBtn: {
     flexDirection: 'row',
     alignItems: 'center',

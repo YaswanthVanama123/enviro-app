@@ -167,6 +167,12 @@ export const formApi = {
     return res.data ?? null;
   },
 
+  async getAgreementForEdit(id: string): Promise<any | null> {
+    const res = await apiClient.get<any>(`/api/pdf/customer-headers/${id}/edit-format`);
+    if (res.error || !res.data) {return null;}
+    return res.data;
+  },
+
   async getAllServiceConfigs(): Promise<any[] | null> {
     console.log('[API] GET /api/service-configs');
     const res = await apiClient.get<any>('/api/service-configs');

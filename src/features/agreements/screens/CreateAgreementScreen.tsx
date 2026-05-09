@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
@@ -29,6 +29,9 @@ const STEP_LABELS = ['Customer', 'Products', 'Services', 'Agreement', 'Terms', '
 
 export function CreateAgreementScreen() {
   const navigation = useNavigation();
+  const route = useRoute<any>();
+  const editAgreementId = (route.params as any)?.agreementId as string | undefined;
+  const isEditMode = !!editAgreementId;
   const scrollRef  = useRef<ScrollView>(null);
 
   const {
@@ -60,7 +63,7 @@ export function CreateAgreementScreen() {
     saveDraft,
     generate,
     allServicesOneTime,
-  } = useFormFilling();
+  } = useFormFilling(editAgreementId);
 
   const {step, saving, saveError, savedId} = form;
 
@@ -208,7 +211,7 @@ export function CreateAgreementScreen() {
             ) : (
               <>
                 <Text style={styles.nextBtnText}>
-                  {isLast ? 'Generate' : 'Next'}
+                  {isLast ? (isEditMode ? 'Update' : 'Generate') : 'Next'}
                 </Text>
                 <Ionicons
                   name={isLast ? 'checkmark-circle' : 'chevron-forward'}
@@ -235,7 +238,7 @@ export function CreateAgreementScreen() {
             <Ionicons name="close" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>New Agreement</Text>
+            <Text style={styles.headerTitle}>{isEditMode ? 'Edit Agreement' : 'New Agreement'}</Text>
             <Text style={styles.headerSub}>{STEP_LABELS[step - 1]}</Text>
           </View>
           <View style={styles.headerRight} />
