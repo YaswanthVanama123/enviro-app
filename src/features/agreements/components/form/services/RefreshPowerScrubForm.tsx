@@ -40,9 +40,11 @@ interface AreaSectionProps {
   label: string;
   config: AreaConfig;
   onChange: (c: AreaConfig) => void;
+  contractMonths: number;
+  contractTotal: number;
 }
 
-function AreaSection({label, config, onChange}: AreaSectionProps) {
+function AreaSection({label, config, onChange, contractMonths, contractTotal}: AreaSectionProps) {
   const {enabled, pricingType, flatRate, sqFt, ratePerSqFt, frequencyLabel} = config;
   const cost = pricingType === 'flat' ? flatRate : sqFt * ratePerSqFt;
 
@@ -120,6 +122,15 @@ function AreaSection({label, config, onChange}: AreaSectionProps) {
             ))}
           </View>
           <DollarRow label="Area Cost" value={cost} />
+          <View style={styles.contractRow}>
+            <Text style={styles.contractLabel}>Contract</Text>
+            <View style={styles.contractMonthsBadge}>
+              <Text style={styles.contractMonthsText}>{contractMonths} mo</Text>
+            </View>
+            <Text style={styles.contractTotal}>
+              ${contractTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </Text>
+          </View>
         </View>
       )}
     </View>
@@ -139,6 +150,24 @@ function calcAreaCost(a: AreaConfig): number {
   return a.enabled ? (a.pricingType === 'flat' ? a.flatRate : a.sqFt * a.ratePerSqFt) : 0;
 }
 
+function calcAreaContractTotal(a: AreaConfig, contractMonths: number): number {
+  if (!a.enabled) {return 0;}
+  const cost = calcAreaCost(a);
+  const freq = a.frequencyLabel;
+  let visits: number;
+  if (freq === 'weekly') {
+    visits = contractMonths * 4.33;
+  } else if (freq === 'biweekly') {
+    visits = contractMonths * 2.165;
+  } else if (freq === 'everyFourWeeks') {
+    visits = Math.round(contractMonths * 1.0833);
+  } else {
+    // monthly (default)
+    visits = contractMonths;
+  }
+  return cost * visits;
+}
+
 export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}: Props) {
   const dumpster = data?.dumpster ?? DEFAULT_AREA;
   const patio    = data?.patio    ?? DEFAULT_AREA;
@@ -153,6 +182,11 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
     const nf = fields.foh      ?? foh;
     const nb = fields.boh      ?? boh;
     const newTotal = calcAreaCost(nd) + calcAreaCost(np) + calcAreaCost(nf) + calcAreaCost(nb);
+    const newContractTotal =
+      calcAreaContractTotal(nd, contractMonths) +
+      calcAreaContractTotal(np, contractMonths) +
+      calcAreaContractTotal(nf, contractMonths) +
+      calcAreaContractTotal(nb, contractMonths);
     onChange({
       serviceId: 'refreshPowerScrub',
       displayName: 'Refresh Power Scrub',
@@ -164,8 +198,9 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
       patio:    np,
       foh:      nf,
       boh:      nb,
-      contractTotal: newTotal,
-      originalContractTotal: newTotal,
+      perVisit: newTotal,
+      contractTotal: newContractTotal,
+      originalContractTotal: newContractTotal,
     });
   }, [data, dumpster, patio, foh, boh, contractMonths, onChange]);
 
@@ -183,24 +218,32 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
         label="Dumpster Area"
         config={dumpster}
         onChange={c => update({dumpster: c})}
+        contractMonths={contractMonths}
+        contractTotal={calcAreaContractTotal(dumpster, contractMonths)}
       />
       <FormDivider />
       <AreaSection
         label="Patio"
         config={patio}
         onChange={c => update({patio: c})}
+        contractMonths={contractMonths}
+        contractTotal={calcAreaContractTotal(patio, contractMonths)}
       />
       <FormDivider />
       <AreaSection
         label="Front of House (FOH)"
         config={foh}
         onChange={c => update({foh: c})}
+        contractMonths={contractMonths}
+        contractTotal={calcAreaContractTotal(foh, contractMonths)}
       />
       <FormDivider />
       <AreaSection
         label="Back of House (BOH)"
         config={boh}
         onChange={c => update({boh: c})}
+        contractMonths={contractMonths}
+        contractTotal={calcAreaContractTotal(boh, contractMonths)}
       />
       <FormDivider />
       <DollarRow label="Total per Visit" value={total} highlight />
@@ -288,5 +331,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textMuted,
     paddingLeft: 2,
+  },
+  contractRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  contractLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    flex: 1,
+  },
+  contractMonthsBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  contractMonthsText: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  contractTotal: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
 });
