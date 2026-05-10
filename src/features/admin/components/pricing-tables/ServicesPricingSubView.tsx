@@ -53,7 +53,7 @@ export function ServicesPricingSubView({
   }
 
   const current = configs.find(c => (c._id ?? c.serviceId) === activeService) ?? configs[0];
-  const configRows = flattenConfig(current.config);
+  const configRows = flattenConfig(current.config, current.serviceId);
   const serviceKey = current._id ?? current.serviceId;
 
   return (

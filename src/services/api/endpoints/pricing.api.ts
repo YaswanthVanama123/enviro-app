@@ -283,6 +283,15 @@ export const pricingApi = {
     return {ok: true};
   },
 
+  async updateServiceConfigPricing(
+    id: string,
+    config: Record<string, any>,
+  ): Promise<{ok: boolean; error?: string}> {
+    const res = await apiClient.put(`/api/service-configs/${id}/partial`, {config});
+    if (res.error) {return {ok: false, error: res.error};}
+    return {ok: true};
+  },
+
   async uploadServiceImage(
     id: string,
     fileUri: string,

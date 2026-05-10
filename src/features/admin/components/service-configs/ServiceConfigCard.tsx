@@ -10,9 +10,10 @@ import {FontSize} from '../../../../theme/typography';
 interface ServiceConfigCardProps {
   config: ServiceConfig;
   onEdit: (c: ServiceConfig) => void;
+  onEditPricing?: (c: ServiceConfig) => void;
 }
 
-export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
+export function ServiceConfigCard({config, onEdit, onEditPricing}: ServiceConfigCardProps) {
   return (
     <View style={styles.serviceCard}>
       <View style={styles.serviceCardTitleRow}>
@@ -62,6 +63,16 @@ export function ServiceConfigCard({config, onEdit}: ServiceConfigCardProps) {
         <Ionicons name="create-outline" size={14} color="#fff" />
         <Text style={styles.editConfigBtnText}>Edit Configuration</Text>
       </TouchableOpacity>
+
+      {config.serviceId === 'pureJanitorial' && onEditPricing && (
+        <TouchableOpacity
+          style={styles.editPricingBtn}
+          onPress={() => onEditPricing(config)}
+          activeOpacity={0.7}>
+          <Ionicons name="briefcase-outline" size={14} color="#fff" />
+          <Text style={styles.editPricingBtnText}>Edit Janitorial Pricing</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -149,6 +160,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563eb',
   },
   editConfigBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  editPricingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 9,
+    borderRadius: Radius.md,
+    backgroundColor: '#059669',
+  },
+  editPricingBtnText: {
     fontSize: FontSize.sm,
     fontWeight: '700',
     color: '#fff',

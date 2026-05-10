@@ -21,10 +21,10 @@ export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
 ];
 
 export const SERVICE_SUBTABS: {key: ServiceSubTab; label: string; icon: string}[] = [
-  {key: 'unit',        label: 'Unit Pricing',        icon: 'pricetag-outline'},
-  {key: 'minimums',    label: 'Minimums',             icon: 'cash-outline'},
-  {key: 'multipliers', label: 'Install Multipliers',  icon: 'flash-outline'},
-  {key: 'frequencies', label: 'Service Frequencies',  icon: 'calendar-outline'},
+  {key: 'unit',        label: 'Unit / Rates',      icon: 'pricetag-outline'},
+  {key: 'minimums',    label: 'Minimums / Labor',  icon: 'cash-outline'},
+  {key: 'multipliers', label: 'Multipliers / Supplies', icon: 'flash-outline'},
+  {key: 'frequencies', label: 'Frequencies',       icon: 'calendar-outline'},
 ];
 
 export const NESTED_CATEGORY: Record<string, ServiceSubTab> = {
@@ -160,7 +160,28 @@ export function formatConfigValue(key: string, val: any): string {
   return JSON.stringify(val);
 }
 
-export function flattenConfig(obj: any): Array<{label: string; value: string}> {
+export function flattenConfig(obj: any, serviceId?: string): Array<{label: string; value: string}> {
+  if (serviceId === 'pureJanitorial') {
+    const pr = obj?.productionRates ?? {};
+    const ds = obj?.defaultSupplies ?? {};
+    return [
+      ...Object.entries(pr).map(([k, v]) => ({
+        label: `${k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1')} (Production Rate)`,
+        value: `${v} sq ft/hr`,
+      })),
+      {label: 'Cost Per Labor Hour',  value: `$${obj?.costPerHour    ?? 20}/hr`},
+      {label: 'Labor Tax %',          value: `${obj?.laborTaxPct     ?? 15}%`},
+      {label: 'Gross Profit %',       value: `${obj?.grossProfitPct  ?? 33}%`},
+      {label: 'Supplies - Vacuums',           value: `$${ds.vacuums          ?? 100}/yr`},
+      {label: 'Supplies - Mops',              value: `$${ds.mops             ?? 500}/yr`},
+      {label: 'Supplies - Mop Buckets',       value: `$${ds.mopBuckets       ?? 200}/yr`},
+      {label: 'Supplies - Dust Mops',         value: `$${ds.dustMops         ?? 300}/yr`},
+      {label: 'Supplies - Microfiber',        value: `$${ds.microfiber       ?? 0}/yr`},
+      {label: 'Supplies - Cleaning Products', value: `$${ds.cleaningProducts ?? 0}/yr`},
+      {label: 'Supplies - Consumables',       value: `$${ds.consumables      ?? 0}/yr`},
+      {label: 'Supplies - Miscellaneous',     value: `$${ds.miscellaneous    ?? 0}/yr`},
+    ];
+  }
   if (!obj || typeof obj !== 'object') {return [];}
   const rows: Array<{label: string; value: string}> = [];
   for (const [k, v] of Object.entries(obj)) {
@@ -207,7 +228,34 @@ export function getFieldDescription(key: string): string {
   return '';
 }
 
-export function extractConfigFields(config: any): ConfigField[] {
+export function extractConfigFields(config: any, serviceId?: string): ConfigField[] {
+  if (serviceId === 'pureJanitorial') {
+    const pr = config?.productionRates ?? {};
+    const ds = config?.defaultSupplies ?? {};
+    return [
+      // unit tab → Production Rates (dynamic from backend)
+      ...Object.entries(pr).map(([k, v]) => ({
+        key: `pr_${k}`,
+        label: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1'),
+        description: `Production rate for ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}`,
+        value: `${v} sq ft/hr`,
+        category: 'unit' as const,
+      })),
+      // minimums tab → Labor Defaults
+      {key: 'costPerHour',    label: 'Cost Per Labor Hour', description: 'Admin-configured baseline labor cost per hour. Default: $20',                                      value: `$${config?.costPerHour    ?? 20}/hr`, category: 'minimums'},
+      {key: 'laborTaxPct',    label: 'Labor Tax %',         description: 'Payroll tax and benefits % on top of base labor. Default: 15%',                                   value: `${config?.laborTaxPct     ?? 15}%`,   category: 'minimums'},
+      {key: 'grossProfitPct', label: 'Gross Profit %',      description: 'Target gross profit margin. Contract Value = Total Cost ÷ (1 − GP%). Default: 33%',              value: `${config?.grossProfitPct  ?? 33}%`,   category: 'minimums'},
+      // multipliers tab → Supply Defaults
+      {key: 'sup_vacuums',          label: 'Supplies - Vacuums',           description: 'Default annual cost for vacuum equipment. Default: $100',       value: `$${ds.vacuums          ?? 100}/yr`, category: 'multipliers'},
+      {key: 'sup_mops',             label: 'Supplies - Mops',              description: 'Default annual cost for mops. Default: $500',                   value: `$${ds.mops             ?? 500}/yr`, category: 'multipliers'},
+      {key: 'sup_mopBuckets',       label: 'Supplies - Mop Buckets',       description: 'Default annual cost for mop buckets. Default: $200',            value: `$${ds.mopBuckets       ?? 200}/yr`, category: 'multipliers'},
+      {key: 'sup_dustMops',         label: 'Supplies - Dust Mops',         description: 'Default annual cost for dust mops. Default: $300',              value: `$${ds.dustMops         ?? 300}/yr`, category: 'multipliers'},
+      {key: 'sup_microfiber',       label: 'Supplies - Microfiber',        description: 'Default annual cost for microfiber cloths. Default: $0',        value: `$${ds.microfiber       ?? 0}/yr`,   category: 'multipliers'},
+      {key: 'sup_cleaningProducts', label: 'Supplies - Cleaning Products', description: 'Default annual cost for cleaning products. Default: $0',        value: `$${ds.cleaningProducts ?? 0}/yr`,   category: 'multipliers'},
+      {key: 'sup_consumables',      label: 'Supplies - Consumables',       description: 'Default annual cost for consumables. Default: $0',              value: `$${ds.consumables      ?? 0}/yr`,   category: 'multipliers'},
+      {key: 'sup_miscellaneous',    label: 'Supplies - Miscellaneous',     description: 'Default annual cost for miscellaneous supplies. Default: $0',   value: `$${ds.miscellaneous    ?? 0}/yr`,   category: 'multipliers'},
+    ];
+  }
   if (!config || typeof config !== 'object') {return [];}
   const result: ConfigField[] = [];
 

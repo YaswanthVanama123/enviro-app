@@ -28,7 +28,7 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
 
   if (!config) {return null;}
 
-  const allFields = extractConfigFields(config.config);
+  const allFields = extractConfigFields(config.config, config.serviceId);
   const visibleFields = allFields.filter(f => f.category === activeSubTab);
 
   const counts = SERVICE_SUBTABS.reduce<Record<string, number>>((acc, t) => {

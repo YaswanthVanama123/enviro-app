@@ -5,6 +5,7 @@ import {TouchableOpacity} from 'react-native';
 import {pricingApi, ServiceConfig} from '../../../../services/api/endpoints/pricing.api';
 import {ServiceConfigCard} from './ServiceConfigCard';
 import {EditServiceConfigModal} from './EditServiceConfigModal';
+import {EditJanitorialConfigModal} from './EditJanitorialConfigModal';
 import {SkeletonRow} from '../pricing-shared/SkeletonRow';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -15,6 +16,7 @@ export function ServiceConfigsSection() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [editTarget, setEditTarget] = useState<ServiceConfig | null>(null);
+  const [editPricingTarget, setEditPricingTarget] = useState<ServiceConfig | null>(null);
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {setRefreshing(true);} else {setLoading(true);}
     const data = await pricingApi.getAllServiceConfigs();
@@ -52,7 +54,7 @@ export function ServiceConfigsSection() {
       <FlatList
         data={configs}
         keyExtractor={c => c._id}
-        renderItem={({item}) => <ServiceConfigCard config={item} onEdit={setEditTarget} />}
+        renderItem={({item}) => <ServiceConfigCard config={item} onEdit={setEditTarget} onEditPricing={setEditPricingTarget} />}
         ListHeaderComponent={
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionHeaderText}>
@@ -84,6 +86,12 @@ export function ServiceConfigsSection() {
         visible={editTarget !== null}
         config={editTarget}
         onClose={() => setEditTarget(null)}
+        onSaved={handleSaved}
+      />
+      <EditJanitorialConfigModal
+        visible={editPricingTarget !== null}
+        config={editPricingTarget}
+        onClose={() => setEditPricingTarget(null)}
         onSaved={handleSaved}
       />
     </>
