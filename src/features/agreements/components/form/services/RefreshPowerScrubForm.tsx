@@ -168,7 +168,35 @@ function calcAreaContractTotal(a: AreaConfig, contractMonths: number): number {
   return cost * visits;
 }
 
-export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}: Props) {
+function calcBaselineAreaCost(a: AreaConfig, cfg: any): number {
+  if (!a.enabled) return 0;
+  if (a.pricingType === 'flat') {
+    // Use admin default flat rate — not user-modified
+    return cfg?.defaultFlatRate ?? a.flatRate;
+  }
+  // sqft: use admin baseline rate per sqft
+  const baselineRate = cfg?.sqFtInsideRate ?? 0.10;
+  return a.sqFt * baselineRate;
+}
+
+function calcBaselineAreaContractTotal(a: AreaConfig, contractMonths: number, cfg: any): number {
+  if (!a.enabled) return 0;
+  const cost = calcBaselineAreaCost(a, cfg);
+  const freq = a.frequencyLabel;
+  let visits: number;
+  if (freq === 'weekly') {
+    visits = contractMonths * 4.33;
+  } else if (freq === 'biweekly') {
+    visits = contractMonths * 2.165;
+  } else if (freq === 'everyFourWeeks') {
+    visits = Math.round(contractMonths * 1.0833);
+  } else {
+    visits = contractMonths;
+  }
+  return cost * visits;
+}
+
+export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const dumpster = data?.dumpster ?? DEFAULT_AREA;
   const patio    = data?.patio    ?? DEFAULT_AREA;
   const foh      = data?.foh      ?? DEFAULT_AREA;
@@ -187,6 +215,12 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
       calcAreaContractTotal(np, contractMonths) +
       calcAreaContractTotal(nf, contractMonths) +
       calcAreaContractTotal(nb, contractMonths);
+    const cfg = pricingConfig?.config ?? {};
+    const baselineContractTotal =
+      calcBaselineAreaContractTotal(nd, contractMonths, cfg) +
+      calcBaselineAreaContractTotal(np, contractMonths, cfg) +
+      calcBaselineAreaContractTotal(nf, contractMonths, cfg) +
+      calcBaselineAreaContractTotal(nb, contractMonths, cfg);
     onChange({
       serviceId: 'refreshPowerScrub',
       displayName: 'Refresh Power Scrub',
@@ -200,9 +234,9 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove}
       boh:      nb,
       perVisit: newTotal,
       contractTotal: newContractTotal,
-      originalContractTotal: newContractTotal,
+      originalContractTotal: baselineContractTotal,
     });
-  }, [data, dumpster, patio, foh, boh, contractMonths, onChange]);
+  }, [data, dumpster, patio, foh, boh, contractMonths, pricingConfig, onChange]);
 
   return (
     <ServiceCard
