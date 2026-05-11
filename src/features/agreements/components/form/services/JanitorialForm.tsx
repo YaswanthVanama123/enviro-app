@@ -55,7 +55,24 @@ interface JanCalcResult {
   annualContractValue: number;
   contractTotal: number;
   grossProfit: number;
+  monthlyRecurring: number;
+  perVisit: number;
 }
+
+const BILLING_CONVERSIONS: Record<string, {annualMultiplier: number; monthlyMultiplier: number}> = {
+  oneTime:       {annualMultiplier: 1,  monthlyMultiplier: 0},
+  weekly:        {annualMultiplier: 52, monthlyMultiplier: 4.33},
+  biweekly:      {annualMultiplier: 26, monthlyMultiplier: 2.165},
+  twicePerMonth: {annualMultiplier: 24, monthlyMultiplier: 2},
+  monthly:       {annualMultiplier: 12, monthlyMultiplier: 1},
+  everyFourWeeks:{annualMultiplier: 13, monthlyMultiplier: 1.0833},
+  bimonthly:     {annualMultiplier: 6,  monthlyMultiplier: 0.5},
+  quarterly:     {annualMultiplier: 4,  monthlyMultiplier: 0.333},
+  biannual:      {annualMultiplier: 2,  monthlyMultiplier: 0.167},
+  annual:        {annualMultiplier: 1,  monthlyMultiplier: 0.083},
+};
+
+const VISIT_BASED_FREQUENCIES = ['everyFourWeeks', 'bimonthly', 'quarterly', 'biannual', 'annual'];
 
 function calcJanitorial(
   sqFt: number,
@@ -66,18 +83,35 @@ function calcJanitorial(
   grossProfitPct: number,
   supplies: SupplyItem[],
   contractMonths: number,
+  frequency: string,
 ): JanCalcResult {
   const hoursPerVisit = productionRate > 0 ? sqFt / productionRate : 0;
-  const weeklyLabor = hoursPerVisit * costPerHour * visitsPerWeek;
-  const annualBaseLabor = weeklyLabor * 52;
+  const perOccurrenceLabor = hoursPerVisit * costPerHour * visitsPerWeek;
+  const conv = BILLING_CONVERSIONS[frequency] ?? BILLING_CONVERSIONS.weekly;
+  const annualMultiplier = conv.annualMultiplier;
+
+  const weeklyLabor = perOccurrenceLabor; // kept for display
+  const annualBaseLabor = perOccurrenceLabor * annualMultiplier;
   const annualLaborTax = annualBaseLabor * (laborTaxPct / 100);
   const totalAnnualSupplies = supplies.reduce((s, x) => s + x.amount, 0);
   const totalAnnualCost = annualBaseLabor + annualLaborTax + totalAnnualSupplies;
   const gp = Math.min(Math.max(grossProfitPct / 100, 0), 0.999);
   const annualContractValue = gp < 1 ? totalAnnualCost / (1 - gp) : 0;
-  const contractTotal = annualContractValue * contractMonths / 12;
+
+  let contractTotal: number;
+  if (frequency === 'oneTime') {
+    contractTotal = annualContractValue;
+  } else {
+    contractTotal = annualContractValue * contractMonths / 12;
+  }
+
   const grossProfit = annualContractValue - totalAnnualCost;
-  return {hoursPerVisit, weeklyLabor, annualBaseLabor, annualLaborTax, totalAnnualSupplies, totalAnnualCost, annualContractValue, contractTotal, grossProfit};
+  const monthlyRecurring = (frequency !== 'oneTime' && contractMonths > 0)
+    ? contractTotal / contractMonths
+    : 0;
+  const perVisit = annualMultiplier > 0 ? annualContractValue / annualMultiplier : 0;
+
+  return {hoursPerVisit, weeklyLabor, annualBaseLabor, annualLaborTax, totalAnnualSupplies, totalAnnualCost, annualContractValue, contractTotal, grossProfit, monthlyRecurring, perVisit};
 }
 
 export function JanitorialForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
@@ -129,8 +163,8 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
   const productionRate = (productionRates as any)[placeType] ?? 0;
   console.log('[JAN DEBUG] placeType:', placeType, '| productionRates:', JSON.stringify(productionRates), '| rate:', productionRate, '| sqFt:', sqFt);
 
-  const calc = calcJanitorial(sqFt, productionRate, visitsPerWeek, costPerHour, laborTaxPct, grossProfitPct, supplies, contractMonths);
-  const monthlyRecurring = contractMonths > 0 ? calc.contractTotal / contractMonths : 0;
+  const calc = calcJanitorial(sqFt, productionRate, visitsPerWeek, costPerHour, laborTaxPct, grossProfitPct, supplies, contractMonths, freq);
+  const monthlyRecurring = calc.monthlyRecurring;
 
   const update = useCallback((fields: Record<string, any>) => {
     const newVisits         = fields.visitsPerWeek  ?? visitsPerWeek;
@@ -143,9 +177,8 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     const newFreq           = fields.frequency      ?? freq;
     const newProdRate       = (productionRates as any)[newPlaceType] ?? 0;
 
-    const newCalc  = calcJanitorial(newSqFt, newProdRate, newVisits, newCostPerHour, newLaborTaxPct, newGrossProfitPct, newSupplies, contractMonths);
-    const origCalc = calcJanitorial(newSqFt, newProdRate, newVisits, adminCostPerHour, adminLaborTaxPct, adminGrossProfitPct, adminDefaultSupplies, contractMonths);
-    const newMonthly = contractMonths > 0 ? newCalc.contractTotal / contractMonths : 0;
+    const newCalc  = calcJanitorial(newSqFt, newProdRate, newVisits, newCostPerHour, newLaborTaxPct, newGrossProfitPct, newSupplies, contractMonths, newFreq);
+    const origCalc = calcJanitorial(newSqFt, newProdRate, newVisits, adminCostPerHour, adminLaborTaxPct, adminGrossProfitPct, adminDefaultSupplies, contractMonths, newFreq);
 
     onChange({
       serviceId: 'pureJanitorial',
@@ -156,8 +189,8 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       ...fields,
       placeType: newPlaceType,
       frequency: newFreq,
-      perVisit: newMonthly,
-      monthlyRecurring: newMonthly,
+      perVisit: newCalc.perVisit,
+      monthlyRecurring: newCalc.monthlyRecurring,
       contractTotal: newCalc.contractTotal,
       originalContractTotal: origCalc.contractTotal,
     });
@@ -253,8 +286,15 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         <DollarRow label={`Gross Profit (${grossProfitPct}%)`} value={calc.grossProfit} />
         <DollarRow label="Annual Contract Value" value={calc.annualContractValue} />
         <FormDivider />
-        <DollarRow label="Monthly Recurring" value={monthlyRecurring} />
-        <DollarRow label={`Contract Total (${contractMonths} mo)`} value={calc.contractTotal} highlight />
+        {/* Show Monthly Recurring for month-based frequencies */}
+        {freq !== 'oneTime' && !VISIT_BASED_FREQUENCIES.includes(freq) && (
+          <DollarRow label="Monthly Recurring" value={monthlyRecurring} />
+        )}
+        {/* Show Recurring Visit Total for visit-based frequencies */}
+        {VISIT_BASED_FREQUENCIES.includes(freq) && (
+          <DollarRow label="Recurring Visit Total" value={calc.perVisit} />
+        )}
+        <DollarRow label={freq === 'oneTime' ? 'Total Price' : `Contract Total (${contractMonths} mo)`} value={calc.contractTotal} highlight />
       </View>
     </ServiceCard>
   );
