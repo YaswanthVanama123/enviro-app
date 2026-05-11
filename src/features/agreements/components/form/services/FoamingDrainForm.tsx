@@ -1,4 +1,5 @@
 import React, {useCallback} from 'react';
+import {View, Text, StyleSheet} from 'react-native';
 import {
   ServiceCard, TotalsBlock, calcTotals,
   FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
@@ -77,6 +78,16 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
     });
   }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
 
+  const origRawCost =
+    standardDrainCount * (cfg.standardDrainRate      ?? 10)  +
+    greaseTrapCount    * (cfg.greaseTrapWeeklyRate    ?? 125) +
+    greenDrainCount    * (cfg.greenDrainWeeklyRate    ?? 5)   +
+    (needsPlumbing ? plumbingDrainCount * (cfg.plumbingAddonRate ?? 10) : 0);
+  const origMin = cfg.minimumChargePerVisit ?? 0;
+  const origBase = applyMinimum && origMin > 0 ? Math.max(origRawCost, origMin) : origRawCost;
+  const originalContractTotal = calcTotals(origBase, freq, contractMonths).contractTotal;
+  const isGreenline = totals.contractTotal > originalContractTotal * 1.30;
+
   return (
     <ServiceCard
       serviceId="foamingDrain"
@@ -99,6 +110,25 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
+      {(standardDrainCount > 0 || greaseTrapCount > 0 || greenDrainCount > 0) && (
+        <View style={styles.badgeRow}>
+          <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
+            <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
+              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+            </Text>
+          </View>
+        </View>
+      )}
     </ServiceCard>
   );
 }
+
+const styles = StyleSheet.create({
+  badgeRow: {paddingHorizontal: 16, paddingVertical: 8},
+  badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
+  greenBadge: {backgroundColor: '#e8f5e9'},
+  redBadge: {backgroundColor: '#ffebee'},
+  badgeText: {fontSize: 13, fontWeight: '600'},
+  greenText: {color: '#388e3c'},
+  redText: {color: '#d32f2f'},
+});

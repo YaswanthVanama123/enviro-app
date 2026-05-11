@@ -1,4 +1,5 @@
 import React, {useCallback} from 'react';
+import {View, Text, StyleSheet} from 'react-native';
 import {
   ServiceCard, TotalsBlock, calcTotals,
   FREQ_OPTIONS, DropdownRow, FormDivider, NumberRow, ToggleRow,
@@ -66,6 +67,11 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
     });
   }, [data, freq, podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit, isStandalone, standaloneExtraWeekly, extraBagsPerWeek, extraBagPrice, contractMonths, onChange]);
 
+  const origNr  = freq === 'biweekly' ? (cfg.altWeeklyRatePerUnit ?? 8) : (cfg.weeklyRatePerUnit ?? 3);
+  const origBase = podQuantity * origNr + (isStandalone ? (cfg.standaloneExtraWeeklyCharge ?? 40) : 0) + extraBagsPerWeek * (cfg.extraBagPrice ?? 2);
+  const originalContractTotal = calcTotals(origBase, freq, contractMonths).contractTotal;
+  const isGreenline = totals.contractTotal > originalContractTotal * 1.30;
+
   return (
     <ServiceCard serviceId="sanipod" displayName="SaniPod" icon="cube-outline" iconColor="#7c3aed" iconBg="#ede9fe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
@@ -79,6 +85,25 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
         <NumberRow label="Standalone Extra / Week" value={standaloneExtraWeekly} onChange={v => update({standaloneExtraWeeklyCharge: v})} prefix="$" decimals={2} />
       )}
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
+      {podQuantity > 0 && (
+        <View style={styles.badgeRow}>
+          <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
+            <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
+              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+            </Text>
+          </View>
+        </View>
+      )}
     </ServiceCard>
   );
 }
+
+const styles = StyleSheet.create({
+  badgeRow: {paddingHorizontal: 16, paddingVertical: 8},
+  badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
+  greenBadge: {backgroundColor: '#e8f5e9'},
+  redBadge: {backgroundColor: '#ffebee'},
+  badgeText: {fontSize: 13, fontWeight: '600'},
+  greenText: {color: '#388e3c'},
+  redText: {color: '#d32f2f'},
+});
