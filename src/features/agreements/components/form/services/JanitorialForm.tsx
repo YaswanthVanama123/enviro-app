@@ -161,10 +161,11 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
   const supplies: SupplyItem[] = data?.supplies ?? adminDefaultSupplies;
 
   const productionRate = (productionRates as any)[placeType] ?? 0;
-  console.log('[JAN DEBUG] placeType:', placeType, '| productionRates:', JSON.stringify(productionRates), '| rate:', productionRate, '| sqFt:', sqFt);
 
   const calc = calcJanitorial(sqFt, productionRate, visitsPerWeek, costPerHour, laborTaxPct, grossProfitPct, supplies, contractMonths, freq);
+  const origCalc = calcJanitorial(sqFt, productionRate, visitsPerWeek, adminCostPerHour, adminLaborTaxPct, adminGrossProfitPct, adminDefaultSupplies, contractMonths, freq);
   const monthlyRecurring = calc.monthlyRecurring;
+  const isGreenline = calc.contractTotal > origCalc.contractTotal * 1.30;
 
   const update = useCallback((fields: Record<string, any>) => {
     const newVisits         = fields.visitsPerWeek  ?? visitsPerWeek;
@@ -296,6 +297,15 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         )}
         <DollarRow label={freq === 'oneTime' ? 'Total Price' : `Contract Total (${contractMonths} mo)`} value={calc.contractTotal} highlight />
       </View>
+      {sqFt > 0 && (
+        <View style={styles.badgeRow}>
+          <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
+            <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
+              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+            </Text>
+          </View>
+        </View>
+      )}
     </ServiceCard>
   );
 }
@@ -388,4 +398,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  badgeRow: {paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm},
+  badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
+  greenBadge: {backgroundColor: '#e8f5e9'},
+  redBadge: {backgroundColor: '#ffebee'},
+  badgeText: {fontSize: 13, fontWeight: '600'},
+  greenText: {color: '#388e3c'},
+  redText: {color: '#d32f2f'},
 });

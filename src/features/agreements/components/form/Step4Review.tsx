@@ -173,6 +173,10 @@ export function Step4Review({form}: Step4ReviewProps) {
                   <Text style={styles.svcFreq}>Paper · {chargeLabel} · {freqInfo} · qty {p.qty}</Text>
                 </View>
                 <Text style={styles.svcTotal}>{formatCurrency(rowTotal)}</Text>
+              </View>
+            );
+          })}
+          {bigProducts.map(p => (
             <View key={p.id} style={styles.svcRow}>
               <View style={styles.svcInfo}>
                 <Text style={styles.svcName}>{p.displayName || '(unnamed)'}</Text>

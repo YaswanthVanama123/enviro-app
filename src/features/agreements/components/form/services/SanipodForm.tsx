@@ -42,7 +42,7 @@ function calcSanipodTotals(
   const optA = pods * altRate + weeklyBags;
   const optB = pods * weeklyRate + (isStandalone ? standaloneExtra : 0) + weeklyBags;
   const weeklyService = Math.min(optA, optB);
-  const perVisit = isStandalone ? Math.max(weeklyService, standaloneExtra) : weeklyService;
+  const perVisit = weeklyService;
 
   // Install cost
   const effectiveInstallQty = isNewInstall ? installQty : 0;
