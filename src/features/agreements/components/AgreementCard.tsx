@@ -377,9 +377,17 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
                   <Text style={[styles.timelineLabel, {color: timeline.color}]}>{timeline.label}</Text>
                 </View>
                 <Text style={[styles.timelineDaysText, {color: timeline.color}]}>· {timeline.daysText}</Text>
+                <TouchableOpacity style={styles.calendarInlineBtn} onPress={handleCalendar}>
+                  <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
+                </TouchableOpacity>
               </View>
             ) : agreement.agreementStatus ? (
-              <FileBadge status={agreement.agreementStatus} />
+              <View style={styles.timelineRow}>
+                <FileBadge status={agreement.agreementStatus} />
+                <TouchableOpacity style={styles.calendarInlineBtn} onPress={handleCalendar}>
+                  <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
             ) : null}
           </View>
           <Ionicons
@@ -390,12 +398,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         </TouchableOpacity>
 
         <View style={styles.cardActions}>
-          <TouchableOpacity style={styles.cardActionIconBtn} onPress={handleCalendar}>
-            <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
-          </TouchableOpacity>
-
-          <View style={styles.cardActionDivider} />
-
           <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
             <Ionicons name="create-outline" size={13} color="#fff" />
             <Text style={styles.editBtnText}>Edit</Text>
@@ -639,6 +641,17 @@ const styles = StyleSheet.create({
   timelineDot: {width: 6, height: 6, borderRadius: 3},
   timelineLabel: {fontSize: FontSize.xs, fontWeight: '700'},
   timelineDaysText: {fontSize: FontSize.xs, fontWeight: '500'},
+  calendarInlineBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    marginLeft: 'auto',
+  },
 
   cardActions: {
     flexDirection: 'row',

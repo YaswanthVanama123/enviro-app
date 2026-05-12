@@ -183,10 +183,10 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
       <NumberRow label="Extra Bags / Week" value={extraBagsPerWeek} onChange={v => update({extraBagsPerWeek: v})} decimals={0} />
       <NumberRow label="Extra Bag Price" value={extraBagPrice} onChange={v => update({extraBagPrice: v})} prefix="$" decimals={2} />
       <ToggleRow label="Bags Recurring" value={extraBagsRecurring} onChange={v => update({extraBagsRecurring: v})} subtitle="Charge bags every visit" />
-      <ToggleRow label="Standalone Service" value={isStandalone} onChange={v => update({isStandalone: v})} subtitle="Charge standalone extra fee" />
+      {/* <ToggleRow label="Standalone Service" value={isStandalone} onChange={v => update({isStandalone: v})} subtitle="Charge standalone extra fee" />
       {isStandalone && (
         <NumberRow label="Standalone Extra / Week" value={standaloneExtraWeekly} onChange={v => update({standaloneExtraWeeklyCharge: v})} prefix="$" decimals={2} />
-      )}
+      )} */}
       <FormDivider />
       <ToggleRow label="New Install" value={isNewInstall} onChange={v => update({isNewInstall: v})} subtitle="Include installation charge" />
       {isNewInstall && (
