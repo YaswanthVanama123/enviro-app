@@ -85,7 +85,7 @@ export function Step4Review({form}: Step4ReviewProps) {
   let smallOnce = 0;
   let smallMonthly = 0;
   smallProducts.forEach(p => {
-    const ct = p.costType ?? 'warranty';
+    const ct = p.costType ?? 'productCost';
     const base = p.qty * p.unitPrice;
     if (ct === 'productCost') { smallOnce += base; }
     else { smallMonthly += base * getFreqMult(p.frequency); }
@@ -160,7 +160,7 @@ export function Step4Review({form}: Step4ReviewProps) {
       {hasProducts && (
         <SectionCard icon="cube-outline" title="Products">
           {smallProducts.map(p => {
-            const ct = p.costType ?? 'warranty';
+            const ct = p.costType ?? 'productCost';
             const rowTotal = ct === 'productCost'
               ? p.qty * p.unitPrice
               : p.qty * p.unitPrice * getFreqMult(p.frequency) * contractMonths;

@@ -382,7 +382,7 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
   onRemove: () => void;
   onOpenCatalog: () => void;
 }) {
-  const costType = product.costType ?? 'warranty';
+  const costType = product.costType ?? 'productCost';
   const total = product.qty * product.unitPrice;
 
   return (

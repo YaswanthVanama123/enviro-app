@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, ScrollView} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -33,19 +33,21 @@ export function PickerField({
       </TouchableOpacity>
       {open && (
         <View style={styles.pickerDropdown}>
-          {options.map(opt => (
-            <TouchableOpacity
-              key={opt.value}
-              style={styles.pickerOption}
-              onPress={() => {onSelect(opt.value); setOpen(false);}}>
-              <Text style={[styles.pickerOptionText, opt.value === value && styles.pickerOptionActive]}>
-                {opt.label}
-              </Text>
-              {opt.value === value && (
-                <Ionicons name="checkmark" size={14} color={Colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
+          <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={true} nestedScrollEnabled>
+            {options.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.pickerOption}
+                onPress={() => {onSelect(opt.value); setOpen(false);}}>
+                <Text style={[styles.pickerOptionText, opt.value === value && styles.pickerOptionActive]}>
+                  {opt.label}
+                </Text>
+                {opt.value === value && (
+                  <Ionicons name="checkmark" size={14} color={Colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
@@ -79,6 +81,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     marginTop: 4,
     overflow: 'hidden',
+    maxHeight: 280,
+  },
+  pickerScroll: {
+    maxHeight: 278,
   },
   pickerOption: {
     flexDirection: 'row',

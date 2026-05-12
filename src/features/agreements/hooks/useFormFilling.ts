@@ -210,7 +210,7 @@ export function useFormFilling(editAgreementId?: string) {
               qty: 1,
               unitPrice: p.basePrice?.amount ?? 0,
               frequency: p.frequency ?? 'monthly',
-              costType: 'warranty' as const,
+              costType: 'productCost' as const,
             }));
             console.log('[FormFilling] Pre-populated', next.smallProducts.length, 'products from catalog');
           }
@@ -294,7 +294,7 @@ export function useFormFilling(editAgreementId?: string) {
               qty: p.qty ?? 1,
               unitPrice: p.unitPrice ?? 0,
               frequency: p.frequency ?? 'monthly',
-              costType: p.costType ?? 'warranty',
+              costType: p.costType ?? 'productCost',
             }));
           }
           if (Array.isArray(savedProducts.dispensers)) {
@@ -385,7 +385,7 @@ export function useFormFilling(editAgreementId?: string) {
       qty: 1,
       unitPrice: 0,
       frequency: 'monthly',
-      costType: 'warranty',
+      costType: 'productCost',
     };
     setForm(prev => ({...prev, smallProducts: [...prev.smallProducts, item]}));
   }, []);
@@ -564,7 +564,7 @@ export function useFormFilling(editAgreementId?: string) {
           qty: p.qty,
           unitPrice: p.unitPrice,
           frequency: p.frequency,
-          costType: p.costType ?? 'warranty',
+          costType: p.costType ?? 'productCost',
           total: p.qty * p.unitPrice,
         })),
         bigProducts: form.bigProducts.map(p => ({

@@ -1,7 +1,7 @@
 import React, {useState, useMemo, useRef, useEffect} from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Modal, FlatList,
+  Modal, FlatList, ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SmallProduct, Dispenser} from '../../hooks/useFormFilling';
@@ -264,6 +264,153 @@ function CostTypeToggle({value, onChange, labels}: {
   );
 }
 
+// ─── Autocomplete Input ─────────────────────────────────────────────
+function AutocompleteInput({
+  value,
+  onChangeText,
+  onSelectItem,
+  catalogItems,
+  placeholder,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+  onSelectItem: (item: CatalogItemFlat) => void;
+  catalogItems: CatalogItemFlat[];
+  placeholder: string;
+}) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const filteredItems = useMemo(() => {
+    if (!value.trim() || value.trim().length < 1) return [];
+    const q = value.trim().toLowerCase();
+    return catalogItems.filter(it =>
+      it.name.toLowerCase().includes(q) ||
+      it.familyLabel.toLowerCase().includes(q)
+    ).slice(0, 8); // Limit to 8 suggestions
+  }, [catalogItems, value]);
+
+  const shouldShowDropdown = isFocused && filteredItems.length > 0;
+
+  return (
+    <View style={acStyles.container}>
+      <TextInput
+        style={acStyles.input}
+        value={value}
+        onChangeText={t => {
+          onChangeText(t);
+          setShowSuggestions(true);
+        }}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.textMuted}
+        onFocus={() => {
+          setIsFocused(true);
+          setShowSuggestions(true);
+        }}
+        onBlur={() => {
+          // Delay to allow tap on suggestion
+          setTimeout(() => {
+            setIsFocused(false);
+            setShowSuggestions(false);
+          }, 200);
+        }}
+      />
+      {shouldShowDropdown && (
+        <View style={acStyles.dropdown}>
+          <ScrollView
+            style={acStyles.dropdownScroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled>
+            {filteredItems.map((item, index) => (
+              <TouchableOpacity
+                key={item.key + index}
+                style={acStyles.option}
+                onPress={() => {
+                  onSelectItem(item);
+                  setShowSuggestions(false);
+                  setIsFocused(false);
+                }}>
+                <View style={acStyles.optionContent}>
+                  <Text style={acStyles.optionName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={acStyles.optionFamily} numberOfLines={1}>{item.familyLabel}</Text>
+                </View>
+                <Text style={acStyles.optionPrice}>{formatCurrency(item.basePrice)}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const acStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 100,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 7,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    backgroundColor: '#fff',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 40,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: Radius.md,
+    zIndex: 200,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
+    maxHeight: 220,
+    overflow: 'hidden',
+  },
+  dropdownScroll: {
+    maxHeight: 218,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  optionContent: {
+    flex: 1,
+    gap: 2,
+  },
+  optionName: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  optionFamily: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  optionPrice: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginLeft: Spacing.sm,
+  },
+});
+
 // ─── Compact Product Row ───────────────────────────────────────────
 function CompactProductRow({
   product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
@@ -276,7 +423,7 @@ function CompactProductRow({
   onRemove: () => void;
   onOpenCatalog: () => void;
 }) {
-  const costType = product.costType ?? 'warranty';
+  const costType = product.costType ?? 'productCost';
   const total = product.qty * product.unitPrice;
 
   return (
@@ -313,14 +460,16 @@ function CompactProductRow({
 
       {/* Expanded detail */}
       {isExpanded && (
-        <View style={styles.expandPanel}>
-          <View style={styles.expandNameRow}>
-            <TextInput
-              style={styles.expandNameInput}
+        <View style={[styles.expandPanel, {zIndex: 100}]}>
+          <View style={[styles.expandNameRow, {zIndex: 101}]}>
+            <AutocompleteInput
               value={product.displayName}
               onChangeText={t => onUpdate({displayName: t})}
-              placeholder="Product name"
-              placeholderTextColor={Colors.textMuted}
+              onSelectItem={item => {
+                onUpdate({displayName: item.name, unitPrice: item.basePrice});
+              }}
+              catalogItems={catalogItems}
+              placeholder="Search product name..."
             />
             <TouchableOpacity style={styles.catalogBtn} onPress={onOpenCatalog}>
               <Ionicons name="list-outline" size={15} color={Colors.primary} />
@@ -391,14 +540,20 @@ function CompactDispenserRow({
 
       {/* Expanded detail */}
       {isExpanded && (
-        <View style={styles.expandPanel}>
-          <View style={styles.expandNameRow}>
-            <TextInput
-              style={styles.expandNameInput}
+        <View style={[styles.expandPanel, {zIndex: 100}]}>
+          <View style={[styles.expandNameRow, {zIndex: 101}]}>
+            <AutocompleteInput
               value={product.displayName}
               onChangeText={t => onUpdate({displayName: t})}
-              placeholder="Dispenser name"
-              placeholderTextColor={Colors.textMuted}
+              onSelectItem={item => {
+                onUpdate({
+                  displayName: item.name,
+                  warrantyRate: item.warrantyRate,
+                  replacementRate: item.replacementRate,
+                });
+              }}
+              catalogItems={catalogItems}
+              placeholder="Search dispenser name..."
             />
             <TouchableOpacity style={styles.catalogBtn} onPress={onOpenCatalog}>
               <Ionicons name="list-outline" size={15} color={Colors.primary} />

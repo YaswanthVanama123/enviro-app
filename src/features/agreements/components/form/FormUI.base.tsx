@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardTypeOptions,
   Switch,
+  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors} from '../../../../theme/colors';
@@ -143,17 +144,19 @@ export function DropdownRow({label, value, options, onChange}: DropdownRowProps)
         </TouchableOpacity>
         {open && (
           <View style={ss.dropdownMenu}>
-            {options.map(opt => (
-              <TouchableOpacity
-                key={opt.value}
-                style={[ss.dropdownOption, opt.value === value && ss.dropdownOptionActive]}
-                onPress={() => {onChange(opt.value); setOpen(false);}}>
-                <Text style={[ss.dropdownOptionText, opt.value === value && ss.dropdownOptionTextActive]}>
-                  {opt.label}
-                </Text>
-                {opt.value === value && <Ionicons name="checkmark" size={14} color={Colors.primary} />}
-              </TouchableOpacity>
-            ))}
+            <ScrollView style={ss.dropdownScroll} showsVerticalScrollIndicator={true} nestedScrollEnabled>
+              {options.map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[ss.dropdownOption, opt.value === value && ss.dropdownOptionActive]}
+                  onPress={() => {onChange(opt.value); setOpen(false);}}>
+                  <Text style={[ss.dropdownOptionText, opt.value === value && ss.dropdownOptionTextActive]}>
+                    {opt.label}
+                  </Text>
+                  {opt.value === value && <Ionicons name="checkmark" size={14} color={Colors.primary} />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         )}
       </View>
@@ -287,7 +290,8 @@ const ss = StyleSheet.create({
   selectChipTextActive: {color: '#fff', fontWeight: '700'},
   dropdown: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.sm},
   dropdownText: {fontSize: FontSize.md, color: Colors.textPrimary, flex: 1},
-  dropdownMenu: {position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, zIndex: 100, shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.1, shadowRadius: 8, elevation: 8, maxHeight: 280},
+  dropdownMenu: {position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, zIndex: 100, shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.1, shadowRadius: 8, elevation: 8, maxHeight: 280, overflow: 'hidden'},
+  dropdownScroll: {maxHeight: 278},
   dropdownOption: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight},
   dropdownOptionActive: {backgroundColor: Colors.primaryLight},
   dropdownOptionText: {flex: 1, fontSize: FontSize.sm, color: Colors.textPrimary},
