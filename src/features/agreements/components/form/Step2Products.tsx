@@ -1,7 +1,7 @@
 import React, {useState, useMemo, useRef, useEffect} from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Modal, FlatList, ScrollView,
+  Modal, FlatList,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SmallProduct, Dispenser} from '../../hooks/useFormFilling';
@@ -11,13 +11,17 @@ import {FontSize} from '../../../../theme/typography';
 import {formatCurrency} from '../../../../shared/utils/format.utils';
 
 const PROD_FREQ = [
-  {value: 'daily',     label: 'Daily'},
-  {value: 'weekly',    label: 'Weekly'},
-  {value: 'biweekly',  label: 'Bi-Wk'},
-  {value: 'monthly',   label: 'Monthly'},
-  {value: 'quarterly', label: 'Qtrly'},
-  {value: 'yearly',    label: 'Yearly'},
+  {value: 'daily',     label: 'Daily',   short: 'Daily'},
+  {value: 'weekly',    label: 'Weekly',   short: 'Wkly'},
+  {value: 'biweekly',  label: 'Bi-Wk',   short: 'Bi-Wk'},
+  {value: 'monthly',   label: 'Monthly',  short: 'Mthly'},
+  {value: 'quarterly', label: 'Qtrly',    short: 'Qtrly'},
+  {value: 'yearly',    label: 'Yearly',   short: 'Yrly'},
 ];
+
+function freqShort(value: string): string {
+  return PROD_FREQ.find(f => f.value === value)?.short ?? value;
+}
 
 interface CatalogItemFlat {
   key: string;
@@ -52,77 +56,11 @@ function displayNum(n: number): string {
   return n === 0 ? '' : String(n);
 }
 
-function NameAutocompleteInput({
-  value,
-  onChangeText,
-  placeholder,
-  catalogItems,
-  onSelectItem,
-  onOpenFullCatalog,
-}: {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder: string;
-  catalogItems: CatalogItemFlat[];
-  onSelectItem: (item: CatalogItemFlat) => void;
-  onOpenFullCatalog: () => void;
-}) {
-  const [focused, setFocused] = useState(false);
-
-  const suggestions = useMemo(() => {
-    if (!value.trim()) {return [];}
-    const q = value.trim().toLowerCase();
-    return catalogItems
-      .filter(it => it.name.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [value, catalogItems]);
-
-  const showDropdown = focused && suggestions.length > 0;
-
-  return (
-    <View style={auto.wrapper}>
-      <View style={[auto.inputRow, showDropdown && auto.inputRowOpen]}>
-        <TextInput
-          style={auto.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={Colors.textMuted}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-        />
-        <TouchableOpacity style={auto.catalogBtn} onPress={onOpenFullCatalog}>
-          <Ionicons name="list-outline" size={16} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {showDropdown && (
-        <View style={auto.dropdown}>
-          {suggestions.map((item, idx) => (
-            <TouchableOpacity
-              key={item.key}
-              style={[auto.dropItem, idx === suggestions.length - 1 && auto.dropItemLast]}
-              onPress={() => {
-                onSelectItem(item);
-                setFocused(false);
-              }}>
-              <Text style={auto.dropName} numberOfLines={1}>{item.name}</Text>
-              <Text style={auto.dropPrice}>{formatCurrency(item.basePrice)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
+// ─── Catalog Picker Modal ──────────────────────────────────────────
 type PickCallback = (item: CatalogItemFlat) => void;
 
 function CatalogPickerModal({
-  visible,
-  items,
-  onSelect,
-  onClose,
+  visible, items, onSelect, onClose,
 }: {
   visible: boolean;
   items: CatalogItemFlat[];
@@ -243,6 +181,7 @@ function CatalogPickerModal({
   );
 }
 
+// ─── Section Header ────────────────────────────────────────────────
 function SectionHeader({title, icon, count, onAdd}: {
   title: string; icon: string; count: number; onAdd: () => void;
 }) {
@@ -265,6 +204,21 @@ function SectionHeader({title, icon, count, onAdd}: {
   );
 }
 
+// ─── Table Column Header ───────────────────────────────────────────
+function TableColHeader({priceLabel}: {priceLabel?: string}) {
+  return (
+    <View style={styles.colHeaderRow}>
+      <Text style={[styles.colLabel, {flex: 1}]}>Product</Text>
+      <Text style={[styles.colLabel, {width: 36, textAlign: 'center'}]}>Qty</Text>
+      <Text style={[styles.colLabel, {width: 56, textAlign: 'center'}]}>{priceLabel ?? 'Price'}</Text>
+      <Text style={[styles.colLabel, {width: 44, textAlign: 'center'}]}>Freq</Text>
+      <Text style={[styles.colLabel, {width: 58, textAlign: 'right'}]}>Total</Text>
+      <View style={{width: 24}} />
+    </View>
+  );
+}
+
+// ─── Frequency Chips (Expanded) ────────────────────────────────────
 function FreqChips({value, onChange}: {value: string; onChange: (v: string) => void}) {
   return (
     <View style={styles.freqRow}>
@@ -282,34 +236,41 @@ function FreqChips({value, onChange}: {value: string; onChange: (v: string) => v
   );
 }
 
-function CostTypeToggle({value, onChange}: {
+// ─── Cost Type Toggle (Expanded) ───────────────────────────────────
+function CostTypeToggle({value, onChange, labels}: {
   value: 'productCost' | 'warranty';
   onChange: (v: 'productCost' | 'warranty') => void;
+  labels?: [string, string];
 }) {
+  const l1 = labels?.[0] ?? 'Warranty';
+  const l2 = labels?.[1] ?? 'Direct Price';
   return (
     <View style={styles.costToggleRow}>
       <TouchableOpacity
         style={[styles.costToggleBtn, value === 'warranty' && styles.costToggleBtnActive]}
         onPress={() => onChange('warranty')}>
         <Text style={[styles.costToggleText, value === 'warranty' && styles.costToggleTextActive]}>
-          Warranty
+          {l1}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.costToggleBtn, value === 'productCost' && styles.costToggleBtnActive]}
         onPress={() => onChange('productCost')}>
         <Text style={[styles.costToggleText, value === 'productCost' && styles.costToggleTextActive]}>
-          Direct Price
+          {l2}
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-function SmallProductRow({
-  product, catalogItems, onUpdate, onRemove, onOpenCatalog,
+// ─── Compact Product Row ───────────────────────────────────────────
+function CompactProductRow({
+  product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
 }: {
   product: SmallProduct;
+  isExpanded: boolean;
+  onToggle: () => void;
   catalogItems: CatalogItemFlat[];
   onUpdate: (d: Partial<SmallProduct>) => void;
   onRemove: () => void;
@@ -317,151 +278,145 @@ function SmallProductRow({
 }) {
   const costType = product.costType ?? 'warranty';
   const total = product.qty * product.unitPrice;
+
   return (
-    <View style={styles.rowCard}>
-      <View style={styles.rowTopLine}>
-        <NameAutocompleteInput
-          value={product.displayName}
-          onChangeText={t => onUpdate({displayName: t})}
-          placeholder="Product name"
-          catalogItems={catalogItems}
-          onSelectItem={item => onUpdate({displayName: item.name, unitPrice: item.basePrice})}
-          onOpenFullCatalog={onOpenCatalog}
+    <View style={[styles.compactCard, isExpanded && styles.compactCardExpanded]}>
+      {/* Compact row */}
+      <TouchableOpacity style={styles.compactRow} onPress={onToggle} activeOpacity={0.7}>
+        <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
+        <TextInput
+          style={styles.compactInput}
+          value={displayNum(product.qty)}
+          onChangeText={t => onUpdate({qty: parseNum(t)})}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
         />
-        <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
-          <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
+        <TextInput
+          style={[styles.compactInput, styles.compactInputWide]}
+          value={displayNum(product.unitPrice)}
+          onChangeText={t => onUpdate({unitPrice: parseNum(t)})}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
+        />
+        <View style={[styles.freqLabel, costType === 'warranty' && styles.freqLabelActive]}>
+          <Text style={[styles.freqLabelText, costType === 'warranty' && styles.freqLabelTextActive]} numberOfLines={1}>
+            {costType === 'warranty' ? freqShort(product.frequency) : '1×'}
+          </Text>
+        </View>
+        <Text style={styles.compactTotal}>{formatCurrency(total)}</Text>
+        <TouchableOpacity onPress={onRemove} hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+          <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
         </TouchableOpacity>
-      </View>
-      <CostTypeToggle
-        value={costType}
-        onChange={v => onUpdate({costType: v})}
-      />
-      <View style={styles.fieldRow}>
-        <View style={styles.fieldUnit}>
-          <Text style={styles.fieldLabel}>Qty</Text>
-          <TextInput
-            style={styles.numInput}
-            value={displayNum(product.qty)}
-            onChangeText={t => onUpdate({qty: parseNum(t)})}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={Colors.textMuted}
-          />
+      </TouchableOpacity>
+
+      {/* Expanded detail */}
+      {isExpanded && (
+        <View style={styles.expandPanel}>
+          <View style={styles.expandNameRow}>
+            <TextInput
+              style={styles.expandNameInput}
+              value={product.displayName}
+              onChangeText={t => onUpdate({displayName: t})}
+              placeholder="Product name"
+              placeholderTextColor={Colors.textMuted}
+            />
+            <TouchableOpacity style={styles.catalogBtn} onPress={onOpenCatalog}>
+              <Ionicons name="list-outline" size={15} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <CostTypeToggle value={costType} onChange={v => onUpdate({costType: v})} />
+          {costType === 'warranty' ? (
+            <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+          ) : (
+            <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
+          )}
         </View>
-        <Text style={styles.opSign}>×</Text>
-        <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
-          <Text style={styles.fieldLabel}>Unit Price ($)</Text>
-          <TextInput
-            style={styles.numInput}
-            value={displayNum(product.unitPrice)}
-            onChangeText={t => onUpdate({unitPrice: parseNum(t)})}
-            keyboardType="numeric"
-            placeholder="0.00"
-            placeholderTextColor={Colors.textMuted}
-          />
-        </View>
-        <View style={styles.totalCell}>
-          <Text style={styles.fieldLabel}>Total</Text>
-          <Text style={styles.totalAmt}>{formatCurrency(total)}</Text>
-        </View>
-      </View>
-      {costType === 'warranty' ? (
-        <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
-      ) : (
-        <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
       )}
     </View>
   );
 }
 
-function DispenserRow({
-  product, catalogItems, onUpdate, onRemove, onOpenCatalog,
+// ─── Compact Dispenser Row ─────────────────────────────────────────
+function CompactDispenserRow({
+  product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
 }: {
   product: Dispenser;
+  isExpanded: boolean;
+  onToggle: () => void;
   catalogItems: CatalogItemFlat[];
   onUpdate: (d: Partial<Dispenser>) => void;
   onRemove: () => void;
   onOpenCatalog: () => void;
 }) {
   const costType = product.costType ?? 'productCost';
-  const total = costType === 'warranty'
-    ? product.qty * product.warrantyRate
-    : product.qty * product.replacementRate;
+  const rate = costType === 'warranty' ? product.warrantyRate : product.replacementRate;
+  const total = product.qty * rate;
 
   return (
-    <View style={styles.rowCard}>
-      <View style={styles.rowTopLine}>
-        <NameAutocompleteInput
-          value={product.displayName}
-          onChangeText={t => onUpdate({displayName: t})}
-          placeholder="Dispenser name"
-          catalogItems={catalogItems}
-          onSelectItem={item => onUpdate({
-            displayName: item.name,
-            warrantyRate: item.warrantyRate,
-            replacementRate: item.replacementRate,
-          })}
-          onOpenFullCatalog={onOpenCatalog}
+    <View style={[styles.compactCard, isExpanded && styles.compactCardExpanded]}>
+      {/* Compact row */}
+      <TouchableOpacity style={styles.compactRow} onPress={onToggle} activeOpacity={0.7}>
+        <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
+        <TextInput
+          style={styles.compactInput}
+          value={displayNum(product.qty)}
+          onChangeText={t => onUpdate({qty: parseNum(t)})}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
         />
-        <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
-          <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
+        <TextInput
+          style={[styles.compactInput, styles.compactInputWide]}
+          value={displayNum(rate)}
+          onChangeText={t => {
+            if (costType === 'warranty') {onUpdate({warrantyRate: parseNum(t)});}
+            else {onUpdate({replacementRate: parseNum(t)});}
+          }}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
+        />
+        <View style={[styles.freqLabel, costType === 'warranty' && styles.freqLabelActive]}>
+          <Text style={[styles.freqLabelText, costType === 'warranty' && styles.freqLabelTextActive]} numberOfLines={1}>
+            {costType === 'warranty' ? freqShort(product.frequency) : '1×'}
+          </Text>
+        </View>
+        <Text style={styles.compactTotal}>{formatCurrency(total)}</Text>
+        <TouchableOpacity onPress={onRemove} hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+          <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
         </TouchableOpacity>
-      </View>
-      <CostTypeToggle
-        value={costType}
-        onChange={v => onUpdate({costType: v})}
-      />
-      <View style={styles.fieldRow}>
-        <View style={styles.fieldUnit}>
-          <Text style={styles.fieldLabel}>Qty</Text>
-          <TextInput
-            style={styles.numInput}
-            value={displayNum(product.qty)}
-            onChangeText={t => onUpdate({qty: parseNum(t)})}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={Colors.textMuted}
-          />
-        </View>
-        {costType === 'warranty' ? (
-          <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
-            <Text style={styles.fieldLabel}>Warranty ($)</Text>
+      </TouchableOpacity>
+
+      {/* Expanded detail */}
+      {isExpanded && (
+        <View style={styles.expandPanel}>
+          <View style={styles.expandNameRow}>
             <TextInput
-              style={styles.numInput}
-              value={displayNum(product.warrantyRate)}
-              onChangeText={t => onUpdate({warrantyRate: parseNum(t)})}
-              keyboardType="numeric"
-              placeholder="0.00"
+              style={styles.expandNameInput}
+              value={product.displayName}
+              onChangeText={t => onUpdate({displayName: t})}
+              placeholder="Dispenser name"
               placeholderTextColor={Colors.textMuted}
             />
+            <TouchableOpacity style={styles.catalogBtn} onPress={onOpenCatalog}>
+              <Ionicons name="list-outline" size={15} color={Colors.primary} />
+            </TouchableOpacity>
           </View>
-        ) : (
-          <View style={[styles.fieldUnit, styles.fieldUnitFlex]}>
-            <Text style={styles.fieldLabel}>Replace ($)</Text>
-            <TextInput
-              style={styles.numInput}
-              value={displayNum(product.replacementRate)}
-              onChangeText={t => onUpdate({replacementRate: parseNum(t)})}
-              keyboardType="numeric"
-              placeholder="0.00"
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
-        )}
-        <View style={styles.totalCell}>
-          <Text style={styles.fieldLabel}>Total</Text>
-          <Text style={styles.totalAmt}>{formatCurrency(total)}</Text>
+          <CostTypeToggle value={costType} onChange={v => onUpdate({costType: v})} labels={['Warranty', 'Replace']} />
+          {costType === 'warranty' ? (
+            <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+          ) : (
+            <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
+          )}
         </View>
-      </View>
-      {costType === 'warranty' ? (
-        <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
-      ) : (
-        <Text style={styles.noFreqNote}>One-time charge — no frequency</Text>
       )}
     </View>
   );
 }
 
+// ─── Main Component ────────────────────────────────────────────────
 export function Step2Products({
   smallProducts,
   dispensers,
@@ -475,6 +430,7 @@ export function Step2Products({
   includeProductsTable,
   onIncludeProductsTableChange,
 }: Step2ProductsProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pickerCallback, setPickerCallback] = useState<PickCallback | null>(null);
 
   const allCatalogItems = useMemo<CatalogItemFlat[]>(() => {
@@ -502,6 +458,10 @@ export function Step2Products({
     [allCatalogItems],
   );
 
+  const toggleExpand = (id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
+  };
+
   const openPicker = (cb: PickCallback) => {
     setPickerCallback(() => cb);
   };
@@ -516,6 +476,7 @@ export function Step2Products({
         onClose={() => setPickerCallback(null)}
       />
 
+      {/* ── Small Products Section ── */}
       <View style={styles.section}>
         <SectionHeader
           icon="document-outline"
@@ -526,21 +487,27 @@ export function Step2Products({
         {smallProducts.length === 0 ? (
           <Text style={styles.emptyText}>No products added — tap Add to start</Text>
         ) : (
-          smallProducts.map(p => (
-            <SmallProductRow
-              key={p.id}
-              product={p}
-              catalogItems={allCatalogItems}
-              onUpdate={d => onUpdateSmallProduct(p.id, d)}
-              onRemove={() => onRemoveSmallProduct(p.id)}
-              onOpenCatalog={() => openPicker(item => {
-                onUpdateSmallProduct(p.id, {displayName: item.name, unitPrice: item.basePrice});
-              })}
-            />
-          ))
+          <>
+            <TableColHeader />
+            {smallProducts.map(p => (
+              <CompactProductRow
+                key={p.id}
+                product={p}
+                isExpanded={expandedId === p.id}
+                onToggle={() => toggleExpand(p.id)}
+                catalogItems={allCatalogItems}
+                onUpdate={d => onUpdateSmallProduct(p.id, d)}
+                onRemove={() => onRemoveSmallProduct(p.id)}
+                onOpenCatalog={() => openPicker(item => {
+                  onUpdateSmallProduct(p.id, {displayName: item.name, unitPrice: item.basePrice});
+                })}
+              />
+            ))}
+          </>
         )}
       </View>
 
+      {/* ── Dispensers Section ── */}
       <View style={styles.section}>
         <SectionHeader
           icon="cube-outline"
@@ -551,25 +518,31 @@ export function Step2Products({
         {dispensers.length === 0 ? (
           <Text style={styles.emptyText}>No dispensers added — tap Add to start</Text>
         ) : (
-          dispensers.map(d => (
-            <DispenserRow
-              key={d.id}
-              product={d}
-              catalogItems={dispenserCatalogItems}
-              onUpdate={upd => onUpdateDispenser(d.id, upd)}
-              onRemove={() => onRemoveDispenser(d.id)}
-              onOpenCatalog={() => openPicker(item => {
-                onUpdateDispenser(d.id, {
-                  displayName: item.name,
-                  warrantyRate: item.warrantyRate,
-                  replacementRate: item.replacementRate,
-                });
-              })}
-            />
-          ))
+          <>
+            <TableColHeader priceLabel="Rate" />
+            {dispensers.map(d => (
+              <CompactDispenserRow
+                key={d.id}
+                product={d}
+                isExpanded={expandedId === d.id}
+                onToggle={() => toggleExpand(d.id)}
+                catalogItems={dispenserCatalogItems}
+                onUpdate={upd => onUpdateDispenser(d.id, upd)}
+                onRemove={() => onRemoveDispenser(d.id)}
+                onOpenCatalog={() => openPicker(item => {
+                  onUpdateDispenser(d.id, {
+                    displayName: item.name,
+                    warrantyRate: item.warrantyRate,
+                    replacementRate: item.replacementRate,
+                  });
+                })}
+              />
+            ))}
+          </>
         )}
       </View>
 
+      {/* ── Include checkbox ── */}
       <TouchableOpacity
         style={styles.includeCheckboxRow}
         onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
@@ -586,6 +559,7 @@ export function Step2Products({
   );
 }
 
+// ─── Styles ────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     paddingBottom: Spacing.xl,
@@ -622,6 +596,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
   },
+
+  // Section
   section: {
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
@@ -629,6 +605,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
+    overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -638,8 +615,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
     borderLeftWidth: 3,
     borderLeftColor: Colors.primary,
   },
@@ -691,38 +666,109 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.md,
   },
-  rowCard: {
-    padding: Spacing.md,
+
+  // Column header
+  colHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    backgroundColor: '#f1f5f9',
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    gap: Spacing.sm,
+    gap: 4,
   },
-  rowTopLine: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  removeBtn: {
-    padding: 2,
-    marginTop: 6,
-  },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-  },
-  fieldUnit: {
-    gap: 3,
-  },
-  fieldUnitFlex: {
-    flex: 1,
-  },
-  fieldLabel: {
-    fontSize: FontSize.xs,
+  colLabel: {
+    fontSize: 10,
+    fontWeight: '600',
     color: Colors.textMuted,
-    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  numInput: {
+
+  // Compact row
+  compactCard: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  compactCardExpanded: {
+    backgroundColor: '#fafbfc',
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  compactName: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  compactInput: {
+    width: 36,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    fontSize: 12,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    backgroundColor: '#fff',
+  },
+  compactInputWide: {
+    width: 56,
+  },
+  freqLabel: {
+    width: 44,
+    paddingVertical: 3,
+    paddingHorizontal: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+  },
+  freqLabelActive: {
+    borderColor: '#bbf7d0',
+    backgroundColor: '#f0fdf4',
+  },
+  freqLabelText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  freqLabelTextActive: {
+    color: '#166534',
+  },
+  compactTotal: {
+    width: 58,
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
+    textAlign: 'right',
+  },
+
+  // Expanded panel
+  expandPanel: {
+    paddingHorizontal: Spacing.sm,
+    paddingTop: 4,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    backgroundColor: '#f8fafc',
+  },
+  expandNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  expandNameInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.md,
@@ -730,24 +776,17 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
-    backgroundColor: Colors.background,
-    minWidth: 56,
+    backgroundColor: '#fff',
   },
-  opSign: {
-    fontSize: FontSize.md,
-    color: Colors.textMuted,
-    paddingBottom: 6,
+  catalogBtn: {
+    padding: 6,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
   },
-  totalCell: {
-    alignItems: 'flex-end',
-    gap: 3,
-  },
-  totalAmt: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.primary,
-    paddingBottom: 6,
-  },
+
+  // Frequency chips
   freqRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -774,6 +813,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
   },
+
+  // Cost type toggle
   costToggleRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
@@ -803,79 +844,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textMuted,
     fontStyle: 'italic',
-  },
-});
-
-const auto = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 6,
-    backgroundColor: Colors.background,
-  },
-  inputRowOpen: {
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderBottomColor: Colors.primary,
-  },
-  input: {
-    flex: 1,
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    paddingVertical: 1,
-  },
-  catalogBtn: {
-    padding: 4,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: Colors.primary,
-    borderBottomLeftRadius: Radius.md,
-    borderBottomRightRadius: Radius.md,
-    backgroundColor: Colors.surface,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  dropItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    gap: Spacing.sm,
-  },
-  dropItemLast: {
-    borderBottomWidth: 0,
-  },
-  dropName: {
-    flex: 1,
-    fontSize: FontSize.sm,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-  dropPrice: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.primary,
   },
 });
 
