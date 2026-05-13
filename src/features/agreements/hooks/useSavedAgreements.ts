@@ -5,6 +5,7 @@ import {
   FileType,
   GetSavedFilesOptions,
 } from '../../../services/api/endpoints/agreements.api';
+import {useAuth} from '../../admin/context/AdminAuthContext';
 
 export interface UseSavedAgreementsResult {
   agreements: SavedFileGroup[];
@@ -15,8 +16,10 @@ export interface UseSavedAgreementsResult {
   hasMore: boolean;
   searchQuery: string;
   activeFilter: string;
+  ownershipFilter: 'all' | 'mine';
   setSearchQuery: (q: string) => void;
   setActiveFilter: (f: string) => void;
+  setOwnershipFilter: (f: 'all' | 'mine') => void;
   refresh: () => void;
   loadMore: () => void;
   deleteAgreement: (id: string) => Promise<boolean>;
@@ -26,6 +29,7 @@ export interface UseSavedAgreementsResult {
 const PAGE_SIZE = 20;
 
 export function useSavedAgreements(): UseSavedAgreementsResult {
+  const {user} = useAuth();
   const [agreements, setAgreements] = useState<SavedFileGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,9 +39,11 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
   const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQueryState] = useState('');
   const [activeFilter, setActiveFilterState] = useState('all');
+  const [ownershipFilter, setOwnershipFilterState] = useState<'all' | 'mine'>('all');
 
   const searchRef = useRef('');
   const filterRef = useRef('all');
+  const ownershipRef = useRef<'all' | 'mine'>('all');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(
@@ -45,10 +51,11 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       pageNum: number;
       search: string;
       filter: string;
+      ownership: 'all' | 'mine';
       append: boolean;
       isRefresh: boolean;
     }) => {
-      const {pageNum, search, filter, append, isRefresh} = opts;
+      const {pageNum, search, filter, ownership, append, isRefresh} = opts;
 
       if (isRefresh) {
         setRefreshing(true);
@@ -76,9 +83,21 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       }
 
       if (result) {
-        const items = result.groups ?? [];
+        let items = result.groups ?? [];
+
+        // Apply ownership filter client-side
+        if (ownership === 'mine' && user?.username) {
+          items = items.filter(agreement =>
+            agreement.files.some(
+              file =>
+                file.createdBy === user.username ||
+                file.createdBy === user.fullName
+            )
+          );
+        }
+
         setAgreements(prev => (append ? [...prev, ...items] : items));
-        setTotal(result.total ?? items.length);
+        setTotal(ownership === 'mine' ? items.length : (result.total ?? items.length));
         const totalPages = Math.ceil((result.total ?? items.length) / PAGE_SIZE);
         setHasMore((result.page ?? 1) < totalPages);
       } else {
@@ -88,7 +107,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
         setApiError('Could not load agreements. Check your connection.');
       }
     },
-    [],
+    [user],
   );
 
   useEffect(() => {
@@ -96,6 +115,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       pageNum: 1,
       search: '',
       filter: 'all',
+      ownership: 'all',
       append: false,
       isRefresh: false,
     });
@@ -112,6 +132,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
           pageNum: 1,
           search: q,
           filter: filterRef.current,
+          ownership: ownershipRef.current,
           append: false,
           isRefresh: false,
         });
@@ -129,6 +150,24 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
         pageNum: 1,
         search: searchRef.current,
         filter: f,
+        ownership: ownershipRef.current,
+        append: false,
+        isRefresh: false,
+      });
+    },
+    [fetchData],
+  );
+
+  const setOwnershipFilter = useCallback(
+    (f: 'all' | 'mine') => {
+      setOwnershipFilterState(f);
+      ownershipRef.current = f;
+      setPage(1);
+      fetchData({
+        pageNum: 1,
+        search: searchRef.current,
+        filter: filterRef.current,
+        ownership: f,
         append: false,
         isRefresh: false,
       });
@@ -142,6 +181,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       pageNum: 1,
       search: searchRef.current,
       filter: filterRef.current,
+      ownership: ownershipRef.current,
       append: false,
       isRefresh: true,
     });
@@ -155,6 +195,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       pageNum: nextPage,
       search: searchRef.current,
       filter: filterRef.current,
+      ownership: ownershipRef.current,
       append: true,
       isRefresh: false,
     });
@@ -198,8 +239,10 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
     hasMore,
     searchQuery,
     activeFilter,
+    ownershipFilter,
     setSearchQuery,
     setActiveFilter,
+    setOwnershipFilter,
     refresh,
     loadMore,
     deleteAgreement,

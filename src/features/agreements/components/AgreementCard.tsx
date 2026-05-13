@@ -292,6 +292,21 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
 
   const timeline = calcTimelineStatus(agreement.startDate, agreement.contractMonths);
 
+  // Get creator and last editor from files
+  const getCreatorAndEditor = () => {
+    const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
+    const sortedByUpdate = [...agreement.files].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+    const latestEdit = sortedByUpdate[0];
+    return {
+      createdBy: mainFile?.createdBy || agreement.files[0]?.createdBy || null,
+      lastEditedBy: latestEdit?.updatedBy || latestEdit?.createdBy || null,
+      lastEditTime: latestEdit?.updatedAt || null,
+    };
+  };
+  const {createdBy, lastEditedBy, lastEditTime} = getCreatorAndEditor();
+
   const handleDeleteFile = useCallback((file: SavedFileListItem) => {
     setFileToDelete(file);
   }, []);
@@ -370,6 +385,27 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             <Text style={styles.cardMeta}>
               {agreement.fileCount} {agreement.fileCount === 1 ? 'file' : 'files'}{'  ·  '}{timeAgo(agreement.latestUpdate)}
             </Text>
+            {/* Creator and Editor Info */}
+            <View style={styles.creatorEditorRow}>
+              {createdBy && (
+                <View style={styles.userInfoTag}>
+                  <Ionicons name="person-add-outline" size={10} color="#16a34a" />
+                  <Text style={styles.userInfoText}>
+                    <Text style={styles.userInfoLabel}>Created: </Text>
+                    {createdBy}
+                  </Text>
+                </View>
+              )}
+              {lastEditedBy && lastEditedBy !== createdBy && (
+                <View style={styles.userInfoTag}>
+                  <Ionicons name="create-outline" size={10} color="#2563eb" />
+                  <Text style={styles.userInfoText}>
+                    <Text style={styles.userInfoLabel}>Edited: </Text>
+                    {lastEditedBy}
+                  </Text>
+                </View>
+              )}
+            </View>
             {timeline ? (
               <View style={styles.timelineRow}>
                 <View style={[styles.timelineBadge, {backgroundColor: timeline.bg}]}>
@@ -636,6 +672,10 @@ const styles = StyleSheet.create({
   cardInfo: {flex: 1, minWidth: 0},
   cardTitle: {fontSize: FontSize.md, fontWeight: '700', color: Colors.textPrimary},
   cardMeta: {fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2},
+  creatorEditorRow: {flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 4},
+  userInfoTag: {flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.xs, borderWidth: 1, borderColor: Colors.borderLight},
+  userInfoText: {fontSize: 10, color: Colors.textSecondary},
+  userInfoLabel: {fontWeight: '600', color: Colors.textMuted},
   timelineRow: {flexDirection: 'row', alignItems: 'center', marginTop: Spacing.xs, gap: 4, flexWrap: 'wrap'},
   timelineBadge: {flexDirection: 'row', alignItems: 'center', borderRadius: Radius.full, paddingHorizontal: 7, paddingVertical: 3, gap: 4},
   timelineDot: {width: 6, height: 6, borderRadius: 3},

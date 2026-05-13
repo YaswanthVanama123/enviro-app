@@ -28,6 +28,11 @@ const FILTERS = [
   {key: 'finalized', label: 'Finalized'},
 ];
 
+const OWNERSHIP_FILTERS = [
+  {key: 'all' as const, label: 'All Agreements'},
+  {key: 'mine' as const, label: 'My Agreements'},
+];
+
 function SearchBar({
   value,
   onChange,
@@ -78,6 +83,41 @@ function FilterChips({
         </TouchableOpacity>
       ))}
     </ScrollView>
+  );
+}
+
+function OwnershipChips({
+  active,
+  onSelect,
+}: {
+  active: 'all' | 'mine';
+  onSelect: (k: 'all' | 'mine') => void;
+}) {
+  return (
+    <View style={styles.ownershipRow}>
+      {OWNERSHIP_FILTERS.map(f => (
+        <TouchableOpacity
+          key={f.key}
+          onPress={() => onSelect(f.key)}
+          style={[
+            styles.ownershipChip,
+            f.key === active && styles.ownershipChipActive,
+          ]}>
+          <Ionicons
+            name={f.key === 'mine' ? 'person' : 'people'}
+            size={14}
+            color={f.key === active ? Colors.textWhite : Colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.ownershipChipText,
+              f.key === active && styles.ownershipChipTextActive,
+            ]}>
+            {f.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
   );
 }
 
@@ -148,8 +188,10 @@ export function SavedAgreementsScreen() {
     hasMore,
     searchQuery,
     activeFilter,
+    ownershipFilter,
     setSearchQuery,
     setActiveFilter,
+    setOwnershipFilter,
     refresh,
     loadMore,
     deleteAgreement,
@@ -194,6 +236,7 @@ export function SavedAgreementsScreen() {
         <View style={styles.searchContainer}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </View>
+        <OwnershipChips active={ownershipFilter} onSelect={setOwnershipFilter} />
         <FilterChips active={activeFilter} onSelect={setActiveFilter} />
       </View>
 
@@ -316,6 +359,37 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: Colors.textWhite,
     fontWeight: '700',
+  },
+
+  ownershipRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  ownershipChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ownershipChipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  ownershipChipText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  ownershipChipTextActive: {
+    color: Colors.textWhite,
+    fontWeight: '600',
   },
 
   countText: {

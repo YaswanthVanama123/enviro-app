@@ -1,4 +1,5 @@
 export type RootStackParamList = {
+  Login: undefined;
   Main: undefined;
   AdminLogin: undefined;
   AdminPanel: undefined;
@@ -13,5 +14,10 @@ export type TabParamList = {
   Saved: undefined;
   Trash: undefined;
   More: undefined;
+  // Admin tabs
+  Dashboard: undefined;
+  Approvals: undefined;
+  Pricing: undefined;
+  History: undefined;
+  Admin: undefined;
 };
-
