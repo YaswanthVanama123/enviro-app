@@ -11,6 +11,7 @@ import {AdminDashboardScreen} from '../../features/admin/screens/AdminDashboardS
 import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocumentsScreen';
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
 import {EditHistoryScreen} from '../../features/admin/screens/EditHistoryScreen';
+import {EmployeeAgreementsScreen} from '../../features/admin/screens/EmployeeAgreementsScreen';
 import {useAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
 
@@ -26,6 +27,7 @@ const TAB_ICON: Record<string, [string, string]> = {
   Pricing:   ['pricetag-outline',                   'pricetag'],
   Admin:     ['shield-checkmark-outline',           'shield-checkmark'],
   History:   ['time-outline',                       'time'],
+  Employees: ['people-outline',                     'people'],
 };
 
 // Profile/More Screen Component
@@ -163,6 +165,11 @@ export function TabNavigator() {
             name="History"
             component={EditHistoryScreen}
             options={{tabBarLabel: 'History'}}
+          />
+          <Tab.Screen
+            name="Employees"
+            component={EmployeeAgreementsScreen}
+            options={{tabBarLabel: 'Staff'}}
           />
           <Tab.Screen
             name="Admin"

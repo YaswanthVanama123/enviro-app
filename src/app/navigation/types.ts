@@ -19,5 +19,6 @@ export type TabParamList = {
   Approvals: undefined;
   Pricing: undefined;
   History: undefined;
+  Employees: undefined;
   Admin: undefined;
 };

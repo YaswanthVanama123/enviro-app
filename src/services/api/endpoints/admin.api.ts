@@ -18,6 +18,24 @@ export interface AdminDashboardData {
   documentStatus: DashboardStatusCounts;
 }
 
+export interface UserListItem {
+  id: string;
+  username: string;
+  fullName?: string;
+  email?: string;
+  role: 'admin' | 'employee';
+  isActive: boolean;
+  lastLoginAt?: string;
+  createdAt?: string;
+}
+
+export interface UserListResponse {
+  users: UserListItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const adminApi = {
   async getDashboard(): Promise<AdminDashboardData | null> {
     const res = await apiClient.get<AdminDashboardData>('/api/admin/dashboard');
@@ -34,5 +52,20 @@ export const adminApi = {
     );
     if (res.error) {return {ok: false, message: res.error};}
     return {ok: true};
+  },
+
+  async listUsers(params?: {
+    role?: 'admin' | 'employee';
+    limit?: number;
+  }): Promise<UserListResponse | null> {
+    const queryParams = new URLSearchParams();
+    if (params?.role) queryParams.set('role', params.role);
+    if (params?.limit) queryParams.set('limit', params.limit.toString());
+
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/users?${queryString}` : '/api/users';
+
+    const res = await apiClient.get<UserListResponse>(url);
+    return res.data ?? null;
   },
 };
