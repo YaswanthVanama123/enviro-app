@@ -16,17 +16,24 @@ interface Props {
 export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
+  // Extract backend config values using correct nested property paths
+  const cfgStandardDrainRate     = cfg.standardPricing?.standardDrainRate       ?? cfg.standardDrainRate      ?? 10;
+  const cfgGreaseWeeklyRate      = cfg.greaseTrapPricing?.weeklyRatePerTrap     ?? cfg.greaseTrapWeeklyRate   ?? 125;
+  const cfgGreenWeeklyRate       = cfg.greenDrainPricing?.weeklyRatePerDrain    ?? cfg.greenDrainWeeklyRate   ?? 5;
+  const cfgPlumbingAddonRate     = cfg.addOns?.plumbingWeeklyAddonPerDrain      ?? cfg.plumbingAddonRate      ?? 10;
+  const cfgMinimumChargePerVisit = cfg.minimumChargePerVisit                    ?? 0;
+
   const freq                  = data?.frequency             ?? 'weekly';
   const standardDrainCount    = data?.standardDrainCount    ?? 0;
   const greaseTrapCount       = data?.greaseTrapCount       ?? 0;
   const greenDrainCount       = data?.greenDrainCount       ?? 0;
-  const standardDrainRate     = data?.standardDrainRate     ?? cfg.standardDrainRate      ?? 10;
-  const greaseWeeklyRate      = data?.greaseWeeklyRate      ?? cfg.greaseTrapWeeklyRate   ?? 125;
-  const greenWeeklyRate       = data?.greenWeeklyRate       ?? cfg.greenDrainWeeklyRate   ?? 5;
+  const standardDrainRate     = data?.standardDrainRate     ?? cfgStandardDrainRate;
+  const greaseWeeklyRate      = data?.greaseWeeklyRate      ?? cfgGreaseWeeklyRate;
+  const greenWeeklyRate       = data?.greenWeeklyRate       ?? cfgGreenWeeklyRate;
   const needsPlumbing         = data?.needsPlumbing         ?? false;
   const plumbingDrainCount    = data?.plumbingDrainCount    ?? 0;
-  const plumbingAddonRate     = data?.plumbingAddonRate     ?? cfg.plumbingAddonRate      ?? 10;
-  const minimumChargePerVisit = data?.minimumChargePerVisit ?? cfg.minimumChargePerVisit  ?? 0;
+  const plumbingAddonRate     = data?.plumbingAddonRate     ?? cfgPlumbingAddonRate;
+  const minimumChargePerVisit = data?.minimumChargePerVisit ?? cfgMinimumChargePerVisit;
   const applyMinimum          = data?.applyMinimum !== false;
 
   const rawCost =
@@ -54,13 +61,9 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
     const raw      = sd * sdr + gt * gwr + gn * gnr + (np ? pd * par : 0);
     const newBase  = applyMin && mn > 0 ? Math.max(raw, mn) : raw;
     const newTotals = calcTotals(newBase, nf, contractMonths);
-    const origSdr   = cfg.standardDrainRate    ?? 10;
-    const origGwr   = cfg.greaseTrapWeeklyRate ?? 125;
-    const origGnr   = cfg.greenDrainWeeklyRate ?? 5;
-    const origPar   = cfg.plumbingAddonRate    ?? 10;
-    const origMin   = cfg.minimumChargePerVisit ?? 0;
-    const origRaw   = sd * origSdr + gt * origGwr + gn * origGnr + (np ? pd * origPar : 0);
-    const originalPerVisitBase = applyMin && origMin > 0 ? Math.max(origRaw, origMin) : origRaw;
+    // Use the same config values for original calculation
+    const origRaw   = sd * cfgStandardDrainRate + gt * cfgGreaseWeeklyRate + gn * cfgGreenWeeklyRate + (np ? pd * cfgPlumbingAddonRate : 0);
+    const originalPerVisitBase = applyMin && cfgMinimumChargePerVisit > 0 ? Math.max(origRaw, cfgMinimumChargePerVisit) : origRaw;
     const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
     onChange({
       serviceId: 'foamingDrain',
@@ -76,17 +79,26 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       contractTotal: newTotals.contractTotal,
       originalContractTotal,
     });
-  }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange]);
+  }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange, cfgStandardDrainRate, cfgGreaseWeeklyRate, cfgGreenWeeklyRate, cfgPlumbingAddonRate, cfgMinimumChargePerVisit]);
 
+  // Use the same config values for original calculation (greenline comparison)
   const origRawCost =
-    standardDrainCount * (cfg.standardDrainRate      ?? 10)  +
-    greaseTrapCount    * (cfg.greaseTrapWeeklyRate    ?? 125) +
-    greenDrainCount    * (cfg.greenDrainWeeklyRate    ?? 5)   +
-    (needsPlumbing ? plumbingDrainCount * (cfg.plumbingAddonRate ?? 10) : 0);
-  const origMin = cfg.minimumChargePerVisit ?? 0;
-  const origBase = applyMinimum && origMin > 0 ? Math.max(origRawCost, origMin) : origRawCost;
+    standardDrainCount * cfgStandardDrainRate +
+    greaseTrapCount    * cfgGreaseWeeklyRate  +
+    greenDrainCount    * cfgGreenWeeklyRate   +
+    (needsPlumbing ? plumbingDrainCount * cfgPlumbingAddonRate : 0);
+  const origBase = applyMinimum && cfgMinimumChargePerVisit > 0 ? Math.max(origRawCost, cfgMinimumChargePerVisit) : origRawCost;
   const originalContractTotal = calcTotals(origBase, freq, contractMonths).contractTotal;
-  const isGreenline = totals.contractTotal > originalContractTotal * 1.30;
+
+  // Check if any rates have been modified from defaults
+  const hasRateChanges =
+    standardDrainRate !== cfgStandardDrainRate ||
+    greaseWeeklyRate !== cfgGreaseWeeklyRate ||
+    greenWeeklyRate !== cfgGreenWeeklyRate ||
+    plumbingAddonRate !== cfgPlumbingAddonRate ||
+    minimumChargePerVisit !== cfgMinimumChargePerVisit;
+
+  const isGreenline = totals.contractTotal >= originalContractTotal;
 
   return (
     <ServiceCard
@@ -110,7 +122,7 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
       <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
       <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
-      {(standardDrainCount > 0 || greaseTrapCount > 0 || greenDrainCount > 0) && (
+      {(standardDrainCount > 0 || greaseTrapCount > 0 || greenDrainCount > 0) && hasRateChanges && (
         <View style={styles.badgeRow}>
           <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
             <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
