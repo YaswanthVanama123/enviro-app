@@ -211,11 +211,21 @@ function FileRow({file, agreement, onRefresh}: FileRowProps) {
 
 interface AgreementRowProps {
   agreement: SavedFileGroup;
+  employeeUsername: string;
+  employeeFullName?: string;
   onRefresh: () => void;
 }
 
-function AgreementRow({agreement, onRefresh}: AgreementRowProps) {
+function AgreementRow({agreement, employeeUsername, employeeFullName, onRefresh}: AgreementRowProps) {
   const [expanded, setExpanded] = useState(false);
+
+  // Filter files to only show those created by this employee
+  const employeeFiles = agreement.files.filter(
+    (file) =>
+      file.createdBy === employeeUsername ||
+      file.createdBy === employeeFullName
+  );
+  const employeeFileCount = employeeFiles.length;
 
   return (
     <View style={styles.agreementCard}>
@@ -235,7 +245,7 @@ function AgreementRow({agreement, onRefresh}: AgreementRowProps) {
             {agreement.agreementTitle}
           </Text>
           <Text style={styles.agreementMeta}>
-            {agreement.fileCount} {agreement.fileCount === 1 ? 'file' : 'files'} · {timeAgo(agreement.latestUpdate)}
+            {employeeFileCount} {employeeFileCount === 1 ? 'file' : 'files'} · {timeAgo(agreement.latestUpdate)}
           </Text>
         </View>
         <Ionicons
@@ -247,13 +257,13 @@ function AgreementRow({agreement, onRefresh}: AgreementRowProps) {
 
       {expanded && (
         <View style={styles.filesContainer}>
-          {agreement.files.length === 0 ? (
+          {employeeFiles.length === 0 ? (
             <Text style={styles.noFilesText}>No files</Text>
           ) : (
-            agreement.files.map((file, idx) => (
+            employeeFiles.map((file, idx) => (
               <View key={file.id}>
                 <FileRow file={file} agreement={agreement} onRefresh={onRefresh} />
-                {idx < agreement.files.length - 1 && <View style={styles.fileDivider} />}
+                {idx < employeeFiles.length - 1 && <View style={styles.fileDivider} />}
               </View>
             ))
           )}
@@ -326,7 +336,13 @@ function EmployeeCard({employee, onRefresh}: EmployeeCardProps) {
             <Text style={styles.noAgreementsText}>No agreements created by this user</Text>
           ) : (
             employee.agreements.map(agreement => (
-              <AgreementRow key={agreement.id} agreement={agreement} onRefresh={onRefresh} />
+              <AgreementRow
+                key={agreement.id}
+                agreement={agreement}
+                employeeUsername={employee.user.username}
+                employeeFullName={employee.user.fullName}
+                onRefresh={onRefresh}
+              />
             ))
           )}
         </View>
@@ -418,17 +434,33 @@ export function EmployeeAgreementsScreen() {
           byFullName?.agreements.forEach(a => mergedAgreements.set(a.id, a));
 
           const agreements = Array.from(mergedAgreements.values());
+
+          // Count only files created by this employee
+          const employeeFileCount = agreements.reduce((sum, a) => {
+            const filesCreatedByEmployee = a.files.filter(
+              f => f.createdBy === user.username || f.createdBy === user.fullName
+            );
+            return sum + filesCreatedByEmployee.length;
+          }, 0);
+
           employeeList.push({
             user,
             agreements,
             agreementCount: agreements.length,
-            fileCount: agreements.reduce((sum, a) => sum + a.fileCount, 0),
+            fileCount: employeeFileCount,
           });
         }
       });
 
-      // Sort by agreement count descending
-      employeeList.sort((a, b) => b.agreementCount - a.agreementCount);
+      // Sort by agreement count descending, then alphabetically
+      employeeList.sort((a, b) => {
+        if (b.agreementCount !== a.agreementCount) {
+          return b.agreementCount - a.agreementCount;
+        }
+        const nameA = a.user.fullName || a.user.username;
+        const nameB = b.user.fullName || b.user.username;
+        return nameA.localeCompare(nameB);
+      });
 
       setEmployees(employeeList);
     } catch (err) {
