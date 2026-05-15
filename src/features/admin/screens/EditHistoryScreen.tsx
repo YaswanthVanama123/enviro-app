@@ -265,9 +265,9 @@ export function EditHistoryScreen() {
       const result = await agreementsApi.getGrouped({
         page: 1,
         limit: 100,
-        status: 'all',
-        search: '',
-        includeDeleted: false,
+        isDeleted: false,
+        includeLogs: true,
+        includeDrafts: true,
       });
       if (result?.groups) {
         setAgreements(result.groups);
