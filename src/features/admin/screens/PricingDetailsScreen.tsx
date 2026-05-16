@@ -9,6 +9,7 @@ import {ServiceConfigsSection} from '../components/service-configs/ServiceConfig
 import {ServicesReferenceSection} from '../components/service-configs/ServicesReferenceSection';
 import {ProductCatalogSection} from '../components/product-catalog/ProductCatalogSection';
 import {BackupManagementSection} from '../components/backup/BackupManagementSection';
+import {CommissionsSection} from '../components/commissions/CommissionsSection';
 import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 import {Colors} from '../../../theme/colors';
 
@@ -61,6 +62,7 @@ export function PricingDetailsScreen() {
         {activeTab === 'catalog'   && <ProductCatalogSection />}
         {activeTab === 'backup'    && <BackupManagementSection />}
         {activeTab === 'reference' && <ServicesReferenceSection />}
+        {activeTab === 'commissions' && <CommissionsSection />}
       </View>
     </View>
   );

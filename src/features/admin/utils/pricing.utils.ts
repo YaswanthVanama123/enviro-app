@@ -1,4 +1,4 @@
-export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference';
+export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference' | 'commissions';
 
 export type ServiceSubTab = 'unit' | 'minimums' | 'multipliers' | 'frequencies';
 
@@ -13,11 +13,12 @@ export interface ConfigField {
 }
 
 export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
-  {key: 'pricing',   label: 'Pricing Tables',     icon: 'pricetag-outline'},
-  {key: 'services',  label: 'Service Configs',     icon: 'settings-outline'},
-  {key: 'catalog',   label: 'Product Catalog',     icon: 'cube-outline'},
-  {key: 'backup',    label: 'Backup',              icon: 'cloud-upload-outline'},
-  {key: 'reference', label: 'Services Reference',  icon: 'book-outline'},
+  {key: 'pricing',     label: 'Pricing Tables',     icon: 'pricetag-outline'},
+  {key: 'services',    label: 'Service Configs',    icon: 'settings-outline'},
+  {key: 'catalog',     label: 'Product Catalog',    icon: 'cube-outline'},
+  {key: 'backup',      label: 'Backup',             icon: 'cloud-upload-outline'},
+  {key: 'reference',   label: 'Services Reference', icon: 'book-outline'},
+  {key: 'commissions', label: 'Commissions',        icon: 'calculator-outline'},
 ];
 
 export const SERVICE_SUBTABS: {key: ServiceSubTab; label: string; icon: string}[] = [
