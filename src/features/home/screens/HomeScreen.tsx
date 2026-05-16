@@ -117,6 +117,17 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
             onPress={() => go('Saved')}
             fullWidth
           />
+          <ActionCard
+            title="My Commissions"
+            description="View your commission earnings and breakdown for all agreements"
+            iconBg="#fef2f2"
+            iconColor={Colors.primary}
+            iconName="calculator-outline"
+            btnLabel="View Commissions →"
+            btnColor={Colors.primary}
+            onPress={() => navigation?.navigate('MyCommissions')}
+            fullWidth
+          />
         </View>
 
         <View style={styles.section}>

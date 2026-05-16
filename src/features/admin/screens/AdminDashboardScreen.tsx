@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import {useAdminAuth} from '../context/AdminAuthContext';
 import {adminApi, AdminDashboardData} from '../../../services/api/endpoints/admin.api';
 import {agreementsApi, SavedFileGroup} from '../../../services/api/endpoints/agreements.api';
@@ -138,6 +139,7 @@ function SkeletonBlock({width, height}: {width: number | string; height: number}
 
 export function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const {user: _user} = useAdminAuth();
 
   const [dashData, setDashData] = useState<AdminDashboardData | null>(null);
@@ -282,6 +284,23 @@ export function AdminDashboardScreen() {
             ))
           )}
         </View>
+
+        {/* Employee Commissions Quick Action */}
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate('AdminCommissions')}
+          activeOpacity={0.7}>
+          <View style={styles.actionIconBox}>
+            <Ionicons name="calculator-outline" size={24} color={Colors.primary} />
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Employee Commissions</Text>
+            <Text style={styles.actionSubtitle}>
+              View commission earnings for all employees
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -437,5 +456,37 @@ const styles = StyleSheet.create({
   skeleton: {
     backgroundColor: '#e5e7eb',
     borderRadius: Radius.xs,
+  },
+
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  actionIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: '#fef2f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  actionSubtitle: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
   },
 });

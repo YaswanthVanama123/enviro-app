@@ -6,6 +6,8 @@ export type RootStackParamList = {
   Agreement: undefined;
   Trash: undefined;
   EditAgreement: { agreementId: string };
+  MyCommissions: undefined;
+  AdminCommissions: undefined;
 };
 
 export type TabParamList = {

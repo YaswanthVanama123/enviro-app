@@ -9,6 +9,8 @@ import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
 import {ServiceAgreementScreen} from '../../features/admin/screens/ServiceAgreementScreen';
 import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
 import {EditAgreementScreen} from '../../features/agreements/screens/EditAgreementScreen';
+import {MyCommissionsScreen} from '../../features/commissions/screens/MyCommissionsScreen';
+import {AdminCommissionsScreen} from '../../features/admin/screens/AdminCommissionsScreen';
 import {useAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors} from '../../theme';
 import type {RootStackParamList} from './types';
@@ -39,6 +41,8 @@ export default function AppNavigator() {
             <Stack.Screen name="Agreement" component={ServiceAgreementScreen} />
             <Stack.Screen name="Trash" component={TrashScreen} />
             <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
+            <Stack.Screen name="MyCommissions" component={MyCommissionsScreen} />
+            <Stack.Screen name="AdminCommissions" component={AdminCommissionsScreen} />
           </>
         ) : (
           // Unauthenticated - show login

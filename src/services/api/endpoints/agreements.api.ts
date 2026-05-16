@@ -201,6 +201,21 @@ export const agreementsApi = {
     );
     return res.data ?? null;
   },
+
+  async getUserCommissions(): Promise<any> {
+    const res = await apiClient.get('/api/pdf/user/commissions');
+    return res.data ?? null;
+  },
+
+  async getAllEmployeesCommissions(): Promise<any> {
+    const res = await apiClient.get('/api/pdf/admin/commissions/employees');
+    return res.data ?? null;
+  },
+
+  async getEmployeeCommissions(username: string): Promise<any> {
+    const res = await apiClient.get(`/api/pdf/admin/commissions/employee/${encodeURIComponent(username)}`);
+    return res.data ?? null;
+  },
 };
 
 export interface ZohoUploadStatus {
