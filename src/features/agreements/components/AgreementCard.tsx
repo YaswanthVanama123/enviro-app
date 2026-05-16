@@ -152,6 +152,20 @@ function FileRow({file, onDelete}: FileRowProps) {
 
   const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
 
+  // Format last edit time for file
+  const fileEditInfo = file.updatedAt && file.updatedBy
+    ? {
+        by: file.updatedBy,
+        time: new Date(file.updatedAt).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
+      }
+    : null;
+
   const handleDelete = useCallback(() => onDelete(file), [file, onDelete]);
 
   const handleView = useCallback(async () => {
@@ -223,6 +237,15 @@ function FileRow({file, onDelete}: FileRowProps) {
             </>
           )}
         </View>
+        {/* File Edit Info */}
+        {fileEditInfo && (
+          <View style={styles.fileEditInfoRow}>
+            <Ionicons name="create-outline" size={9} color="#6b7280" />
+            <Text style={styles.fileEditInfoText}>
+              Edited by {fileEditInfo.by} • {fileEditInfo.time}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.fileActionsGrid}>
@@ -292,20 +315,33 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
 
   const timeline = calcTimelineStatus(agreement.startDate, agreement.contractMonths);
 
-  // Get creator and last editor from files
+  // Get creator and last editor from files (with agreement-level fallback)
   const getCreatorAndEditor = () => {
     const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
     const sortedByUpdate = [...agreement.files].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
     const latestEdit = sortedByUpdate[0];
+
+    // Use file-level data if available, otherwise fall back to agreement-level
     return {
-      createdBy: mainFile?.createdBy || agreement.files[0]?.createdBy || null,
-      lastEditedBy: latestEdit?.updatedBy || latestEdit?.createdBy || null,
-      lastEditTime: latestEdit?.updatedAt || null,
+      createdBy: mainFile?.createdBy || agreement.files[0]?.createdBy || agreement.createdBy || null,
+      lastEditedBy: latestEdit?.updatedBy || latestEdit?.createdBy || agreement.updatedBy || agreement.createdBy || null,
+      lastEditTime: latestEdit?.updatedAt || agreement.latestUpdate || null,
     };
   };
   const {createdBy, lastEditedBy, lastEditTime} = getCreatorAndEditor();
+
+  // Format last edit time for display
+  const formattedEditTime = lastEditTime
+    ? new Date(lastEditTime).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+    : null;
 
   const handleDeleteFile = useCallback((file: SavedFileListItem) => {
     setFileToDelete(file);
@@ -388,20 +424,26 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             {/* Creator and Editor Info */}
             <View style={styles.creatorEditorRow}>
               {createdBy && (
-                <View style={styles.userInfoTag}>
+                <View style={[styles.userInfoTag, {backgroundColor: '#dcfce7', borderColor: '#bbf7d0'}]}>
                   <Ionicons name="person-add-outline" size={10} color="#16a34a" />
-                  <Text style={styles.userInfoText}>
-                    <Text style={styles.userInfoLabel}>Created: </Text>
-                    {createdBy}
+                  <Text style={[styles.userInfoText, {color: '#16a34a'}]}>
+                    Created: {createdBy}
                   </Text>
                 </View>
               )}
               {lastEditedBy && lastEditedBy !== createdBy && (
-                <View style={styles.userInfoTag}>
+                <View style={[styles.userInfoTag, {backgroundColor: '#dbeafe', borderColor: '#bfdbfe'}]}>
                   <Ionicons name="create-outline" size={10} color="#2563eb" />
-                  <Text style={styles.userInfoText}>
-                    <Text style={styles.userInfoLabel}>Edited: </Text>
-                    {lastEditedBy}
+                  <Text style={[styles.userInfoText, {color: '#2563eb'}]}>
+                    Edited: {lastEditedBy}{formattedEditTime ? ` • ${formattedEditTime}` : ''}
+                  </Text>
+                </View>
+              )}
+              {lastEditedBy && lastEditedBy === createdBy && formattedEditTime && (
+                <View style={[styles.userInfoTag, {backgroundColor: '#fef3c7', borderColor: '#fde68a'}]}>
+                  <Ionicons name="time-outline" size={10} color="#92400e" />
+                  <Text style={[styles.userInfoText, {color: '#92400e'}]}>
+                    Last Edit: {formattedEditTime}
                   </Text>
                 </View>
               )}
@@ -830,6 +872,9 @@ const styles = StyleSheet.create({
   fileBadge: {flexDirection: 'row', alignItems: 'center', borderRadius: Radius.full, paddingHorizontal: 7, paddingVertical: 2, gap: 4},
   fileBadgeDot: {width: 5, height: 5, borderRadius: 2.5},
   fileBadgeText: {fontSize: 10, fontWeight: '600'},
+
+  fileEditInfoRow: {flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2},
+  fileEditInfoText: {fontSize: 10, color: '#6b7280'},
 
   latestTag: {backgroundColor: Colors.greenLight, borderRadius: Radius.full, paddingHorizontal: 5, paddingVertical: 1},
   latestTagText: {fontSize: 9, fontWeight: '700', color: Colors.greenDark},
