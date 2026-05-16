@@ -1,11 +1,20 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useState, useMemo} from 'react';
+import {View, Text, StyleSheet, Switch, TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FormState} from '../../hooks/useFormFilling';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 import {formatCurrency} from '../../../../shared/utils/format.utils';
+import {
+  QuotaLevel,
+  AccountType,
+  PricingLine,
+  AgreementTerm,
+  DEFAULT_COMMISSION_RULES,
+  QUOTA_LEVEL_OPTIONS,
+  ACCOUNT_TYPE_OPTIONS,
+} from '../../../admin/types/commission.types';
 
 interface Step4ReviewProps {
   form: FormState;
@@ -140,6 +149,79 @@ export function Step4Review({form}: Step4ReviewProps) {
   const displayDate = startDate
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
+
+  // Commission Calculator State - simplified (form filling is always new business)
+  const [quotaLevel, setQuotaLevel] = useState<QuotaLevel>('above');
+  const [accountType, setAccountType] = useState<AccountType>('Anchor');
+  const [isInsideSales, setIsInsideSales] = useState<boolean>(false);
+  const [isCommissionExpanded, setIsCommissionExpanded] = useState<boolean>(true);
+
+  // Calculate commission based on form values
+  const commissionCalc = useMemo(() => {
+    const rules = DEFAULT_COMMISSION_RULES;
+
+    // Monthly value from contract total (auto from form)
+    const monthlyValue = contractMonths > 0
+      ? totalCurrentContract / contractMonths
+      : totalCurrentContract;
+
+    // Derive agreement term from contract months (auto from form)
+    const getAgreementTerm = (): AgreementTerm => {
+      if (contractMonths >= 36) return '3-year';
+      if (contractMonths >= 12) return '1-year';
+      return 'MTM-with-install';
+    };
+
+    // Pricing line from indicator (auto from form)
+    const derivedPricingLine: PricingLine = pricingLine === 'green' ? 'Greenline' : 'Redline';
+    const agreementTerm = getAgreementTerm();
+
+    // Base rate from quota level
+    const baseRate = rules.quotaRates[quotaLevel];
+
+    // Agreement multiplier
+    const agreementMultiplier = rules.agreementMultipliers[agreementTerm];
+
+    // Account type adjustment
+    const accountTypeAdjustment = rules.accountTypeAdjustments[accountType];
+
+    // Greenline bonus (auto from form pricing)
+    const greenlineBonus = derivedPricingLine === 'Greenline' ? rules.greenlineBonus : 0;
+
+    // No renewal bonus - form filling is always new business
+    const renewalBonus = 0;
+
+    // Inside sales deduction
+    const insideSalesDeduction = isInsideSales ? rules.insideSalesDeduction : 0;
+
+    // Effective base rate (before multiplier)
+    const effectiveBaseRate = baseRate + accountTypeAdjustment + greenlineBonus + renewalBonus + insideSalesDeduction;
+
+    // Final commission rate after multiplier
+    const finalCommissionRate = effectiveBaseRate * (agreementMultiplier / 100);
+
+    // Calculate dollar amounts
+    const monthlyCommission = monthlyValue * (finalCommissionRate / 100);
+    const annualCommission = monthlyCommission * 12;
+    const contractCommission = monthlyCommission * contractMonths;
+
+    return {
+      monthlyValue,
+      agreementTerm,
+      derivedPricingLine,
+      baseRate,
+      agreementMultiplier,
+      accountTypeAdjustment,
+      greenlineBonus,
+      renewalBonus,
+      insideSalesDeduction,
+      effectiveBaseRate,
+      finalCommissionRate,
+      monthlyCommission,
+      annualCommission,
+      contractCommission,
+    };
+  }, [totalCurrentContract, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
 
   return (
     <View style={styles.container}>
@@ -332,6 +414,154 @@ export function Step4Review({form}: Step4ReviewProps) {
           </View>
         </View>
       )}
+
+      {/* Commission Calculator Section */}
+      <View style={styles.commissionCard}>
+        <TouchableOpacity
+          style={styles.commissionHeader}
+          onPress={() => setIsCommissionExpanded(!isCommissionExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.commissionHeaderLeft}>
+            <Ionicons name="calculator-outline" size={18} color="#d97706" />
+            <Text style={styles.commissionTitle}>Sales Commission</Text>
+          </View>
+          <Ionicons
+            name={isCommissionExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color="#d97706"
+          />
+        </TouchableOpacity>
+
+        {isCommissionExpanded && (
+          <View style={styles.commissionBody}>
+            {/* Commission Inputs - only what's needed (form provides the rest) */}
+            <View style={styles.commissionInputs}>
+              {/* Quota Level */}
+              <View style={styles.commissionInputGroup}>
+                <Text style={styles.commissionInputLabel}>Quota Level</Text>
+                <View style={styles.commissionPickerRow}>
+                  {QUOTA_LEVEL_OPTIONS.map(opt => (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.commissionChip, quotaLevel === opt.value && styles.commissionChipActive]}
+                      onPress={() => setQuotaLevel(opt.value)}
+                    >
+                      <Text style={[styles.commissionChipText, quotaLevel === opt.value && styles.commissionChipTextActive]}>
+                        {opt.label.replace(` (${opt.rate}%)`, '')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Account Type */}
+              <View style={styles.commissionInputGroup}>
+                <Text style={styles.commissionInputLabel}>Account Type</Text>
+                <View style={styles.commissionPickerRow}>
+                  {ACCOUNT_TYPE_OPTIONS.map(opt => (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.commissionChip, accountType === opt.value && styles.commissionChipActive]}
+                      onPress={() => setAccountType(opt.value)}
+                    >
+                      <Text style={[styles.commissionChipText, accountType === opt.value && styles.commissionChipTextActive]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Inside Sales Toggle */}
+              <View style={styles.commissionSwitchRow}>
+                <Text style={styles.commissionInputLabel}>Inside Sales (-3%)</Text>
+                <Switch
+                  value={isInsideSales}
+                  onValueChange={setIsInsideSales}
+                  trackColor={{false: '#e5e7eb', true: '#fbbf24'}}
+                  thumbColor={isInsideSales ? '#d97706' : '#f4f4f5'}
+                />
+              </View>
+            </View>
+
+            {/* Commission Breakdown */}
+            <View style={styles.commissionBreakdown}>
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Monthly Value</Text>
+                <Text style={styles.commissionRowValue}>{formatCurrency(commissionCalc.monthlyValue)}</Text>
+              </View>
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Agreement Term</Text>
+                <Text style={styles.commissionRowValue}>{commissionCalc.agreementTerm} ({commissionCalc.agreementMultiplier}%)</Text>
+              </View>
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Pricing Line</Text>
+                <Text style={[styles.commissionRowValue, {color: commissionCalc.derivedPricingLine === 'Greenline' ? '#16a34a' : '#dc2626'}]}>
+                  {commissionCalc.derivedPricingLine}
+                </Text>
+              </View>
+
+              <View style={styles.commissionDivider} />
+
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Base Rate ({quotaLevel})</Text>
+                <Text style={styles.commissionRowValue}>{commissionCalc.baseRate}%</Text>
+              </View>
+              {commissionCalc.accountTypeAdjustment !== 0 && (
+                <View style={styles.commissionRow}>
+                  <Text style={styles.commissionRowLabel}>Account Adj ({accountType})</Text>
+                  <Text style={[styles.commissionRowValue, {color: commissionCalc.accountTypeAdjustment < 0 ? '#dc2626' : '#16a34a'}]}>
+                    {commissionCalc.accountTypeAdjustment > 0 ? '+' : ''}{commissionCalc.accountTypeAdjustment}%
+                  </Text>
+                </View>
+              )}
+              {commissionCalc.greenlineBonus > 0 && (
+                <View style={styles.commissionRow}>
+                  <Text style={styles.commissionRowLabel}>Greenline Bonus</Text>
+                  <Text style={[styles.commissionRowValue, {color: '#16a34a'}]}>+{commissionCalc.greenlineBonus}%</Text>
+                </View>
+              )}
+              {commissionCalc.insideSalesDeduction !== 0 && (
+                <View style={styles.commissionRow}>
+                  <Text style={styles.commissionRowLabel}>Inside Sales</Text>
+                  <Text style={[styles.commissionRowValue, {color: '#dc2626'}]}>{commissionCalc.insideSalesDeduction}%</Text>
+                </View>
+              )}
+
+              <View style={styles.commissionDivider} />
+
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Effective Base Rate</Text>
+                <Text style={styles.commissionRowValue}>{commissionCalc.effectiveBaseRate.toFixed(2)}%</Text>
+              </View>
+              <View style={styles.commissionHighlightRow}>
+                <Text style={styles.commissionHighlightLabel}>Final Commission Rate</Text>
+                <Text style={styles.commissionHighlightValue}>{commissionCalc.finalCommissionRate.toFixed(2)}%</Text>
+              </View>
+
+              <View style={styles.commissionDivider} />
+
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Monthly Commission</Text>
+                <Text style={[styles.commissionRowValue, {color: '#16a34a', fontWeight: '700'}]}>
+                  {formatCurrency(commissionCalc.monthlyCommission)}
+                </Text>
+              </View>
+              <View style={styles.commissionRow}>
+                <Text style={styles.commissionRowLabel}>Annual Commission</Text>
+                <Text style={[styles.commissionRowValue, {color: '#16a34a', fontWeight: '700'}]}>
+                  {formatCurrency(commissionCalc.annualCommission)}
+                </Text>
+              </View>
+              <View style={styles.commissionTotalRow}>
+                <Text style={styles.commissionTotalLabel}>Contract Commission ({contractMonths} mo)</Text>
+                <Text style={styles.commissionTotalValue}>{formatCurrency(commissionCalc.contractCommission)}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
 
       <View style={styles.grandTotal}>
         <Text style={styles.grandLabel}>Grand Total</Text>
@@ -622,5 +852,153 @@ const styles = StyleSheet.create({
   },
   crossMinStatusWarnText: {
     color: '#991b1b',
+  },
+  // Commission Calculator Styles
+  commissionCard: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 2,
+    borderColor: '#fde047',
+    backgroundColor: '#fefce8',
+    overflow: 'hidden',
+  },
+  commissionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fde047',
+  },
+  commissionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  commissionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: '#92400e',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  commissionBody: {
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  commissionInputs: {
+    gap: Spacing.sm,
+  },
+  commissionInputGroup: {
+    gap: 4,
+  },
+  commissionInputLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  commissionPickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  commissionChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  commissionChipActive: {
+    backgroundColor: '#fbbf24',
+    borderColor: '#d97706',
+  },
+  commissionChipText: {
+    fontSize: FontSize.xs,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+  commissionChipTextActive: {
+    color: '#78350f',
+    fontWeight: '700',
+  },
+  commissionSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.xs,
+  },
+  commissionBreakdown: {
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#fde047',
+  },
+  commissionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  commissionRowLabel: {
+    fontSize: FontSize.sm,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  commissionRowValue: {
+    fontSize: FontSize.sm,
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  commissionDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 6,
+  },
+  commissionHighlightRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    marginHorizontal: -8,
+    borderRadius: Radius.sm,
+  },
+  commissionHighlightLabel: {
+    fontSize: FontSize.sm,
+    color: '#92400e',
+    fontWeight: '700',
+  },
+  commissionHighlightValue: {
+    fontSize: FontSize.md,
+    color: '#92400e',
+    fontWeight: '800',
+  },
+  commissionTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#dcfce7',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: -8,
+    marginTop: 8,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  commissionTotalLabel: {
+    fontSize: FontSize.sm,
+    color: '#166534',
+    fontWeight: '700',
+  },
+  commissionTotalValue: {
+    fontSize: FontSize.md,
+    color: '#166534',
+    fontWeight: '800',
   },
 });
