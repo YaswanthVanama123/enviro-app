@@ -14,6 +14,7 @@ import {QuotaSection} from '../components/quota/QuotaSection';
 import {RouteStarCustomersSection} from '../components/routestar/RouteStarCustomersSection';
 import {BiginAuditSection} from '../components/bigin/BiginAuditSection';
 import {BiginCompaniesSection} from '../components/bigin/BiginCompaniesSection';
+import {CompanyMappingSection} from '../components/company-mapping/CompanyMappingSection';
 import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 import {Colors} from '../../../theme/colors';
 
@@ -71,6 +72,7 @@ export function PricingDetailsScreen() {
         {activeTab === 'customers' && <RouteStarCustomersSection />}
         {activeTab === 'audit' && <BiginAuditSection />}
         {activeTab === 'companies' && <BiginCompaniesSection />}
+        {activeTab === 'mapping' && <CompanyMappingSection />}
       </View>
     </View>
   );
