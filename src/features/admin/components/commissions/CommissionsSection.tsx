@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,12 @@ import type {
   QuotaLevel,
   BusinessType,
 } from '../../types/commission.types';
+import {
+  detectAccountTypeClient,
+  getAccountTypeColor,
+  getAccountTypeBgColor,
+  type AccountTypeDetectionResult,
+} from '../../types/accountType.types';
 
 const ACCOUNT_TYPES: {value: AccountType; label: string}[] = [
   {value: 'Anchor', label: 'Anchor ($200+/visit)'},
@@ -61,6 +67,13 @@ export function CommissionsSection() {
   const [isInsideSales, setIsInsideSales] = useState(false);
   const [customerName, setCustomerName] = useState('');
 
+  // Auto-detect state
+  const [autoDetectEnabled, setAutoDetectEnabled] = useState(false);
+  const [perVisitRevenue, setPerVisitRevenue] = useState('');
+  const [distanceToAnchor, setDistanceToAnchor] = useState('');
+  const [detectionResult, setDetectionResult] =
+    useState<AccountTypeDetectionResult | null>(null);
+
   // UI state
   const [activePicker, setActivePicker] = useState<PickerType>(null);
 
@@ -68,6 +81,24 @@ export function CommissionsSection() {
   const [result, setResult] = useState<CommissionCalculationResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-detect effect
+  useEffect(() => {
+    if (!autoDetectEnabled || !perVisitRevenue) {
+      setDetectionResult(null);
+      return;
+    }
+
+    const revenue = parseFloat(perVisitRevenue);
+    const distance = distanceToAnchor ? parseFloat(distanceToAnchor) : null;
+    const isGreenline = pricingLine === 'Greenline';
+
+    if (!isNaN(revenue) && revenue > 0) {
+      const result = detectAccountTypeClient(revenue, distance, isGreenline);
+      setDetectionResult(result);
+      setAccountType(result.accountType);
+    }
+  }, [autoDetectEnabled, perVisitRevenue, distanceToAnchor, pricingLine]);
 
   const handleCalculate = useCallback(async () => {
     if (!monthlyValue || parseFloat(monthlyValue) <= 0) {
@@ -122,6 +153,11 @@ export function CommissionsSection() {
     setCustomerName('');
     setResult(null);
     setError(null);
+    // Clear auto-detect state
+    setAutoDetectEnabled(false);
+    setPerVisitRevenue('');
+    setDistanceToAnchor('');
+    setDetectionResult(null);
   }, []);
 
   const renderPickerOptions = (
@@ -207,26 +243,93 @@ export function CommissionsSection() {
 
         {/* Account Type */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Account Type</Text>
-          <TouchableOpacity
-            style={styles.pickerButton}
-            onPress={() =>
-              setActivePicker(activePicker === 'accountType' ? null : 'accountType')
-            }>
-            <Text style={styles.pickerButtonText}>
-              {ACCOUNT_TYPES.find(t => t.value === accountType)?.label}
-            </Text>
-            <Ionicons
-              name={activePicker === 'accountType' ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color={Colors.textMuted}
-            />
-          </TouchableOpacity>
-          {renderPickerOptions(
-            'accountType',
-            ACCOUNT_TYPES,
-            accountType,
-            v => setAccountType(v as AccountType),
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Account Type</Text>
+            <TouchableOpacity
+              style={styles.autoDetectToggle}
+              onPress={() => setAutoDetectEnabled(!autoDetectEnabled)}>
+              <View
+                style={[
+                  styles.checkbox,
+                  autoDetectEnabled && styles.checkboxActive,
+                ]}>
+                {autoDetectEnabled && (
+                  <Ionicons name="checkmark" size={12} color="#fff" />
+                )}
+              </View>
+              <Text style={styles.autoDetectLabel}>Auto-detect</Text>
+            </TouchableOpacity>
+          </View>
+
+          {autoDetectEnabled ? (
+            <View style={styles.autoDetectContainer}>
+              <View style={styles.autoDetectInputs}>
+                <View style={[styles.inputRow, {flex: 1}]}>
+                  <TextInput
+                    style={styles.input}
+                    value={perVisitRevenue}
+                    onChangeText={setPerVisitRevenue}
+                    placeholder="Revenue/visit ($)"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                <View style={[styles.inputRow, {flex: 1}]}>
+                  <TextInput
+                    style={styles.input}
+                    value={distanceToAnchor}
+                    onChangeText={setDistanceToAnchor}
+                    placeholder="Distance (mi)"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+              {detectionResult && (
+                <View
+                  style={[
+                    styles.detectionResult,
+                    {backgroundColor: getAccountTypeBgColor(detectionResult.accountType)},
+                  ]}>
+                  <Text
+                    style={[
+                      styles.detectionResultType,
+                      {color: getAccountTypeColor(detectionResult.accountType)},
+                    ]}>
+                    {detectionResult.accountType}
+                  </Text>
+                  <Text style={styles.detectionResultConfidence}>
+                    {detectionResult.confidence} confidence
+                  </Text>
+                  <Text style={styles.detectionResultReason}>
+                    {detectionResult.reason}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.pickerButton}
+                onPress={() =>
+                  setActivePicker(activePicker === 'accountType' ? null : 'accountType')
+                }>
+                <Text style={styles.pickerButtonText}>
+                  {ACCOUNT_TYPES.find(t => t.value === accountType)?.label}
+                </Text>
+                <Ionicons
+                  name={activePicker === 'accountType' ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={Colors.textMuted}
+                />
+              </TouchableOpacity>
+              {renderPickerOptions(
+                'accountType',
+                ACCOUNT_TYPES,
+                accountType,
+                v => setAccountType(v as AccountType),
+              )}
+            </>
           )}
         </View>
 
@@ -604,4 +707,44 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   errorText: {fontSize: FontSize.xs, color: '#ef4444', flex: 1},
+  // Auto-detect styles
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  autoDetectToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  autoDetectLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  autoDetectContainer: {
+    gap: Spacing.sm,
+  },
+  autoDetectInputs: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  detectionResult: {
+    padding: Spacing.sm,
+    borderRadius: Radius.md,
+  },
+  detectionResultType: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  detectionResultConfidence: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  detectionResultReason: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
 });

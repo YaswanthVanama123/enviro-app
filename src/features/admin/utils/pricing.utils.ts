@@ -1,4 +1,4 @@
-export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference' | 'commissions';
+export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference' | 'commissions' | 'quota' | 'customers' | 'audit';
 
 export type ServiceSubTab = 'unit' | 'minimums' | 'multipliers' | 'frequencies';
 
@@ -19,6 +19,9 @@ export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
   {key: 'backup',      label: 'Backup',             icon: 'cloud-upload-outline'},
   {key: 'reference',   label: 'Services Reference', icon: 'book-outline'},
   {key: 'commissions', label: 'Commissions',        icon: 'calculator-outline'},
+  {key: 'quota',       label: 'Quota Tracking',     icon: 'trending-up-outline'},
+  {key: 'customers',   label: 'Customers',          icon: 'people-outline'},
+  {key: 'audit',       label: 'Audit History',      icon: 'time-outline'},
 ];
 
 export const SERVICE_SUBTABS: {key: ServiceSubTab; label: string; icon: string}[] = [

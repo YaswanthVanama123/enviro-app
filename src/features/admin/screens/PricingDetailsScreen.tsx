@@ -10,6 +10,9 @@ import {ServicesReferenceSection} from '../components/service-configs/ServicesRe
 import {ProductCatalogSection} from '../components/product-catalog/ProductCatalogSection';
 import {BackupManagementSection} from '../components/backup/BackupManagementSection';
 import {CommissionsSection} from '../components/commissions/CommissionsSection';
+import {QuotaSection} from '../components/quota/QuotaSection';
+import {RouteStarCustomersSection} from '../components/routestar/RouteStarCustomersSection';
+import {BiginAuditSection} from '../components/bigin/BiginAuditSection';
 import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 import {Colors} from '../../../theme/colors';
 
@@ -63,6 +66,9 @@ export function PricingDetailsScreen() {
         {activeTab === 'backup'    && <BackupManagementSection />}
         {activeTab === 'reference' && <ServicesReferenceSection />}
         {activeTab === 'commissions' && <CommissionsSection />}
+        {activeTab === 'quota' && <QuotaSection />}
+        {activeTab === 'customers' && <RouteStarCustomersSection />}
+        {activeTab === 'audit' && <BiginAuditSection />}
       </View>
     </View>
   );
