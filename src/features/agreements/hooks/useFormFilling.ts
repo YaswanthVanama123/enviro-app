@@ -66,6 +66,9 @@ export interface FormState {
   saving: boolean;
   saveError: string | null;
   savedId: string | null;
+  // Bigin integration for account type detection
+  biginCompanyId: string | null;
+  isConnectedToBigin: boolean;
 }
 
 const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
@@ -111,6 +114,8 @@ const INITIAL_STATE: FormState = {
   saving: false,
   saveError: null,
   savedId: null,
+  biginCompanyId: null,
+  isConnectedToBigin: false,
 };
 
 export function useFormFilling(editAgreementId?: string) {
@@ -282,6 +287,14 @@ export function useFormFilling(editAgreementId?: string) {
           const ts = Date.now();
 
           next.savedId = doc._id ?? doc.id ?? editAgreementId!;
+
+          // Capture Bigin integration data for account type detection
+          if (doc.biginCompanyId) {
+            next.biginCompanyId = doc.biginCompanyId;
+          }
+          if (typeof doc.isConnectedToBigin === 'boolean') {
+            next.isConnectedToBigin = doc.isConnectedToBigin;
+          }
 
           if (doc.headerTitle) {next.headerTitle = doc.headerTitle;}
           if (Array.isArray(doc.headerRows) && doc.headerRows.length > 0) {next.headerRows = doc.headerRows;}

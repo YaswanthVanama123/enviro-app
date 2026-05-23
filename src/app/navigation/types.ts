@@ -8,6 +8,14 @@ export type RootStackParamList = {
   EditAgreement: { agreementId: string };
   MyCommissions: undefined;
   AdminCommissions: undefined;
+  // New admin screens
+  QuotaManagement: undefined;
+  RouteStarCustomers: undefined;
+  CompanyMapping: undefined;
+  BiginAudit: undefined;
+  MapDistance: undefined;
+  EmployeeAgreements: undefined;
+  EditHistory: undefined;
 };
 
 export type TabParamList = {

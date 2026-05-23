@@ -167,6 +167,102 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('AdminCommissions')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#dcfce7'}]}>
+                <Ionicons name="calculator-outline" size={18} color="#16a34a" />
+              </View>
+              <Text style={styles.menuRowText}>Commissions</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('QuotaManagement')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fef3c7'}]}>
+                <Ionicons name="trophy-outline" size={18} color="#f59e0b" />
+              </View>
+              <Text style={styles.menuRowText}>Quota Management</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('EmployeeAgreements')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#e0f2fe'}]}>
+                <Ionicons name="people-outline" size={18} color="#0ea5e9" />
+              </View>
+              <Text style={styles.menuRowText}>Employee Agreements</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('EditHistory')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#f3e8ff'}]}>
+                <Ionicons name="time-outline" size={18} color="#7c3aed" />
+              </View>
+              <Text style={styles.menuRowText}>Edit History</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('RouteStarCustomers')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fff7ed'}]}>
+                <Ionicons name="business-outline" size={18} color="#ea580c" />
+              </View>
+              <Text style={styles.menuRowText}>RouteStar Customers</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('CompanyMapping')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fce7f3'}]}>
+                <Ionicons name="git-merge-outline" size={18} color="#db2777" />
+              </View>
+              <Text style={styles.menuRowText}>Company Mapping</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('BiginAudit')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#ecfdf5'}]}>
+                <Ionicons name="shield-checkmark-outline" size={18} color="#059669" />
+              </View>
+              <Text style={styles.menuRowText}>Bigin Audit</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('MapDistance')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#dbeafe'}]}>
+                <Ionicons name="map-outline" size={18} color="#2563eb" />
+              </View>
+              <Text style={styles.menuRowText}>Map Distance</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('Trash')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#fef2f2'}]}>

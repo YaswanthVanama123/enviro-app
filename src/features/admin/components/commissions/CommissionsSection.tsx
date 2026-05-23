@@ -11,6 +11,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {commissionApi} from '../../../../services/api/endpoints/commission.api';
+import {accountTypeApi} from '../../../../services/api/endpoints/accountType.api';
+import type {ServerAccountTypeDetectionResult} from '../../../../services/api/endpoints/accountType.api';
 import {CommissionResultCard} from './CommissionResultCard';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -53,7 +55,12 @@ const QUOTA_LEVELS: {value: QuotaLevel; label: string}[] = [
 
 type PickerType = 'accountType' | 'agreementTerm' | 'quotaLevel' | null;
 
-export function CommissionsSection() {
+interface CommissionsSectionProps {
+  biginCompanyId?: string | null;
+  isGreenline?: boolean;
+}
+
+export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline}: CommissionsSectionProps = {}) {
   const insets = useSafeAreaInsets();
 
   // Form state
@@ -73,6 +80,9 @@ export function CommissionsSection() {
   const [distanceToAnchor, setDistanceToAnchor] = useState('');
   const [detectionResult, setDetectionResult] =
     useState<AccountTypeDetectionResult | null>(null);
+  const [serverDetectionResult, setServerDetectionResult] =
+    useState<ServerAccountTypeDetectionResult | null>(null);
+  const [serverDetectionLoading, setServerDetectionLoading] = useState(false);
 
   // UI state
   const [activePicker, setActivePicker] = useState<PickerType>(null);
@@ -82,8 +92,39 @@ export function CommissionsSection() {
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-detect effect
+  // Server-side auto-detect when biginCompanyId is provided
   useEffect(() => {
+    if (!biginCompanyId) {
+      setServerDetectionResult(null);
+      return;
+    }
+
+    const detectFromServer = async () => {
+      setServerDetectionLoading(true);
+      const isGreenline = propIsGreenline ?? pricingLine === 'Greenline';
+
+      const result = await accountTypeApi.detectFromDistance({
+        biginCompanyId,
+        isGreenline,
+      });
+
+      setServerDetectionResult(result);
+      if (result.success && result.accountType) {
+        setAccountType(result.accountType);
+      }
+      setServerDetectionLoading(false);
+    };
+
+    detectFromServer();
+  }, [biginCompanyId, propIsGreenline, pricingLine]);
+
+  // Client-side auto-detect effect (fallback when no biginCompanyId)
+  useEffect(() => {
+    if (biginCompanyId) {
+      // Skip client-side detection if server-side is available
+      return;
+    }
+
     if (!autoDetectEnabled || !perVisitRevenue) {
       setDetectionResult(null);
       return;
@@ -98,7 +139,7 @@ export function CommissionsSection() {
       setDetectionResult(result);
       setAccountType(result.accountType);
     }
-  }, [autoDetectEnabled, perVisitRevenue, distanceToAnchor, pricingLine]);
+  }, [biginCompanyId, autoDetectEnabled, perVisitRevenue, distanceToAnchor, pricingLine]);
 
   const handleCalculate = useCallback(async () => {
     if (!monthlyValue || parseFloat(monthlyValue) <= 0) {
@@ -245,23 +286,68 @@ export function CommissionsSection() {
         <View style={styles.formGroup}>
           <View style={styles.labelRow}>
             <Text style={styles.label}>Account Type</Text>
-            <TouchableOpacity
-              style={styles.autoDetectToggle}
-              onPress={() => setAutoDetectEnabled(!autoDetectEnabled)}>
-              <View
-                style={[
-                  styles.checkbox,
-                  autoDetectEnabled && styles.checkboxActive,
-                ]}>
-                {autoDetectEnabled && (
-                  <Ionicons name="checkmark" size={12} color="#fff" />
-                )}
-              </View>
-              <Text style={styles.autoDetectLabel}>Auto-detect</Text>
-            </TouchableOpacity>
+            {!biginCompanyId && (
+              <TouchableOpacity
+                style={styles.autoDetectToggle}
+                onPress={() => setAutoDetectEnabled(!autoDetectEnabled)}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    autoDetectEnabled && styles.checkboxActive,
+                  ]}>
+                  {autoDetectEnabled && (
+                    <Ionicons name="checkmark" size={12} color="#fff" />
+                  )}
+                </View>
+                <Text style={styles.autoDetectLabel}>Auto-detect</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {autoDetectEnabled ? (
+          {/* Server-side detection (when biginCompanyId is available) */}
+          {biginCompanyId ? (
+            <View style={styles.autoDetectContainer}>
+              {serverDetectionLoading ? (
+                <View style={[styles.detectionResult, {backgroundColor: '#f3f4f6'}]}>
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                  <Text style={[styles.detectionResultReason, {textAlign: 'center', marginTop: 8}]}>
+                    Detecting account type...
+                  </Text>
+                </View>
+              ) : serverDetectionResult ? (
+                <View
+                  style={[
+                    styles.detectionResult,
+                    {backgroundColor: getAccountTypeBgColor(serverDetectionResult.accountType)},
+                  ]}>
+                  <Text
+                    style={[
+                      styles.detectionResultType,
+                      {color: getAccountTypeColor(serverDetectionResult.accountType)},
+                    ]}>
+                    {serverDetectionResult.accountType}
+                  </Text>
+                  <Text style={styles.detectionResultConfidence}>
+                    {serverDetectionResult.confidence} confidence
+                  </Text>
+                  <Text style={styles.detectionResultReason}>
+                    {serverDetectionResult.reason}
+                  </Text>
+                  {serverDetectionResult.nearestAnchor && (
+                    <Text style={[styles.detectionResultReason, {marginTop: 4, color: Colors.textMuted}]}>
+                      Nearest: {serverDetectionResult.nearestAnchor}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <View style={[styles.detectionResult, {backgroundColor: '#fef2f2'}]}>
+                  <Text style={[styles.detectionResultReason, {color: '#ef4444'}]}>
+                    No distance data available
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : autoDetectEnabled ? (
             <View style={styles.autoDetectContainer}>
               <View style={styles.autoDetectInputs}>
                 <View style={[styles.inputRow, {flex: 1}]}>
