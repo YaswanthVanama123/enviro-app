@@ -96,6 +96,10 @@ function formatMoney(amount: number): string {
   }).format(amount);
 }
 
+function formatPercent(value: number): string {
+  return value.toFixed(2);
+}
+
 function formatDate(dateStr: string): string {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
@@ -240,7 +244,7 @@ export function MyCommissionsScreen() {
             </View>
             <View style={[styles.summaryCard, styles.summaryCardSmall]}>
               <Text style={styles.summaryLabelSmall}>Avg Rate</Text>
-              <Text style={styles.summaryValueSmall}>{data.totals.averageCommissionRate}%</Text>
+              <Text style={styles.summaryValueSmall}>{formatPercent(data.totals.averageCommissionRate)}%</Text>
             </View>
           </View>
         </View>
@@ -335,7 +339,7 @@ export function MyCommissionsScreen() {
                         {formatMoney(agreement.commission.total)}
                       </Text>
                       <View style={styles.rateBadge}>
-                        <Text style={styles.rateBadgeText}>{agreement.commission.rate}%</Text>
+                        <Text style={styles.rateBadgeText}>{formatPercent(agreement.commission.rate)}%</Text>
                       </View>
                     </View>
 
@@ -362,14 +366,14 @@ export function MyCommissionsScreen() {
                           Base Rate ({agreement.commission.breakdown.agreementTerm})
                         </Text>
                         <Text style={styles.breakdownValue}>
-                          {agreement.commission.breakdown.baseRate}%
+                          {formatPercent(agreement.commission.breakdown.baseRate)}%
                         </Text>
                       </View>
 
                       <View style={styles.breakdownItem}>
                         <Text style={styles.breakdownLabel}>Agreement Multiplier</Text>
                         <Text style={styles.breakdownValue}>
-                          {agreement.commission.breakdown.multiplier}%
+                          {formatPercent(agreement.commission.breakdown.multiplier)}%
                         </Text>
                       </View>
 
@@ -386,7 +390,7 @@ export function MyCommissionsScreen() {
                             {agreement.commission.breakdown.accountTypeAdjustment > 0
                               ? '+'
                               : ''}
-                            {agreement.commission.breakdown.accountTypeAdjustment}%
+                            {formatPercent(agreement.commission.breakdown.accountTypeAdjustment)}%
                           </Text>
                         </View>
                       )}
@@ -395,7 +399,7 @@ export function MyCommissionsScreen() {
                         <View style={styles.breakdownItem}>
                           <Text style={styles.breakdownLabel}>Greenline Bonus</Text>
                           <Text style={[styles.breakdownValue, styles.bonus]}>
-                            +{agreement.commission.breakdown.greenlineBonus}%
+                            +{formatPercent(agreement.commission.breakdown.greenlineBonus)}%
                           </Text>
                         </View>
                       )}
@@ -404,14 +408,14 @@ export function MyCommissionsScreen() {
                         <View style={styles.breakdownItem}>
                           <Text style={styles.breakdownLabel}>Inside Sales Deduction</Text>
                           <Text style={[styles.breakdownValue, styles.deduction]}>
-                            {agreement.commission.breakdown.insideSalesDeduction}%
+                            {formatPercent(agreement.commission.breakdown.insideSalesDeduction)}%
                           </Text>
                         </View>
                       )}
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
                         <Text style={styles.breakdownLabelTotal}>Final Rate</Text>
-                        <Text style={styles.breakdownValueTotal}>{agreement.commission.rate}%</Text>
+                        <Text style={styles.breakdownValueTotal}>{formatPercent(agreement.commission.rate)}%</Text>
                       </View>
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>

@@ -13,7 +13,6 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   quotaApi,
   salesPersonApi,
-  agreementApi,
 } from '../../../../services/api/endpoints/quota.api';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -21,7 +20,6 @@ import {FontSize} from '../../../../theme/typography';
 import type {
   SalesPerson,
   QuotaStatusResponse,
-  Agreement,
   LeaderboardEntry,
 } from '../../types/quota.types';
 import {
@@ -32,14 +30,13 @@ import {
   getQuotaCommissionRate,
   getAgreementStatusColor,
   getAgreementStatusBgColor,
-  getAgreementTermLabel,
 } from '../../types/quota.types';
 import {
   getAccountTypeColor,
   getAccountTypeBgColor,
 } from '../../types/accountType.types';
 
-type SubTab = 'dashboard' | 'agreements' | 'leaderboard';
+type SubTab = 'dashboard' | 'leaderboard';
 
 export function QuotaSection() {
   const insets = useSafeAreaInsets();
@@ -50,7 +47,6 @@ export function QuotaSection() {
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [quotaStatus, setQuotaStatus] = useState<QuotaStatusResponse | null>(null);
-  const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,14 +84,6 @@ export function QuotaSection() {
           setQuotaStatus(status);
         } else {
           setError('Failed to load quota status');
-        }
-      } else if (activeTab === 'agreements') {
-        const result = await agreementApi.getAll({
-          salesPersonId: selectedPersonId,
-          limit: 50,
-        });
-        if (result) {
-          setAgreements(result.data);
         }
       } else if (activeTab === 'leaderboard') {
         const result = await quotaApi.getLeaderboard({periodType: 'monthly'});
@@ -263,89 +251,6 @@ export function QuotaSection() {
     );
   };
 
-  const renderAgreements = () => {
-    if (agreements.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Ionicons name="document-text-outline" size={48} color={Colors.textMuted} />
-          <Text style={styles.emptyText}>No agreements found</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.agreementsList}>
-        {agreements.map(agreement => (
-          <View key={agreement._id} style={styles.agreementCard}>
-            <View style={styles.agreementHeader}>
-              <Text style={styles.agreementNumber}>
-                {agreement.agreementNumber}
-              </Text>
-              <View
-                style={[
-                  styles.statusBadge,
-                  {backgroundColor: getAgreementStatusBgColor(agreement.status)},
-                ]}>
-                <Text
-                  style={[
-                    styles.statusText,
-                    {color: getAgreementStatusColor(agreement.status)},
-                  ]}>
-                  {agreement.status.replace('_', ' ')}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.agreementCustomerName}>
-              {agreement.customer.name}
-            </Text>
-
-            <View style={styles.agreementDetails}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Monthly:</Text>
-                <Text style={styles.detailValue}>
-                  {formatCurrency(agreement.monthlyValue)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Term:</Text>
-                <Text style={styles.detailValue}>
-                  {getAgreementTermLabel(agreement.agreementTerm)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Type:</Text>
-                <View
-                  style={[
-                    styles.accountTypeBadge,
-                    {backgroundColor: getAccountTypeBgColor(agreement.accountType)},
-                  ]}>
-                  <Text
-                    style={[
-                      styles.accountTypeText,
-                      {color: getAccountTypeColor(agreement.accountType)},
-                    ]}>
-                    {agreement.accountType}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.agreementFooter}>
-              <Text style={styles.footerText}>
-                Commission: {formatCurrency(agreement.commission.monthlyCommission)}
-                /mo
-              </Text>
-              <Text style={styles.footerDate}>
-                {new Date(agreement.signedDate).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
   const renderLeaderboard = () => {
     if (leaderboard.length === 0) {
       return (
@@ -490,17 +395,6 @@ export function QuotaSection() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'agreements' && styles.tabActive]}
-          onPress={() => setActiveTab('agreements')}>
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'agreements' && styles.tabTextActive,
-            ]}>
-            Agreements
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === 'leaderboard' && styles.tabActive]}
           onPress={() => setActiveTab('leaderboard')}>
           <Text
@@ -530,7 +424,6 @@ export function QuotaSection() {
       ) : (
         <>
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'agreements' && renderAgreements()}
           {activeTab === 'leaderboard' && renderLeaderboard()}
         </>
       )}
