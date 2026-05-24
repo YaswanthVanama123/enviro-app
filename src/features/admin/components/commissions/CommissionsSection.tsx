@@ -10,21 +10,24 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {commissionApi} from '../../../../services/api/endpoints/commission.api';
 import {accountTypeApi} from '../../../../services/api/endpoints/accountType.api';
 import type {ServerAccountTypeDetectionResult} from '../../../../services/api/endpoints/accountType.api';
-import {CommissionResultCard} from './CommissionResultCard';
+import {CommissionResultCardV2} from './CommissionResultCardV2';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 import type {
-  CommissionCalculationInput,
-  CommissionCalculationResult,
+  CommissionCalculationInputV2,
+  CommissionCalculationResultV2,
   AccountType,
   AgreementTerm,
-  PricingLine,
   QuotaLevel,
   BusinessType,
+  ServiceFrequency,
+} from '../../types/commission.types';
+import {
+  calculateCommissionV2,
+  FREQUENCY_OPTIONS,
 } from '../../types/commission.types';
 import {
   detectAccountTypeClient,
@@ -53,7 +56,12 @@ const QUOTA_LEVELS: {value: QuotaLevel; label: string}[] = [
   {value: 'double', label: 'Double Quota (9%)'},
 ];
 
-type PickerType = 'accountType' | 'agreementTerm' | 'quotaLevel' | null;
+const FREQUENCIES: {value: ServiceFrequency; label: string}[] = FREQUENCY_OPTIONS.map(f => ({
+  value: f.value,
+  label: `${f.label} (${f.visitsPerYear} visits/yr)`,
+}));
+
+type PickerType = 'accountType' | 'agreementTerm' | 'quotaLevel' | 'frequency' | null;
 
 interface CommissionsSectionProps {
   biginCompanyId?: string | null;
@@ -63,11 +71,13 @@ interface CommissionsSectionProps {
 export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline}: CommissionsSectionProps = {}) {
   const insets = useSafeAreaInsets();
 
-  // Form state
-  const [monthlyValue, setMonthlyValue] = useState('');
+  // Form state - V2 inputs
+  const [perVisitRevenueInput, setPerVisitRevenueInput] = useState('');
+  const [redlinePrice, setRedlinePrice] = useState('');
+  const [frequency, setFrequency] = useState<ServiceFrequency>('monthly');
+  const [contractMonths, setContractMonths] = useState('12');
   const [accountType, setAccountType] = useState<AccountType>('Anchor');
   const [agreementTerm, setAgreementTerm] = useState<AgreementTerm>('1-year');
-  const [pricingLine, setPricingLine] = useState<PricingLine>('Redline');
   const [quotaLevel, setQuotaLevel] = useState<QuotaLevel>('below');
   const [businessType, setBusinessType] = useState<BusinessType>('new');
   const [yearsAsCustomer, setYearsAsCustomer] = useState('0');
@@ -88,7 +98,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
   const [activePicker, setActivePicker] = useState<PickerType>(null);
 
   // Result state
-  const [result, setResult] = useState<CommissionCalculationResult | null>(null);
+  const [result, setResult] = useState<CommissionCalculationResultV2 | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,7 +111,9 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
 
     const detectFromServer = async () => {
       setServerDetectionLoading(true);
-      const isGreenline = propIsGreenline ?? pricingLine === 'Greenline';
+      const perVisit = parseFloat(perVisitRevenueInput) || 0;
+      const redline = parseFloat(redlinePrice) || 0;
+      const isGreenline = propIsGreenline ?? (redline > 0 && perVisit / redline >= 1.3);
 
       const result = await accountTypeApi.detectFromDistance({
         biginCompanyId,
@@ -116,7 +128,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
     };
 
     detectFromServer();
-  }, [biginCompanyId, propIsGreenline, pricingLine]);
+  }, [biginCompanyId, propIsGreenline, perVisitRevenueInput, redlinePrice]);
 
   // Client-side auto-detect effect (fallback when no biginCompanyId)
   useEffect(() => {
@@ -132,61 +144,67 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
 
     const revenue = parseFloat(perVisitRevenue);
     const distance = distanceToAnchor ? parseFloat(distanceToAnchor) : null;
-    const isGreenline = pricingLine === 'Greenline';
+    const perVisit = parseFloat(perVisitRevenueInput) || 0;
+    const redline = parseFloat(redlinePrice) || 0;
+    const isGreenline = redline > 0 && perVisit / redline >= 1.3;
 
     if (!isNaN(revenue) && revenue > 0) {
       const result = detectAccountTypeClient(revenue, distance, isGreenline);
       setDetectionResult(result);
       setAccountType(result.accountType);
     }
-  }, [biginCompanyId, autoDetectEnabled, perVisitRevenue, distanceToAnchor, pricingLine]);
+  }, [biginCompanyId, autoDetectEnabled, perVisitRevenue, distanceToAnchor, perVisitRevenueInput, redlinePrice]);
 
   const handleCalculate = useCallback(async () => {
-    if (!monthlyValue || parseFloat(monthlyValue) <= 0) {
-      setError('Please enter a valid monthly value');
+    const perVisit = parseFloat(perVisitRevenueInput);
+    if (!perVisitRevenueInput || isNaN(perVisit) || perVisit <= 0) {
+      setError('Please enter a valid per-visit revenue');
       return;
     }
+
+    const redline = parseFloat(redlinePrice) || perVisit; // Default to per-visit if no redline
+    const months = parseInt(contractMonths, 10) || 12;
 
     setCalculating(true);
     setError(null);
 
-    const input: CommissionCalculationInput = {
-      monthlyValue: parseFloat(monthlyValue),
-      agreementTerm,
+    const input: CommissionCalculationInputV2 = {
+      perVisitRevenue: perVisit,
+      redlinePrice: redline,
+      frequency,
       accountType,
-      pricingLine,
-      quotaLevel,
+      agreementTerm,
+      contractMonths: months,
       businessType,
-      yearsAsCustomer:
-        businessType === 'renewal' ? parseInt(yearsAsCustomer, 10) : undefined,
+      yearsAsCustomer: businessType === 'renewal' ? parseInt(yearsAsCustomer, 10) : 0,
       isInsideSales,
-      customerName: customerName || undefined,
+      quotaLevel,
     };
 
-    const data = await commissionApi.calculate(input);
-    if (data) {
-      setResult(data);
-    } else {
-      setError('Failed to calculate commission');
-    }
+    // Use local V2 calculation
+    const calculationResult = calculateCommissionV2(input);
+    setResult(calculationResult);
     setCalculating(false);
   }, [
-    monthlyValue,
+    perVisitRevenueInput,
+    redlinePrice,
+    frequency,
+    contractMonths,
     agreementTerm,
     accountType,
-    pricingLine,
     quotaLevel,
     businessType,
     yearsAsCustomer,
     isInsideSales,
-    customerName,
   ]);
 
   const handleClear = useCallback(() => {
-    setMonthlyValue('');
+    setPerVisitRevenueInput('');
+    setRedlinePrice('');
+    setFrequency('monthly');
+    setContractMonths('12');
     setAccountType('Anchor');
     setAgreementTerm('1-year');
-    setPricingLine('Redline');
     setQuotaLevel('below');
     setBusinessType('new');
     setYearsAsCustomer('0');
@@ -251,18 +269,75 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           Calculate sales commissions based on deal parameters
         </Text>
 
-        {/* Monthly Value Input */}
+        {/* Per-Visit Revenue Input */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Monthly Contract Value ($)</Text>
+          <Text style={styles.label}>Per-Visit Revenue ($)</Text>
           <View style={styles.inputRow}>
             <Ionicons name="cash-outline" size={18} color={Colors.textMuted} />
             <TextInput
               style={styles.input}
-              value={monthlyValue}
-              onChangeText={setMonthlyValue}
-              placeholder="Enter monthly value"
+              value={perVisitRevenueInput}
+              onChangeText={setPerVisitRevenueInput}
+              placeholder="Enter per-visit revenue"
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+
+        {/* Redline Price Input */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Redline Price ($) - Standard price for this service</Text>
+          <View style={styles.inputRow}>
+            <Ionicons name="pricetag-outline" size={18} color={Colors.textMuted} />
+            <TextInput
+              style={styles.input}
+              value={redlinePrice}
+              onChangeText={setRedlinePrice}
+              placeholder="Enter redline price (optional)"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+
+        {/* Service Frequency */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Service Frequency</Text>
+          <TouchableOpacity
+            style={styles.pickerButton}
+            onPress={() =>
+              setActivePicker(activePicker === 'frequency' ? null : 'frequency')
+            }>
+            <Text style={styles.pickerButtonText}>
+              {FREQUENCIES.find(f => f.value === frequency)?.label}
+            </Text>
+            <Ionicons
+              name={activePicker === 'frequency' ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={Colors.textMuted}
+            />
+          </TouchableOpacity>
+          {renderPickerOptions(
+            'frequency',
+            FREQUENCIES,
+            frequency,
+            v => setFrequency(v as ServiceFrequency),
+          )}
+        </View>
+
+        {/* Contract Length */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Contract Length (months)</Text>
+          <View style={styles.inputRow}>
+            <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
+            <TextInput
+              style={styles.input}
+              value={contractMonths}
+              onChangeText={setContractMonths}
+              placeholder="12"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="number-pad"
             />
           </View>
         </View>
@@ -446,41 +521,6 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </View>
 
-        {/* Pricing Line */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Pricing Line</Text>
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                pricingLine === 'Redline' && styles.toggleBtnActive,
-              ]}
-              onPress={() => setPricingLine('Redline')}>
-              <Text
-                style={[
-                  styles.toggleBtnText,
-                  pricingLine === 'Redline' && styles.toggleBtnTextActive,
-                ]}>
-                Redline
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                pricingLine === 'Greenline' && styles.toggleBtnActiveGreen,
-              ]}
-              onPress={() => setPricingLine('Greenline')}>
-              <Text
-                style={[
-                  styles.toggleBtnText,
-                  pricingLine === 'Greenline' && styles.toggleBtnTextActive,
-                ]}>
-                Greenline (130%+)
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Quota Level */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Quota Achievement</Text>
@@ -593,7 +633,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </TouchableOpacity>
 
-        {(result || monthlyValue) && (
+        {(result || perVisitRevenueInput) && (
           <TouchableOpacity
             style={[styles.clearBtn]}
             onPress={handleClear}>
@@ -611,7 +651,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
       </View>
 
       {/* Result Card */}
-      {result && <CommissionResultCard result={result} />}
+      {result && <CommissionResultCardV2 result={result} />}
     </ScrollView>
   );
 }

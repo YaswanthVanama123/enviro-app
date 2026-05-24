@@ -1,6 +1,8 @@
 import React from 'react';
 import {View, Text, StyleSheet, Platform, TouchableOpacity, Alert} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../../features/home/screens/HomeScreen';
 import {SavedAgreementsScreen} from '../../features/agreements/screens/SavedAgreementsScreen';
@@ -14,6 +16,7 @@ import {EditHistoryScreen} from '../../features/admin/screens/EditHistoryScreen'
 import {EmployeeAgreementsScreen} from '../../features/admin/screens/EmployeeAgreementsScreen';
 import {useAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors, FontSize, Spacing} from '../../theme';
+import type {RootStackParamList} from './types';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,6 +36,7 @@ const TAB_ICON: Record<string, [string, string]> = {
 // Profile/More Screen Component
 function ProfileScreen() {
   const {user, isAdmin, logout} = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleLogout = () => {
     Alert.alert(
@@ -68,7 +72,40 @@ function ProfileScreen() {
         </View>
       </View>
 
+      {/* Quick Actions */}
+      <View style={profileStyles.actionsSection}>
+        <Text style={profileStyles.sectionTitle}>Quick Actions</Text>
+
+        <TouchableOpacity
+          style={profileStyles.actionRow}
+          onPress={() => navigation.navigate('MyQuota')}>
+          <View style={[profileStyles.actionIcon, {backgroundColor: '#dbeafe'}]}>
+            <Ionicons name="trending-up" size={20} color="#2563eb" />
+          </View>
+          <View style={profileStyles.actionContent}>
+            <Text style={profileStyles.actionLabel}>My Quota</Text>
+            <Text style={profileStyles.actionDesc}>View your quota progress</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={profileStyles.actionRow}
+          onPress={() => navigation.navigate('MyCommissions')}>
+          <View style={[profileStyles.actionIcon, {backgroundColor: '#dcfce7'}]}>
+            <Ionicons name="calculator" size={20} color="#16a34a" />
+          </View>
+          <View style={profileStyles.actionContent}>
+            <Text style={profileStyles.actionLabel}>My Commissions</Text>
+            <Text style={profileStyles.actionDesc}>View your commission earnings</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Info Section */}
       <View style={profileStyles.infoSection}>
+        <Text style={profileStyles.sectionTitle}>Account Info</Text>
         <View style={profileStyles.infoRow}>
           <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
           <Text style={profileStyles.infoLabel}>Username</Text>
@@ -348,5 +385,47 @@ const profileStyles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: '600',
     color: Colors.primary,
+  },
+  actionsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.md,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionContent: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  actionLabel: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  actionDesc: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });
