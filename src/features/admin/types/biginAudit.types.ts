@@ -41,6 +41,7 @@ export interface ScrapeStatus {
 
 export interface AuditStats {
   total: number;
+  storageSize: number;
   uniqueUsers: number;
   uniqueActions: number;
   uniqueModules: number;
@@ -49,6 +50,7 @@ export interface AuditStats {
   users: string[];
   actions: string[];
   modules: string[];
+  pipelines: string[];
   actionBreakdown: Array<{ action: string; count: number }>;
   userBreakdown: Array<{ user: string; count: number }>;
 }
@@ -116,4 +118,13 @@ export function formatAuditDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const date = new Date(dateStr);
   return date.toLocaleString();
+}
+
+// Helper function to format bytes to human-readable size
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

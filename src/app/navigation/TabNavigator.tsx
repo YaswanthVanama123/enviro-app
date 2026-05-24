@@ -101,6 +101,19 @@ function ProfileScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={profileStyles.actionRow}
+          onPress={() => navigation.navigate('MyInsideSales')}>
+          <View style={[profileStyles.actionIcon, {backgroundColor: '#fef3c7'}]}>
+            <Ionicons name="analytics" size={20} color="#d97706" />
+          </View>
+          <View style={profileStyles.actionContent}>
+            <Text style={profileStyles.actionLabel}>Inside Sales</Text>
+            <Text style={profileStyles.actionDesc}>Check your inside sales status</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
       </View>
 
       {/* Info Section */}

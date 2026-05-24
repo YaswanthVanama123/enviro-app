@@ -9,6 +9,7 @@ export type RootStackParamList = {
   MyCommissions: undefined;
   AdminCommissions: undefined;
   MyQuota: undefined;
+  MyInsideSales: undefined;
   // New admin screens
   QuotaManagement: undefined;
   RouteStarCustomers: undefined;

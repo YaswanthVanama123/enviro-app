@@ -190,6 +190,141 @@ export const biginAuditApi = {
       return null;
     }
   },
+
+  /**
+   * Delete all audit logs
+   */
+  async deleteAll(): Promise<{
+    success: boolean;
+    message: string;
+    data?: {deletedCount: number; previousCount: number};
+  } | null> {
+    try {
+      const response = await apiClient.delete<{
+        success: boolean;
+        message: string;
+        data: {deletedCount: number; previousCount: number};
+      }>(`${BASE_PATH}/delete-all`);
+
+      if (response.success !== false) {
+        return {
+          success: true,
+          message: response.message || 'All audit logs deleted',
+          data: response.data,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error deleting all audit logs:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Delete unnecessary audit logs (keeps Lisa Rothwell's records)
+   */
+  async deleteUnnecessary(): Promise<{
+    success: boolean;
+    message: string;
+    data?: {deletedCount: number; keptCount: number; previousTotal: number};
+  } | null> {
+    try {
+      const response = await apiClient.delete<{
+        success: boolean;
+        message: string;
+        data: {deletedCount: number; keptCount: number; previousTotal: number};
+      }>(`${BASE_PATH}/delete-unnecessary`);
+
+      if (response.success !== false) {
+        return {
+          success: true,
+          message: response.message || 'Unnecessary audit logs deleted',
+          data: response.data,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error deleting unnecessary audit logs:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Check if a salesperson's records exist in Lisa Rothwell's audit history within 1 year
+   * Used to determine if "Inside Sales" checkbox should be checked
+   */
+  async checkInsideSalesEligibility(salespersonName: string): Promise<{
+    success: boolean;
+    data?: {
+      salespersonName: string;
+      isInsideSales: boolean;
+      matchCount: number;
+      totalAgreementsByUser?: number;
+      agreementCount?: number;
+      biginIdCount?: number;
+      allBiginIds?: string[];
+      agreementDetails?: Array<{
+        agreementId?: string;
+        biginId: string | null;
+        title: string;
+        createdAt: string;
+        createdBy?: string;
+        dealName?: string;
+      }>;
+      matchedBiginIds?: string[];
+      message?: string;
+      matchDetails: Array<{
+        recordId?: string;
+        recordName: string;
+        action: string;
+        timestamp: string;
+        module: string;
+      }>;
+    };
+  } | null> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {
+          salespersonName: string;
+          isInsideSales: boolean;
+          matchCount: number;
+          totalAgreementsByUser?: number;
+          agreementCount?: number;
+          biginIdCount?: number;
+          allBiginIds?: string[];
+          agreementDetails?: Array<{
+            agreementId?: string;
+            biginId: string | null;
+            title: string;
+            createdAt: string;
+            createdBy?: string;
+            dealName?: string;
+          }>;
+          matchedBiginIds?: string[];
+          message?: string;
+          matchDetails: Array<{
+            recordId?: string;
+            recordName: string;
+            action: string;
+            timestamp: string;
+            module: string;
+          }>;
+        };
+      }>(`${BASE_PATH}/check-inside-sales?salespersonName=${encodeURIComponent(salespersonName)}`);
+
+      if (response.success !== false) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking inside sales eligibility:', error);
+      return null;
+    }
+  },
 };
 
 export default biginAuditApi;
