@@ -134,13 +134,20 @@ export function Step4Review({form}: Step4ReviewProps) {
   const pricingLine: 'red' | 'green' = totalCurrentContract > greenThreshold ? 'green' : 'red';
 
   const CROSS_SERVICE_MIN_PER_VISIT = 50;
+
+  // Calculate total monthly recurring revenue (accounts for service frequencies)
+  // Weekly services: perVisit × 4.33, Monthly services: perVisit × 1, etc.
   let totalPerVisit = 0;
+  let totalMonthlyRecurring = 0;
   visibleServices.forEach(id => {
     const svc = services[id];
     if (!svc) {return;}
     const isOneTime = svc.frequency === 'oneTime';
     if (!isOneTime && typeof svc.perVisit === 'number' && svc.perVisit > 0) {
       totalPerVisit += svc.perVisit;
+      // Calculate monthly contribution based on frequency
+      const freqMult = getFreqMult(svc.frequency || 'monthly');
+      totalMonthlyRecurring += svc.perVisit * freqMult;
     }
   });
   const hasRecurringServices = totalPerVisit > 0;
@@ -160,10 +167,11 @@ export function Step4Review({form}: Step4ReviewProps) {
   const commissionCalc = useMemo(() => {
     const rules = DEFAULT_COMMISSION_RULES;
 
-    // Monthly value from contract total (auto from form)
-    const monthlyValue = contractMonths > 0
-      ? totalCurrentContract / contractMonths
-      : totalCurrentContract;
+    // Use monthly recurring revenue (accounts for different service frequencies)
+    // This properly calculates: Weekly services × 4.33, Monthly × 1, etc.
+    const monthlyValue = totalMonthlyRecurring > 0
+      ? totalMonthlyRecurring
+      : (contractMonths > 0 ? totalCurrentContract / contractMonths : totalCurrentContract);
 
     // Derive agreement term from contract months (auto from form)
     const getAgreementTerm = (): AgreementTerm => {
@@ -221,7 +229,7 @@ export function Step4Review({form}: Step4ReviewProps) {
       annualCommission,
       contractCommission,
     };
-  }, [totalCurrentContract, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
+  }, [totalCurrentContract, totalMonthlyRecurring, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
 
   return (
     <View style={styles.container}>
