@@ -1,11 +1,13 @@
-import React, {useState, useMemo} from 'react';
-import {View, Text, StyleSheet, Switch, TouchableOpacity} from 'react-native';
+import React, {useState, useMemo, useEffect} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FormState} from '../../hooks/useFormFilling';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 import {formatCurrency} from '../../../../shared/utils/format.utils';
+import {biginAuditApi} from '../../../../services/api/endpoints/biginAudit.api';
+import {useAdminAuth} from '../../../admin/context/AdminAuthContext';
 import {
   QuotaLevel,
   AccountType,
@@ -157,11 +159,33 @@ export function Step4Review({form}: Step4ReviewProps) {
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
 
+  // Get current user for inside sales check
+  const {adminUser} = useAdminAuth();
+
   // Commission Calculator State - simplified (form filling is always new business)
   const [quotaLevel, setQuotaLevel] = useState<QuotaLevel>('above');
   const [accountType, setAccountType] = useState<AccountType>('Anchor');
   const [isInsideSales, setIsInsideSales] = useState<boolean>(false);
   const [isCommissionExpanded, setIsCommissionExpanded] = useState<boolean>(true);
+
+  // Auto-check Inside Sales based on Lisa Rothwell's audit history
+  useEffect(() => {
+    const checkInsideSales = async () => {
+      const salespersonName = adminUser?.fullName || adminUser?.username;
+      if (!salespersonName) return;
+
+      try {
+        const result = await biginAuditApi.checkInsideSalesEligibility(salespersonName);
+        if (result?.success && result.data) {
+          setIsInsideSales(result.data.isInsideSales);
+        }
+      } catch (error) {
+        console.error('Error checking inside sales:', error);
+      }
+    };
+
+    checkInsideSales();
+  }, [adminUser?.fullName, adminUser?.username]);
 
   // Calculate commission based on form values
   const commissionCalc = useMemo(() => {
@@ -481,15 +505,35 @@ export function Step4Review({form}: Step4ReviewProps) {
                 </View>
               </View>
 
-              {/* Inside Sales Toggle */}
-              <View style={styles.commissionSwitchRow}>
-                <Text style={styles.commissionInputLabel}>Inside Sales (-3%)</Text>
-                <Switch
-                  value={isInsideSales}
-                  onValueChange={setIsInsideSales}
-                  trackColor={{false: '#e5e7eb', true: '#fbbf24'}}
-                  thumbColor={isInsideSales ? '#d97706' : '#f4f4f5'}
-                />
+              {/* Inside Sales - Auto-detected (read-only) */}
+              <View style={[
+                styles.insideSalesStatus,
+                isInsideSales ? styles.insideSalesStatusWarning : styles.insideSalesStatusGood
+              ]}>
+                <View style={styles.insideSalesCheckbox}>
+                  <Ionicons
+                    name={isInsideSales ? 'checkbox' : 'checkbox-outline'}
+                    size={20}
+                    color={isInsideSales ? '#d97706' : '#059669'}
+                  />
+                </View>
+                <Text style={[
+                  styles.insideSalesText,
+                  isInsideSales ? styles.insideSalesTextWarning : styles.insideSalesTextGood
+                ]}>
+                  {isInsideSales ? 'Inside Sales (-3%)' : 'No Inside Sales Deduction'}
+                </Text>
+                <View style={[
+                  styles.autoDetectedBadge,
+                  isInsideSales ? styles.autoDetectedBadgeWarning : styles.autoDetectedBadgeGood
+                ]}>
+                  <Text style={[
+                    styles.autoDetectedText,
+                    isInsideSales ? styles.autoDetectedTextWarning : styles.autoDetectedTextGood
+                  ]}>
+                    Auto-detected
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -1008,5 +1052,58 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: '#166534',
     fontWeight: '800',
+  },
+  // Inside Sales Auto-detected Styles
+  insideSalesStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  insideSalesStatusGood: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#86efac',
+  },
+  insideSalesStatusWarning: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#fcd34d',
+  },
+  insideSalesCheckbox: {
+    marginRight: 4,
+  },
+  insideSalesText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    flex: 1,
+  },
+  insideSalesTextGood: {
+    color: '#166534',
+  },
+  insideSalesTextWarning: {
+    color: '#92400e',
+  },
+  autoDetectedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  autoDetectedBadgeGood: {
+    backgroundColor: '#bbf7d0',
+  },
+  autoDetectedBadgeWarning: {
+    backgroundColor: '#fde68a',
+  },
+  autoDetectedText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  autoDetectedTextGood: {
+    color: '#15803d',
+  },
+  autoDetectedTextWarning: {
+    color: '#b45309',
   },
 });
