@@ -127,6 +127,7 @@ function renderServiceForm(
     case 'rpmWindows':         return <RpmWindowsForm         key={serviceId} {...props} />;
     case 'carpetclean':        return <CarpetForm             key={serviceId} {...props} />;
     case 'pureJanitorial':     return <JanitorialForm         key={serviceId} {...props} />;
+    case 'janitorial':         return <JanitorialForm         key={serviceId} {...props} />; // Web app saves as 'janitorial'
     case 'stripwax':           return <StripWaxForm           key={serviceId} {...props} />;
     case 'electrostaticSpray': return <ElectrostaticSprayForm key={serviceId} {...props} />;
     case 'refreshPowerScrub':  return <RefreshPowerScrubForm  key={serviceId} {...props} />;

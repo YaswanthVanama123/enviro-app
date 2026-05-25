@@ -243,6 +243,7 @@ export function useFormFilling(editAgreementId?: string) {
           const SERVICE_ID_ALIASES: Record<string, string> = {
             carpetCleaning: 'carpetclean',
             stripWax:       'stripwax',
+            pureJanitorial: 'janitorial', // Web app saves pureJanitorial as 'janitorial'
           };
 
           const map: Record<string, any> = {};

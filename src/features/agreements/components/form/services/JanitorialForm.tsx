@@ -74,6 +74,20 @@ const BILLING_CONVERSIONS: Record<string, {annualMultiplier: number; monthlyMult
 
 const VISIT_BASED_FREQUENCIES = ['everyFourWeeks', 'bimonthly', 'quarterly', 'biannual', 'annual'];
 
+// Frequency labels for PDF display
+const FREQUENCY_LABELS: Record<string, string> = {
+  oneTime:       'One-Time',
+  weekly:        'Weekly',
+  biweekly:      'Bi-Weekly',
+  twicePerMonth: 'Twice Per Month',
+  monthly:       'Monthly',
+  everyFourWeeks:'Every 4 Weeks',
+  bimonthly:     'Bi-Monthly',
+  quarterly:     'Quarterly',
+  biannual:      'Bi-Annual',
+  annual:        'Annual',
+};
+
 function calcJanitorial(
   sqFt: number,
   productionRate: number,
@@ -148,17 +162,53 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     return item;
   });
 
-  const freq           = data?.frequency      ?? 'weekly';
-  const visitsPerWeek  = data?.visitsPerWeek  ?? 1;
+  // Extract form values - prioritize _restoreData for editing mode
+  const restoreData = data?._restoreData;
+
+  // Helper to get value from restoreData or fall back to direct data properties
+  const getValue = <T,>(key: string, defaultValue: T): T => {
+    // First try _restoreData (new format)
+    if (restoreData?.[key] !== undefined) {
+      return restoreData[key] as T;
+    }
+    // Then try direct value (backward compatibility for old format or simple values)
+    const directValue = data?.[key];
+    if (directValue !== undefined && directValue !== null) {
+      // If it's a display object with a value property, extract the raw value
+      if (typeof directValue === 'object' && 'value' in directValue) {
+        // For frequency, try frequencyKey first
+        if (key === 'frequency' && directValue.frequencyKey) {
+          return directValue.frequencyKey as T;
+        }
+        // For placeType, try placeTypeKey first
+        if (key === 'placeType' && directValue.placeTypeKey) {
+          return directValue.placeTypeKey as T;
+        }
+        // Parse numeric values from strings
+        if (typeof defaultValue === 'number') {
+          const parsed = parseFloat(directValue.value);
+          return (isNaN(parsed) ? defaultValue : parsed) as T;
+        }
+        return directValue.value as T;
+      }
+      return directValue as T;
+    }
+    return defaultValue;
+  };
+
+  const freq           = getValue<string>('frequency', 'weekly');
+  const visitsPerWeek  = getValue<number>('visitsPerWeek', 1);
   const availablePlaceTypes = Object.keys(productionRates);
-  const placeType      = data?.placeType && productionRates[data.placeType] !== undefined
-    ? data.placeType
+  const rawPlaceType   = getValue<string>('placeType', availablePlaceTypes[0] ?? 'office');
+  const placeType      = productionRates[rawPlaceType] !== undefined
+    ? rawPlaceType
     : (availablePlaceTypes[0] ?? 'office');
-  const sqFt           = data?.sqFt           ?? 0;
-  const costPerHour    = data?.costPerHour    ?? adminCostPerHour;
-  const laborTaxPct    = data?.laborTaxPct    ?? adminLaborTaxPct;
-  const grossProfitPct = data?.grossProfitPct ?? adminGrossProfitPct;
-  const supplies: SupplyItem[] = data?.supplies ?? adminDefaultSupplies;
+  const sqFt           = getValue<number>('sqFt', 0);
+  const costPerHour    = getValue<number>('costPerHour', adminCostPerHour);
+  const laborTaxPct    = getValue<number>('laborTaxPct', adminLaborTaxPct);
+  const grossProfitPct = getValue<number>('grossProfitPct', adminGrossProfitPct);
+  // For supplies, use restoreData first, then direct data.supplies, then admin defaults
+  const supplies: SupplyItem[] = restoreData?.supplies ?? data?.supplies ?? adminDefaultSupplies;
 
   const productionRate = (productionRates as any)[placeType] ?? 0;
 
@@ -176,26 +226,132 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     const newGrossProfitPct = fields.grossProfitPct ?? grossProfitPct;
     const newSupplies       = fields.supplies       ?? supplies;
     const newFreq           = fields.frequency      ?? freq;
+    const newNotes          = fields.notes          ?? (restoreData?.notes ?? data?.notes ?? '');
     const newProdRate       = (productionRates as any)[newPlaceType] ?? 0;
 
     const newCalc  = calcJanitorial(newSqFt, newProdRate, newVisits, newCostPerHour, newLaborTaxPct, newGrossProfitPct, newSupplies, contractMonths, newFreq);
     const origCalc = calcJanitorial(newSqFt, newProdRate, newVisits, adminCostPerHour, adminLaborTaxPct, adminGrossProfitPct, adminDefaultSupplies, contractMonths, newFreq);
 
+    const isActive = newSqFt > 0;
+
     onChange({
       serviceId: 'pureJanitorial',
       displayName: 'Janitorial',
-      isActive: newSqFt > 0,
+      isActive,
       contractMonths,
-      ...data,
-      ...fields,
-      placeType: newPlaceType,
-      frequency: newFreq,
-      perVisit: newCalc.perVisit,
-      monthlyRecurring: newCalc.monthlyRecurring,
       contractTotal: newCalc.contractTotal,
       originalContractTotal: origCalc.contractTotal,
+      perVisit: newCalc.perVisit,
+      // Store form input values for restoration when editing
+      // Using _restoreData to avoid conflict with resolveServiceData() in pdfService
+      _restoreData: {
+        frequency: newFreq,
+        visitsPerWeek: newVisits,
+        placeType: newPlaceType,
+        sqFt: newSqFt,
+        costPerHour: newCostPerHour,
+        laborTaxPct: newLaborTaxPct,
+        grossProfitPct: newGrossProfitPct,
+        supplies: newSupplies,
+        contractMonths,
+        notes: newNotes,
+      },
+      // Formatted display fields for PDF generation
+      frequency: {
+        isDisplay: true,
+        orderNo: 1,
+        label: 'Frequency',
+        type: 'text',
+        value: FREQUENCY_LABELS[newFreq] ?? newFreq,
+        frequencyKey: newFreq,
+      },
+      visitsPerWeek: {
+        isDisplay: true,
+        orderNo: 2,
+        label: 'Visits per Week',
+        type: 'text',
+        value: String(newVisits),
+      },
+      placeType: {
+        isDisplay: true,
+        orderNo: 3,
+        label: 'Place Type',
+        type: 'text',
+        value: placeTypeLabel(newPlaceType),
+        placeTypeKey: newPlaceType,
+      },
+      sqFt: {
+        isDisplay: true,
+        orderNo: 4,
+        label: 'Square Feet',
+        type: 'text',
+        value: String(newSqFt),
+      },
+      hoursPerVisit: {
+        isDisplay: true,
+        orderNo: 5,
+        label: 'Hours Per Visit',
+        type: 'text',
+        value: `${newCalc.hoursPerVisit.toFixed(2)} hrs`,
+      },
+      costPerHour: {
+        isDisplay: true,
+        orderNo: 6,
+        label: 'Cost Per Hour',
+        type: 'dollar',
+        amount: newCostPerHour,
+      },
+      totals: {
+        annualBaseLabor: {
+          isDisplay: true, orderNo: 30, label: 'Annual Base Labor',
+          type: 'dollar', amount: newCalc.annualBaseLabor,
+        },
+        annualLaborTax: {
+          isDisplay: true, orderNo: 31, label: `Labor Tax (${newLaborTaxPct}%)`,
+          type: 'dollar', amount: newCalc.annualLaborTax,
+          laborTaxPct: newLaborTaxPct,
+        },
+        annualSupplies: {
+          isDisplay: true, orderNo: 32, label: 'Annual Supplies',
+          type: 'dollar', amount: newCalc.totalAnnualSupplies,
+        },
+        totalAnnualCost: {
+          isDisplay: true, orderNo: 33, label: 'Total Annual Cost',
+          type: 'dollar', amount: newCalc.totalAnnualCost,
+        },
+        grossProfit: {
+          isDisplay: true, orderNo: 34,
+          label: `Gross Profit (${newGrossProfitPct}%)`,
+          type: 'dollar', amount: newCalc.grossProfit,
+          grossProfitPct: newGrossProfitPct,
+        },
+        annualContractValue: {
+          isDisplay: true, orderNo: 35, label: 'Annual Contract Value',
+          type: 'dollar', amount: newCalc.annualContractValue,
+        },
+        ...(newFreq !== 'oneTime' && !VISIT_BASED_FREQUENCIES.includes(newFreq) ? {
+          monthlyRecurring: {
+            isDisplay: true, orderNo: 36, label: 'Monthly Recurring',
+            type: 'dollar', amount: newCalc.monthlyRecurring,
+          },
+        } : {}),
+        ...(VISIT_BASED_FREQUENCIES.includes(newFreq) ? {
+          recurringVisitTotal: {
+            isDisplay: true, orderNo: 36, label: 'Recurring Visit Total',
+            type: 'dollar', amount: newCalc.perVisit,
+          },
+        } : {}),
+        contract: {
+          isDisplay: true, orderNo: 37,
+          label: newFreq === 'oneTime' ? 'Total Price' : 'Contract Total',
+          type: 'dollar', months: newFreq === 'oneTime' ? undefined : contractMonths,
+          amount: newCalc.contractTotal,
+        },
+      },
+      supplies: newSupplies,
+      notes: newNotes,
     });
-  }, [data, freq, visitsPerWeek, placeType, sqFt, costPerHour, laborTaxPct, grossProfitPct, supplies, contractMonths, onChange]);
+  }, [data, freq, visitsPerWeek, placeType, sqFt, costPerHour, laborTaxPct, grossProfitPct, supplies, contractMonths, onChange, productionRates, adminCostPerHour, adminLaborTaxPct, adminGrossProfitPct, adminDefaultSupplies]);
 
   const updateSupply = useCallback((index: number, amount: number) => {
     const newSupplies = supplies.map((s, i) => i === index ? {...s, amount} : s);
@@ -210,7 +366,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       iconColor="#059669"
       iconBg="#d1fae5"
       onRemove={onRemove}
-      notes={data?.notes ?? ''}
+      notes={restoreData?.notes ?? data?.notes ?? ''}
       onNotesChange={v => update({notes: v})}>
 
       {/* Frequency */}
