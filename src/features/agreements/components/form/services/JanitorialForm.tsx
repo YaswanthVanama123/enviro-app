@@ -204,10 +204,11 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     ? rawPlaceType
     : (availablePlaceTypes[0] ?? 'office');
   const sqFt           = getValue<number>('sqFt', 0);
+  // Restore salesperson's saved values (or use admin defaults for new forms)
+  // Greenline/Redline comparison uses adminRates separately via origCalc
   const costPerHour    = getValue<number>('costPerHour', adminCostPerHour);
   const laborTaxPct    = getValue<number>('laborTaxPct', adminLaborTaxPct);
   const grossProfitPct = getValue<number>('grossProfitPct', adminGrossProfitPct);
-  // For supplies, use restoreData first, then direct data.supplies, then admin defaults
   const supplies: SupplyItem[] = restoreData?.supplies ?? data?.supplies ?? adminDefaultSupplies;
 
   const productionRate = (productionRates as any)[placeType] ?? 0;

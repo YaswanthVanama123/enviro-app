@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Platform} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import RenderHtml from 'react-native-render-html';
 import {ServiceConfig} from '../../../../services/api/endpoints/pricing.api';
 import {timeAgo} from '../../utils/pricing.utils';
 import {Colors} from '../../../../theme/colors';
@@ -14,6 +15,14 @@ interface ServiceConfigCardProps {
 }
 
 export function ServiceConfigCard({config, onEdit, onEditPricing}: ServiceConfigCardProps) {
+  const {width} = useWindowDimensions();
+
+  // Check if description contains HTML (from rich text editor)
+  const isHtmlContent = config.description && (
+    config.description.includes('<') ||
+    config.description.includes('&lt;')
+  );
+
   return (
     <View style={styles.serviceCard}>
       <View style={styles.serviceCardTitleRow}>
@@ -41,9 +50,23 @@ export function ServiceConfigCard({config, onEdit, onEditPricing}: ServiceConfig
       </View>
 
       {config.description ? (
-        <Text style={styles.serviceCardDesc} numberOfLines={2}>
-          {config.description}
-        </Text>
+        isHtmlContent ? (
+          <View style={styles.htmlDescWrapper}>
+            <RenderHtml
+              contentWidth={width - 60}
+              source={{html: config.description}}
+              tagsStyles={{
+                body: {color: Colors.textSecondary, fontSize: FontSize.sm},
+                img: {maxWidth: width - 60, borderRadius: 8},
+                figure: {margin: 0, maxWidth: '100%'},
+              }}
+            />
+          </View>
+        ) : (
+          <Text style={styles.serviceCardDesc} numberOfLines={2}>
+            {config.description}
+          </Text>
+        )
       ) : null}
 
       {config.tags && config.tags.length > 0 && (
@@ -129,6 +152,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  htmlDescWrapper: {
+    maxHeight: 300,
+    overflow: 'hidden',
   },
   serviceCardTags: {
     flexDirection: 'row',
