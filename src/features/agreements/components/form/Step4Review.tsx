@@ -233,9 +233,10 @@ export function Step4Review({form}: Step4ReviewProps) {
     const finalCommissionRate = effectiveBaseRate * (agreementMultiplier / 100);
 
     // Calculate dollar amounts
-    const monthlyCommission = monthlyValue * (finalCommissionRate / 100);
-    const annualCommission = monthlyCommission * 12;
-    const contractCommission = monthlyCommission * contractMonths;
+    const weeklyCommission = (monthlyValue / 4.33) * (finalCommissionRate / 100);
+    const annualCommission = weeklyCommission * 52;
+    // Commission is always paid for 12 months only
+    const contractCommission = annualCommission;
 
     return {
       monthlyValue,
@@ -249,7 +250,7 @@ export function Step4Review({form}: Step4ReviewProps) {
       insideSalesDeduction,
       effectiveBaseRate,
       finalCommissionRate,
-      monthlyCommission,
+      weeklyCommission,
       annualCommission,
       contractCommission,
     };
@@ -595,9 +596,9 @@ export function Step4Review({form}: Step4ReviewProps) {
               <View style={styles.commissionDivider} />
 
               <View style={styles.commissionRow}>
-                <Text style={styles.commissionRowLabel}>Monthly Commission</Text>
+                <Text style={styles.commissionRowLabel}>Weekly Commission</Text>
                 <Text style={[styles.commissionRowValue, {color: '#16a34a', fontWeight: '700'}]}>
-                  {formatCurrency(commissionCalc.monthlyCommission)}
+                  {formatCurrency(commissionCalc.weeklyCommission)}
                 </Text>
               </View>
               <View style={styles.commissionRow}>
@@ -607,7 +608,7 @@ export function Step4Review({form}: Step4ReviewProps) {
                 </Text>
               </View>
               <View style={styles.commissionTotalRow}>
-                <Text style={styles.commissionTotalLabel}>Contract Commission ({contractMonths} mo)</Text>
+                <Text style={styles.commissionTotalLabel}>Total Commission (12 mo)</Text>
                 <Text style={styles.commissionTotalValue}>{formatCurrency(commissionCalc.contractCommission)}</Text>
               </View>
             </View>

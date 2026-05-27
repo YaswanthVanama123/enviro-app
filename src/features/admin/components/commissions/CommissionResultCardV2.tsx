@@ -199,9 +199,9 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </View>
 
         <View style={styles.amountRow}>
-          <Text style={styles.amountLabel}>Monthly</Text>
+          <Text style={styles.amountLabel}>Weekly</Text>
           <Text style={styles.amountValue}>
-            {formatCurrency(result.monthlyCommission)}
+            {formatCurrency(result.weeklyCommission)}
           </Text>
         </View>
 
@@ -213,7 +213,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </View>
 
         <View style={styles.amountRow}>
-          <Text style={styles.amountLabel}>Contract ({result.contractMonths} mo)</Text>
+          <Text style={styles.amountLabel}>Total Commission (12 mo)</Text>
           <Text style={styles.amountValue}>
             {formatCurrency(result.contractCommission)}
           </Text>
@@ -280,8 +280,8 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
                 <Text style={styles.stepNumberText}>1</Text>
               </View>
               <Text style={styles.stepText}>
-                <Text style={styles.stepBold}>Monthly Revenue:</Text> Your agreement generates{' '}
-                <Text style={styles.stepHighlight}>{formatCurrency(breakdown.originalRevenue)}</Text> in monthly revenue.
+                <Text style={styles.stepBold}>Weekly Revenue:</Text> Your agreement generates{' '}
+                <Text style={styles.stepHighlight}>{formatCurrency(breakdown.originalRevenue)}</Text> in weekly revenue.
               </Text>
             </View>
 
@@ -341,18 +341,18 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
               <Text style={styles.finalCalculationTitle}>Final Calculation:</Text>
               <Text style={styles.finalCalculationText}>
                 {formatCurrency(breakdown.commissionableRevenue)} × {formatPercentage(breakdown.finalCommissionRate)} ={' '}
-                <Text style={styles.finalCalculationBold}>{formatCurrency(result.perVisitCommission)}</Text> per month
+                <Text style={styles.finalCalculationBold}>{formatCurrency(result.perVisitCommission)}</Text> per visit
               </Text>
               <Text style={styles.finalCalculationText}>
-                {formatCurrency(result.perVisitCommission)} × 12 months ={' '}
+                {formatCurrency(result.perVisitCommission)} × {breakdown.visitsPerYear} visits ={' '}
                 <Text style={styles.finalCalculationBold}>{formatCurrency(result.annualCommission)}</Text> annually
               </Text>
-              {result.contractMonths > 12 && (
-                <Text style={styles.finalCalculationText}>
-                  {formatCurrency(result.monthlyCommission)} × {result.contractMonths} months ={' '}
-                  <Text style={styles.finalCalculationBold}>{formatCurrency(result.contractCommission)}</Text> total
-                </Text>
-              )}
+              <Text style={styles.finalCalculationText}>
+                Commission is paid for <Text style={styles.finalCalculationBold}>12 months</Text> only.
+                {result.contractMonths > 12 && (
+                  <> The {result.agreementTerm} agreement gives you a <Text style={styles.finalCalculationBold}>{breakdown.agreementMultiplier}%</Text> rate bonus!</>
+                )}
+              </Text>
             </View>
 
             {/* Tips Box */}

@@ -233,7 +233,7 @@ export function MyCommissionsScreen() {
 
           <View style={styles.summaryRow}>
             <View style={[styles.summaryCard, styles.summaryCardSmall]}>
-              <Text style={styles.summaryLabelSmall}>Monthly</Text>
+              <Text style={styles.summaryLabelSmall}>Weekly</Text>
               <Text style={styles.summaryValueSmall}>
                 {formatMoney(data.totals.totalMonthlyCommission)}
               </Text>
@@ -419,14 +419,14 @@ export function MyCommissionsScreen() {
                       </View>
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
-                        <Text style={styles.breakdownLabelTotal}>Monthly Commission</Text>
+                        <Text style={styles.breakdownLabelTotal}>Weekly Commission</Text>
                         <Text style={styles.breakdownValueTotal}>
                           {formatMoney(agreement.commission.monthly)}
                         </Text>
                       </View>
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
-                        <Text style={styles.breakdownLabelTotal}>Contract Total</Text>
+                        <Text style={styles.breakdownLabelTotal}>Total Commission (12 mo)</Text>
                         <Text style={styles.breakdownValueTotal}>
                           {formatMoney(agreement.commission.total)}
                         </Text>

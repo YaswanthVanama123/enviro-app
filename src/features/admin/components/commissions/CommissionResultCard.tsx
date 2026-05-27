@@ -14,10 +14,12 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
     breakdown,
     effectiveBaseRate,
     finalCommissionRate,
-    monthlyCommission,
     annualCommission,
     input,
   } = result;
+
+  // Calculate weekly commission from annual
+  const weeklyCommission = annualCommission / 52;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -47,9 +49,9 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
         </View>
 
         <View style={styles.resultCard}>
-          <Text style={styles.resultLabel}>Monthly</Text>
+          <Text style={styles.resultLabel}>Weekly</Text>
           <Text style={styles.resultValue}>
-            {formatCurrency(monthlyCommission)}
+            {formatCurrency(weeklyCommission)}
           </Text>
         </View>
 
@@ -153,9 +155,9 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
           <Text style={styles.formulaBold}>{formatPercent(finalCommissionRate)}</Text>
         </Text>
         <Text style={styles.formulaText}>
-          <Text style={styles.formulaBold}>Monthly: </Text>
-          {formatCurrency(input.monthlyValue)} × {formatPercent(finalCommissionRate)} ={' '}
-          <Text style={styles.formulaBold}>{formatCurrency(monthlyCommission)}</Text>
+          <Text style={styles.formulaBold}>Weekly: </Text>
+          {formatCurrency(annualCommission)} / 52 ={' '}
+          <Text style={styles.formulaBold}>{formatCurrency(weeklyCommission)}</Text>
         </Text>
       </View>
     </View>

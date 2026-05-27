@@ -218,9 +218,9 @@ export interface CommissionCalculationResultV2 {
   };
 
   perVisitCommission: number;
-  monthlyCommission: number;
+  weeklyCommission: number;
   annualCommission: number;
-  contractCommission: number;
+  contractCommission: number; // Always 12 months
   renewalBonus: number;
   totalCommission: number;
 
@@ -275,11 +275,14 @@ export function calculateCommissionV2(input: CommissionCalculationInputV2): Comm
   const agreementMultiplier = rules.agreementMultipliers[agreementTerm];
   const finalCommissionRate = effectiveRate * (agreementMultiplier / 100);
 
-  // Step 7: Calculate commission amounts
+  // Step 7: Calculate commission amounts (weekly basis)
   const perVisitCommission = commissionableRevenue * (finalCommissionRate / 100);
   const annualCommission = perVisitCommission * visitsPerYear;
-  const monthlyCommission = annualCommission / 12;
-  const contractCommission = annualCommission * (contractMonths / 12);
+  const weeklyCommission = annualCommission / 52; // Weekly commission
+
+  // Commission is always paid for 12 months only (1 year)
+  // The agreement term multiplier (e.g., 135% for 3-year) is the bonus for longer agreements
+  const contractCommission = annualCommission;
 
   // Step 8: Calculate renewal bonus
   let renewalBonusRate = 0;
@@ -318,7 +321,7 @@ export function calculateCommissionV2(input: CommissionCalculationInputV2): Comm
       renewalBonusAmount,
     },
     perVisitCommission,
-    monthlyCommission,
+    weeklyCommission,
     annualCommission,
     contractCommission,
     renewalBonus: renewalBonusAmount,
@@ -486,7 +489,7 @@ export interface CommissionCalculationResult {
   breakdown: CommissionBreakdown;
   effectiveBaseRate: number;
   finalCommissionRate: number;
-  monthlyCommission: number;
+  weeklyCommission: number;
   annualCommission: number;
   firstYearCommission: number;
   calculatedAt: string;
