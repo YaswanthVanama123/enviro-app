@@ -12,10 +12,13 @@ import type {
 const BASE_PATH = '/api/account-type';
 const MAP_DISTANCE_PATH = '/api/map-distance';
 
+// Account type union
+export type AccountType = 'Anchor' | 'Bread5' | 'Bread15' | 'Pit';
+
 // Server-side detection response (from map-distance API)
 export interface ServerAccountTypeDetectionResult {
   success: boolean;
-  accountType: 'Anchor' | 'Bread5' | 'Bread15' | 'Pit';
+  accountType: AccountType;
   confidence: 'high' | 'low';
   reason: string;
   distanceMiles: number | null;
@@ -30,6 +33,59 @@ export interface ServerAccountTypeDetectionResult {
     milesPerMinute: number;
   };
   error?: string;
+}
+
+// Mapbox-based detection types
+export interface DestinationResult {
+  destination: string;
+  address?: string;
+  storedDistanceMiles?: number;
+  mapboxDistanceMiles?: number;
+  drivingTimeMinutes?: number;
+  error?: string;
+}
+
+export interface MapboxDetectionResult {
+  success: boolean;
+  biginCompany?: string;
+  routeStarCustomer?: string;
+  fromAddress?: string;
+  destinations?: DestinationResult[];
+  accountType?: AccountType;
+  shortestDrivingTime?: number | null;
+  nearestDestination?: string | null;
+  reason?: string;
+  error?: string;
+  thresholds?: {
+    bread5MaxMinutes: number;
+    bread15MaxMinutes: number;
+  };
+}
+
+// Batch detection types for form filling
+export interface FrequencyDetectionResult {
+  accountType: AccountType;
+  confidence: 'high' | 'low';
+  reason: string;
+  drivingTimeMinutes: number | null;
+  nearestDestination: string | null;
+  destinations?: DestinationResult[];
+  usedFallback?: boolean;
+  fallbackReason?: string;
+  error?: string;
+}
+
+export interface BatchFrequencyDetectionResult {
+  success: boolean;
+  biginCompany?: string;
+  routeStarCustomer?: string;
+  fromAddress?: string;
+  results?: Record<number, FrequencyDetectionResult>;
+  error?: string;
+  thresholds?: {
+    bread5MaxMinutes: number;
+    bread15MaxMinutes: number;
+  };
 }
 
 export const accountTypeApi = {
@@ -109,6 +165,67 @@ export const accountTypeApi = {
         distanceMiles: null,
         drivingTimeMinutes: null,
         nearestAnchor: null,
+      };
+    }
+  },
+
+  /**
+   * Detect account type using Mapbox for accurate driving time calculation
+   * @param biginCompanyId - The Bigin company ID (biginId field)
+   * @param frequency - Optional frequency filter (1=Weekly, 2=Bi-Weekly, etc.)
+   */
+  async detectWithMapbox(
+    biginCompanyId: string,
+    frequency?: number,
+  ): Promise<MapboxDetectionResult> {
+    try {
+      const payload: {biginCompanyId: string; frequency?: number} = {
+        biginCompanyId,
+      };
+      if (frequency !== undefined) {
+        payload.frequency = frequency;
+      }
+      const response = await apiClient.post<MapboxDetectionResult>(
+        `${MAP_DISTANCE_PATH}/detect-account-type-mapbox`,
+        payload,
+      );
+      return response || {success: false, error: 'No response data'};
+    } catch (error) {
+      console.error('Error detecting account type with Mapbox:', error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to detect account type',
+      };
+    }
+  },
+
+  /**
+   * Detect account types for multiple frequencies in a batch call
+   * Optimized for form filling where multiple services have different frequencies
+   * @param biginCompanyId - The Bigin company ID
+   * @param frequencies - Array of frequency numbers (1=Weekly, 2=Bi-Weekly, etc.)
+   */
+  async detectWithMapboxBatch(
+    biginCompanyId: string,
+    frequencies: number[],
+  ): Promise<BatchFrequencyDetectionResult> {
+    try {
+      const response = await apiClient.post<BatchFrequencyDetectionResult>(
+        `${MAP_DISTANCE_PATH}/detect-account-type-batch`,
+        {biginCompanyId, frequencies},
+      );
+      return response || {success: false, error: 'No response data'};
+    } catch (error) {
+      console.error('Error detecting batch account types with Mapbox:', error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to detect account types',
       };
     }
   },

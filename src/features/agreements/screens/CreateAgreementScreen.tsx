@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ import {Step2Contract}   from '../components/form/Step2Contract';
 import {Step5Agreement}  from '../components/form/Step5Agreement';
 import {Step4Review}     from '../components/form/Step4Review';
 import {useFormFilling}  from '../hooks/useFormFilling';
+import {useAccountTypeDetection} from '../hooks/useAccountTypeDetection';
+import {GlobalCommissionSummary} from '../components/commission';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 
 const STEP_LABELS = ['Customer', 'Products', 'Services', 'Agreement', 'Terms', 'Review'];
@@ -64,6 +66,26 @@ export function CreateAgreementScreen() {
     generate,
     allServicesOneTime,
   } = useFormFilling(editAgreementId);
+
+  // Account type detection for commission calculation
+  const {
+    accountTypeCache,
+    detectAccountTypes,
+    isDetecting: isDetectingAccountTypes,
+    error: accountTypeError,
+    isCompanyMapped,
+  } = useAccountTypeDetection({
+    biginCompanyId: form.biginCompanyId,
+    services: form.services,
+    autoDetect: false,
+  });
+
+  // Detect account types when entering services step with active services
+  useEffect(() => {
+    if (step === 3 && form.biginCompanyId && Object.keys(form.services).length > 0) {
+      detectAccountTypes();
+    }
+  }, [step, form.biginCompanyId, form.services, detectAccountTypes]);
 
   const {step, saving, saveError, savedId} = form;
 
@@ -120,16 +142,29 @@ export function CreateAgreementScreen() {
         );
       case 3:
         return (
-          <Step3Services
-            visibleServices={form.visibleServices}
-            services={form.services}
-            contractMonths={form.contractMonths}
-            pricingConfigs={form.pricingConfigs}
-            serviceConfigsList={form.serviceConfigsList}
-            onAddService={addService}
-            onRemoveService={removeService}
-            onUpdateService={updateService}
-          />
+          <View>
+            <Step3Services
+              visibleServices={form.visibleServices}
+              services={form.services}
+              contractMonths={form.contractMonths}
+              pricingConfigs={form.pricingConfigs}
+              serviceConfigsList={form.serviceConfigsList}
+              onAddService={addService}
+              onRemoveService={removeService}
+              onUpdateService={updateService}
+            />
+            {/* Commission Summary - shows total commission across all services */}
+            <GlobalCommissionSummary
+              services={form.services}
+              accountTypeCache={accountTypeCache}
+              commissionRate={6}
+              showDetectButton={true}
+              isDetecting={isDetectingAccountTypes}
+              isCompanyMapped={isCompanyMapped}
+              error={accountTypeError}
+              onDetect={detectAccountTypes}
+            />
+          </View>
         );
       case 4:
         return (
@@ -160,7 +195,7 @@ export function CreateAgreementScreen() {
             onEnviroOfChange={setEnviroOf}
             serviceAgreement={form.serviceAgreement}
             onUpdate={updateServiceAgreement}
-            loading={form.serviceAgreementLoading}
+            loading={form.initialLoading}
           />
         );
       case 6:
