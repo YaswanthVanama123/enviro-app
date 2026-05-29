@@ -78,6 +78,11 @@ export function CreateAgreementScreen() {
     biginCompanyId: form.biginCompanyId,
     services: form.services,
     autoDetect: false,
+    // Pass agreement ID for auto-saving cache after detection
+    agreementId: form.savedId,
+    // Pass initial cache loaded from saved agreement
+    initialCache: form.accountTypeCache,
+    initialCacheLoadedFromSaved: form.accountTypeCacheLoadedFromSaved,
   });
 
   // Detect account types when entering services step with active services

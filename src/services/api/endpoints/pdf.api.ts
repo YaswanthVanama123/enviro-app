@@ -81,4 +81,27 @@ export const pdfApi = {
     }
     await import('react-native').then(({Linking}) => Linking.openURL(url));
   },
+
+  /**
+   * Save account type cache to an agreement
+   * Used after auto-detection to persist cache for future loads
+   */
+  async saveAccountTypeCache(
+    agreementId: string,
+    accountTypeCache: Record<number, any>,
+  ): Promise<{success: boolean; error?: string}> {
+    try {
+      const response = await apiClient.patch<{success: boolean}>(
+        `/api/pdf/customer-headers/${agreementId}/account-type-cache`,
+        {accountTypeCache},
+      );
+      return {success: response?.success ?? true};
+    } catch (error) {
+      console.error('[PDF-API] Error saving account type cache:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to save cache',
+      };
+    }
+  },
 };

@@ -5,6 +5,7 @@ import {
   FrequencyDetectionResult,
   BatchFrequencyDetectionResult,
 } from '../../../services/api/endpoints/accountType.api';
+import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 
 // Account type cache entry for frequency-based detection
 export interface AccountTypeCacheEntry {
@@ -108,6 +109,12 @@ export interface UseAccountTypeDetectionOptions {
   biginCompanyId: string | null;
   services: Record<string, any>;
   autoDetect?: boolean;
+  // Agreement ID for auto-saving cache after detection
+  agreementId?: string | null;
+  // Initial cache loaded from saved agreement
+  initialCache?: AccountTypeCache | null;
+  // Whether initial cache was loaded from saved agreement
+  initialCacheLoadedFromSaved?: boolean;
 }
 
 export interface UseAccountTypeDetectionResult {
@@ -143,15 +150,31 @@ export function useAccountTypeDetection({
   biginCompanyId,
   services,
   autoDetect = false,
+  agreementId = null,
+  initialCache = null,
+  initialCacheLoadedFromSaved = false,
 }: UseAccountTypeDetectionOptions): UseAccountTypeDetectionResult {
+  // Initialize cache from saved data if available
   const [accountTypeCache, setAccountTypeCache] = useState<AccountTypeCache>(
-    {},
+    initialCache ?? {},
   );
   const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Track if cache was loaded from saved data (to skip initial detection)
+  const cacheLoadedFromSavedRef = useRef(initialCacheLoadedFromSaved);
+
   // Track previous biginCompanyId to clear cache on change
   const prevBiginCompanyIdRef = useRef<string | null>(null);
+
+  // Update cache if initialCache changes (e.g., when edit data loads)
+  useEffect(() => {
+    if (initialCache && Object.keys(initialCache).length > 0) {
+      setAccountTypeCache(initialCache);
+      cacheLoadedFromSavedRef.current = true;
+      console.log('[ACCOUNT-TYPE-MOBILE] Initialized cache from saved data, keys:', Object.keys(initialCache));
+    }
+  }, [initialCache]);
 
   // Clear cache when company changes
   useEffect(() => {
@@ -161,6 +184,7 @@ export function useAccountTypeDetection({
     ) {
       setAccountTypeCache({});
       setError(null);
+      cacheLoadedFromSavedRef.current = false;
     }
     prevBiginCompanyIdRef.current = biginCompanyId;
   }, [biginCompanyId]);
@@ -222,37 +246,54 @@ export function useAccountTypeDetection({
         return;
       }
 
+      // Build updated cache with new results
+      let updatedCache: AccountTypeCache = {...accountTypeCache};
+
       // Process results and update cache
       if (result.results) {
-        setAccountTypeCache(prev => {
-          const updated = {...prev};
+        Object.entries(result.results).forEach(([freqKey, detection]) => {
+          const freqNum = parseInt(freqKey, 10);
+          const entry: AccountTypeCacheEntry = {
+            accountType: detection.accountType,
+            confidence: detection.confidence,
+            reason: detection.reason,
+            drivingTimeMinutes: detection.drivingTimeMinutes,
+            nearestDestination: detection.nearestDestination,
+            cachedAt: Date.now(),
+            usedFallback: detection.usedFallback,
+            fallbackReason: detection.fallbackReason,
+          };
 
-          Object.entries(result.results!).forEach(([freqKey, detection]) => {
-            const freqNum = parseInt(freqKey, 10);
-            updated[freqNum] = {
-              accountType: detection.accountType,
-              confidence: detection.confidence,
-              reason: detection.reason,
-              drivingTimeMinutes: detection.drivingTimeMinutes,
-              nearestDestination: detection.nearestDestination,
-              cachedAt: Date.now(),
-              usedFallback: detection.usedFallback,
-              fallbackReason: detection.fallbackReason,
-            };
+          updatedCache[freqNum] = entry;
 
-            console.log(
-              `[ACCOUNT-TYPE-MOBILE] Cached freq ${freqNum}: ${detection.accountType}`,
-            );
-          });
-
-          return updated;
+          console.log(
+            `[ACCOUNT-TYPE-MOBILE] Cached freq ${freqNum}: ${detection.accountType}`,
+          );
         });
+
+        setAccountTypeCache(updatedCache);
       }
 
       console.log(
         '[ACCOUNT-TYPE-MOBILE] Detection complete, thresholds:',
         result.thresholds,
       );
+
+      // Auto-save to backend if we have an agreementId
+      if (agreementId && Object.keys(updatedCache).length > 0) {
+        try {
+          console.log('[ACCOUNT-TYPE-MOBILE] Auto-saving cache to backend for agreement:', agreementId);
+          const saveResult = await pdfApi.saveAccountTypeCache(agreementId, updatedCache);
+          if (saveResult.success) {
+            console.log('[ACCOUNT-TYPE-MOBILE] Cache saved to backend successfully');
+          } else {
+            console.error('[ACCOUNT-TYPE-MOBILE] Failed to save cache:', saveResult.error);
+          }
+        } catch (saveErr) {
+          console.error('[ACCOUNT-TYPE-MOBILE] Failed to save cache to backend:', saveErr);
+          // Don't fail the detection if save fails - cache is still in memory
+        }
+      }
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : 'Unknown error during detection';
@@ -261,15 +302,26 @@ export function useAccountTypeDetection({
     } finally {
       setIsDetecting(false);
     }
-  }, [biginCompanyId, getMissingFrequencies]);
+  }, [biginCompanyId, agreementId, accountTypeCache, getMissingFrequencies]);
 
   // Auto-detect when services change (if enabled)
   useEffect(() => {
-    if (autoDetect && biginCompanyId) {
-      const missingFrequencies = getMissingFrequencies();
-      if (missingFrequencies.length > 0 && !isDetecting) {
-        detectAccountTypes();
-      }
+    if (!autoDetect || !biginCompanyId || isDetecting) {
+      return;
+    }
+
+    const missingFrequencies = getMissingFrequencies();
+
+    // Skip initial detection if cache was loaded from saved data
+    if (cacheLoadedFromSavedRef.current && missingFrequencies.length === 0) {
+      console.log('[ACCOUNT-TYPE-MOBILE] Using saved cache, skipping detection');
+      return;
+    }
+
+    // Only detect if there are missing frequencies
+    if (missingFrequencies.length > 0) {
+      console.log('[ACCOUNT-TYPE-MOBILE] Auto-detecting for missing frequencies:', missingFrequencies);
+      detectAccountTypes();
     }
   }, [autoDetect, biginCompanyId, getMissingFrequencies, isDetecting, detectAccountTypes]);
 
@@ -312,6 +364,7 @@ export function useAccountTypeDetection({
   const clearCache = useCallback(() => {
     setAccountTypeCache({});
     setError(null);
+    cacheLoadedFromSavedRef.current = false;
   }, []);
 
   return {

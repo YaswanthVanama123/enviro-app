@@ -39,6 +39,9 @@ export type FormStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PaymentOption = 'online' | 'cash' | 'others';
 
+// Import account type cache type
+import type {AccountTypeCache} from './useAccountTypeDetection';
+
 export interface FormState {
   step: FormStep;
   headerTitle: string;
@@ -69,6 +72,9 @@ export interface FormState {
   // Bigin integration for account type detection
   biginCompanyId: string | null;
   isConnectedToBigin: boolean;
+  // Account type cache loaded from saved agreement
+  accountTypeCache: AccountTypeCache | null;
+  accountTypeCacheLoadedFromSaved: boolean;
 }
 
 const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
@@ -116,6 +122,8 @@ const INITIAL_STATE: FormState = {
   savedId: null,
   biginCompanyId: null,
   isConnectedToBigin: false,
+  accountTypeCache: null,
+  accountTypeCacheLoadedFromSaved: false,
 };
 
 export function useFormFilling(editAgreementId?: string) {
@@ -295,6 +303,15 @@ export function useFormFilling(editAgreementId?: string) {
           }
           if (typeof doc.isConnectedToBigin === 'boolean') {
             next.isConnectedToBigin = doc.isConnectedToBigin;
+          }
+
+          // Load account type cache from saved agreement (to avoid re-detection)
+          if (doc.accountTypeCache && typeof doc.accountTypeCache === 'object' && Object.keys(doc.accountTypeCache).length > 0) {
+            next.accountTypeCache = doc.accountTypeCache;
+            next.accountTypeCacheLoadedFromSaved = true;
+            console.log('[FormFilling] Loaded accountTypeCache from saved agreement, keys:', Object.keys(doc.accountTypeCache));
+          } else {
+            console.log('[FormFilling] No accountTypeCache in saved agreement');
           }
 
           if (doc.headerTitle) {next.headerTitle = doc.headerTitle;}
