@@ -24,6 +24,7 @@ interface CommissionBreakdown {
   accountTypeAdjustment: number;
   greenlineBonus: number;
   insideSalesDeduction: number;
+  quotaLevel?: string | null;
 }
 
 interface CommissionData {
@@ -118,6 +119,38 @@ function formatMoney(amount: number): string {
 
 function formatPercent(value: number): string {
   return value.toFixed(2);
+}
+
+// Helper to format quota level for display
+function formatQuotaLevel(quotaLevel: string | null | undefined): string {
+  if (!quotaLevel) return '';
+  const level = quotaLevel.toLowerCase();
+  switch (level) {
+    case 'below':
+      return 'Below Quota (3%)';
+    case 'above':
+      return 'Above Quota (6%)';
+    case 'double':
+      return 'Double Quota (9%)';
+    default:
+      return quotaLevel.charAt(0).toUpperCase() + quotaLevel.slice(1);
+  }
+}
+
+// Helper to get quota level color
+function getQuotaLevelStyle(quotaLevel: string | null | undefined): {bg: string; text: string} {
+  if (!quotaLevel) return {bg: '#f3f4f6', text: '#6b7280'};
+  const level = quotaLevel.toLowerCase();
+  switch (level) {
+    case 'below':
+      return {bg: '#fef3c7', text: '#b45309'};
+    case 'above':
+      return {bg: '#dcfce7', text: '#16a34a'};
+    case 'double':
+      return {bg: '#dbeafe', text: '#2563eb'};
+    default:
+      return {bg: '#f3f4f6', text: '#6b7280'};
+  }
 }
 
 function formatDate(dateStr: string): string {
@@ -647,6 +680,15 @@ export function MyCommissionsScreen() {
                           {formatPercent(breakdown.baseRate ?? rate)}%
                         </Text>
                       </View>
+
+                      {breakdown.quotaLevel && (
+                        <View style={[styles.breakdownItem, {backgroundColor: getQuotaLevelStyle(breakdown.quotaLevel).bg}]}>
+                          <Text style={styles.breakdownLabel}>Quota Level</Text>
+                          <Text style={[styles.breakdownValue, {color: getQuotaLevelStyle(breakdown.quotaLevel).text}]}>
+                            {formatQuotaLevel(breakdown.quotaLevel)}
+                          </Text>
+                        </View>
+                      )}
 
                       <View style={styles.breakdownItem}>
                         <Text style={styles.breakdownLabel}>Agreement Multiplier</Text>
