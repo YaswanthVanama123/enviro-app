@@ -18,6 +18,8 @@ export type RootStackParamList = {
   MapDistance: undefined;
   EmployeeAgreements: undefined;
   EditHistory: undefined;
+  PayrollSettings: undefined;
+  Payroll: undefined;
 };
 
 export type TabParamList = {

@@ -9,6 +9,8 @@ import {
   RefreshControl,
   TextInput,
   Dimensions,
+  Modal,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -102,6 +104,88 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
 };
 
+type TimeFilterType = 'all' | 'thisWeek' | 'last14Days' | 'thisMonth' | 'thisQuarter' | 'thisYear' | 'dateRange';
+
+const TIME_FILTER_OPTIONS: {key: TimeFilterType; label: string}[] = [
+  {key: 'all', label: 'All Time'},
+  {key: 'thisWeek', label: 'This Week'},
+  {key: 'last14Days', label: 'Last 14 Days'},
+  {key: 'thisMonth', label: 'This Month'},
+  {key: 'thisQuarter', label: 'This Quarter'},
+  {key: 'thisYear', label: 'This Year'},
+  {key: 'dateRange', label: 'Date Range'},
+];
+
+function getDateRange(
+  filter: TimeFilterType,
+  customStart?: string,
+  customEnd?: string,
+): {startDate?: string; endDate?: string} {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (filter) {
+    case 'all':
+      return {};
+
+    case 'thisWeek': {
+      const dayOfWeek = today.getDay();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
+      return {
+        startDate: startOfWeek.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+
+    case 'last14Days': {
+      const start = new Date(today);
+      start.setDate(today.getDate() - 14);
+      return {
+        startDate: start.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+
+    case 'thisMonth': {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      return {
+        startDate: startOfMonth.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+
+    case 'thisQuarter': {
+      const quarter = Math.floor(today.getMonth() / 3);
+      const startOfQuarter = new Date(today.getFullYear(), quarter * 3, 1);
+      return {
+        startDate: startOfQuarter.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+
+    case 'thisYear': {
+      const startOfYear = new Date(today.getFullYear(), 0, 1);
+      return {
+        startDate: startOfYear.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+
+    case 'dateRange':
+      if (customStart && customEnd) {
+        return {
+          startDate: new Date(customStart).toISOString(),
+          endDate: new Date(customEnd + 'T23:59:59').toISOString(),
+        };
+      }
+      return {};
+
+    default:
+      return {};
+  }
+}
+
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -139,10 +223,15 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState<TimeFilterType>('all');
+  const [customDateStart, setCustomDateStart] = useState<string>('');
+  const [customDateEnd, setCustomDateEnd] = useState<string>('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState<'start' | 'end'>('start');
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [timeFilter, customDateStart, customDateEnd]);
 
   async function fetchEmployees(isRefresh = false) {
     try {
@@ -152,7 +241,8 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
         setLoading(true);
       }
       setError(null);
-      const response = await agreementsApi.getAllEmployeesCommissions();
+      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd);
+      const response = await agreementsApi.getAllEmployeesCommissions(dateRange);
       if (response?.success) {
         setEmployeesData({
           grandTotals: response.grandTotals,
@@ -172,7 +262,8 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
       setEmployeeLoading(true);
       setError(null);
       setSelectedEmployee(username);
-      const response = await agreementsApi.getEmployeeCommissions(username);
+      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd);
+      const response = await agreementsApi.getEmployeeCommissions(username, dateRange);
       if (response?.success) {
         setEmployeeCommissions({
           totals: response.totals,
@@ -497,6 +588,117 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
             tintColor={Colors.primary}
           />
         }>
+        {/* Time Filter Tabs */}
+        <View style={styles.timeFilterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.timeFilterTabs}>
+              {TIME_FILTER_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.timeFilterTab,
+                    timeFilter === option.key && styles.timeFilterTabActive,
+                  ]}
+                  onPress={() => {
+                    if (option.key === 'dateRange') {
+                      setShowDatePicker(true);
+                      setDatePickerMode('start');
+                    }
+                    setTimeFilter(option.key);
+                  }}>
+                  <Text
+                    style={[
+                      styles.timeFilterTabText,
+                      timeFilter === option.key && styles.timeFilterTabTextActive,
+                    ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {timeFilter === 'dateRange' && (
+            <View style={styles.dateRangeContainer}>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => {
+                  setDatePickerMode('start');
+                  setShowDatePicker(true);
+                }}>
+                <Icon name="calendar-outline" size={16} color="#475569" />
+                <Text style={styles.datePickerButtonText}>
+                  {customDateStart || 'Start Date'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.dateRangeSeparator}>to</Text>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => {
+                  setDatePickerMode('end');
+                  setShowDatePicker(true);
+                }}>
+                <Icon name="calendar-outline" size={16} color="#475569" />
+                <Text style={styles.datePickerButtonText}>
+                  {customDateEnd || 'End Date'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Date Picker Modal */}
+        <Modal
+          visible={showDatePicker && timeFilter === 'dateRange'}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDatePicker(false)}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowDatePicker(false)}>
+            <View style={styles.datePickerModal}>
+              <Text style={styles.datePickerTitle}>
+                Select {datePickerMode === 'start' ? 'Start' : 'End'} Date
+              </Text>
+              <TextInput
+                style={styles.dateInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#94a3b8"
+                value={datePickerMode === 'start' ? customDateStart : customDateEnd}
+                onChangeText={text => {
+                  if (datePickerMode === 'start') {
+                    setCustomDateStart(text);
+                  } else {
+                    setCustomDateEnd(text);
+                  }
+                }}
+                keyboardType={Platform.OS === 'ios' ? 'default' : 'default'}
+              />
+              <View style={styles.datePickerActions}>
+                <TouchableOpacity
+                  style={styles.datePickerCancelBtn}
+                  onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.datePickerCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.datePickerConfirmBtn}
+                  onPress={() => {
+                    if (datePickerMode === 'start' && customDateStart) {
+                      setDatePickerMode('end');
+                    } else {
+                      setShowDatePicker(false);
+                    }
+                  }}>
+                  <Text style={styles.datePickerConfirmText}>
+                    {datePickerMode === 'start' ? 'Next' : 'Done'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
         {/* Grand Totals */}
         {employeesData && (
           <View style={styles.summaryGrid}>
@@ -716,6 +918,119 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxxl,
+  },
+  timeFilterSection: {
+    marginBottom: Spacing.lg,
+  },
+  timeFilterTabs: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  timeFilterTab: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  timeFilterTabActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  timeFilterTabText: {
+    fontSize: FontSize.xs,
+    fontWeight: '500',
+    color: '#475569',
+  },
+  timeFilterTabTextActive: {
+    color: '#fff',
+  },
+  dateRangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  datePickerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  datePickerButtonText: {
+    fontSize: FontSize.xs,
+    color: '#475569',
+  },
+  dateRangeSeparator: {
+    fontSize: FontSize.xs,
+    color: '#94a3b8',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  datePickerModal: {
+    backgroundColor: '#fff',
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    width: '100%',
+    maxWidth: 320,
+  },
+  datePickerTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.md,
+    color: '#1e293b',
+    marginBottom: Spacing.md,
+  },
+  datePickerActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  datePickerCancelBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  datePickerCancelText: {
+    fontSize: FontSize.sm,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  datePickerConfirmBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+  },
+  datePickerConfirmText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: '#fff',
   },
   summaryGrid: {
     flexDirection: 'row',

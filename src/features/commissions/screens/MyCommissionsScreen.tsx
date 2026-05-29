@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {agreementsApi} from '../../../services/api/endpoints/agreements.api';
 import {useAdminAuth} from '../../admin/context/AdminAuthContext';
@@ -25,7 +28,9 @@ interface CommissionBreakdown {
 
 interface CommissionData {
   rate: number;
+  weekly: number;
   monthly: number;
+  annual: number;
   total: number;
   breakdown: CommissionBreakdown;
 }
@@ -44,7 +49,9 @@ interface AgreementCommission {
 
 interface CommissionTotals {
   totalAgreements: number;
+  totalWeeklyCommission: number;
   totalMonthlyCommission: number;
+  totalAnnualCommission: number;
   totalContractCommission: number;
   totalContractValue: number;
   averageCommissionRate: number;
@@ -87,6 +94,19 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
 };
 
+// Time period filter options
+type TimePeriod = 'all' | 'weekly' | '14days' | 'monthly' | 'quarterly' | 'annually' | 'custom';
+
+const TIME_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
+  {key: 'all', label: 'All Time'},
+  {key: 'weekly', label: 'This Week'},
+  {key: '14days', label: '14 Days'},
+  {key: 'monthly', label: 'This Month'},
+  {key: 'quarterly', label: 'Quarter'},
+  {key: 'annually', label: 'This Year'},
+  {key: 'custom', label: 'Custom'},
+];
+
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -110,6 +130,73 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatDateShort(date: Date | null): string {
+  if (!date) return 'Select';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: '2-digit',
+  });
+}
+
+// Helper to check if a date falls within the time period
+function isWithinTimePeriod(
+  dateStr: string | null,
+  period: TimePeriod,
+  customStartDate: Date | null,
+  customEndDate: Date | null,
+): boolean {
+  if (period === 'all') return true;
+  if (!dateStr) return false;
+
+  const date = new Date(dateStr);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (period) {
+    case 'weekly': {
+      const startOfWeek = new Date(startOfToday);
+      startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+      return date >= startOfWeek;
+    }
+    case '14days': {
+      const fourteenDaysAgo = new Date(startOfToday);
+      fourteenDaysAgo.setDate(startOfToday.getDate() - 14);
+      return date >= fourteenDaysAgo;
+    }
+    case 'monthly': {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      return date >= startOfMonth;
+    }
+    case 'quarterly': {
+      const currentQuarter = Math.floor(now.getMonth() / 3);
+      const startOfQuarter = new Date(now.getFullYear(), currentQuarter * 3, 1);
+      return date >= startOfQuarter;
+    }
+    case 'annually': {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      return date >= startOfYear;
+    }
+    case 'custom': {
+      if (!customStartDate && !customEndDate) return true;
+      const endOfDay = customEndDate
+        ? new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate(), 23, 59, 59)
+        : null;
+
+      if (customStartDate && endOfDay) {
+        return date >= customStartDate && date <= endOfDay;
+      } else if (customStartDate) {
+        return date >= customStartDate;
+      } else if (endOfDay) {
+        return date <= endOfDay;
+      }
+      return true;
+    }
+    default:
+      return true;
+  }
+}
+
 export function MyCommissionsScreen() {
   const {adminUser} = useAdminAuth();
   const [loading, setLoading] = useState(true);
@@ -117,7 +204,14 @@ export function MyCommissionsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<CommissionsResponse | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Date picker state
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const fetchData = async (isRefresh = false) => {
     try {
@@ -141,16 +235,118 @@ export function MyCommissionsScreen() {
     fetchData();
   }, []);
 
+  // Time-filtered commissions (without status filter) for status counts
+  const timeFilteredCommissions = useMemo(() => {
+    if (!data?.commissions) return [];
+
+    return data.commissions.filter(c => {
+      const dateToCheck = c.startDate || c.createdAt;
+      return isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate);
+    });
+  }, [data?.commissions, timePeriod, customStartDate, customEndDate]);
+
+  // Filtered commissions (with both status and time filter)
   const filteredCommissions = useMemo(() => {
     if (!data?.commissions) return [];
-    if (statusFilter === 'all') return data.commissions;
+
     return data.commissions.filter(c => {
-      if (statusFilter === 'approved') {
-        return c.status === 'approved_salesman' || c.status === 'approved_admin';
+      // Filter by status
+      let statusMatch = true;
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'approved') {
+          statusMatch = c.status === 'approved_salesman' || c.status === 'approved_admin';
+        } else {
+          statusMatch = c.status === statusFilter;
+        }
       }
-      return c.status === statusFilter;
+
+      // Filter by time period
+      const dateToCheck = c.startDate || c.createdAt;
+      const timeMatch = isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate);
+
+      return statusMatch && timeMatch;
     });
-  }, [data?.commissions, statusFilter]);
+  }, [data?.commissions, statusFilter, timePeriod, customStartDate, customEndDate]);
+
+  // Calculate status counts from time-filtered commissions
+  const filteredByStatus = useMemo(() => {
+    const counts: Record<string, {count: number; commission: number}> = {
+      draft: {count: 0, commission: 0},
+      saved: {count: 0, commission: 0},
+      pending: {count: 0, commission: 0},
+      approved: {count: 0, commission: 0},
+      active: {count: 0, commission: 0},
+    };
+
+    timeFilteredCommissions.forEach(agreement => {
+      const commission = agreement.commission || {};
+      const annualCommission = commission.annual ?? (commission.monthly ? commission.monthly * 12 : 0);
+
+      let statusKey = 'draft';
+      if (agreement.status === 'saved') statusKey = 'saved';
+      else if (agreement.status === 'pending_approval') statusKey = 'pending';
+      else if (agreement.status === 'approved_salesman' || agreement.status === 'approved_admin')
+        statusKey = 'approved';
+      else if (agreement.status === 'active' || agreement.status === 'finalized') statusKey = 'active';
+
+      counts[statusKey].count += 1;
+      counts[statusKey].commission += annualCommission;
+    });
+
+    return counts;
+  }, [timeFilteredCommissions]);
+
+  // Calculate filtered totals
+  const filteredTotals = useMemo(() => {
+    let totalAnnualCommission = 0;
+    let totalMonthlyCommission = 0;
+    let totalContractValue = 0;
+    let totalRateSum = 0;
+    let agreementsWithRate = 0;
+
+    filteredCommissions.forEach(agreement => {
+      const commission = agreement.commission || {};
+      const annualCommission = commission.annual ?? (commission.monthly ? commission.monthly * 12 : 0);
+      const monthlyCommission = commission.monthly ?? 0;
+      const rate = commission.rate ?? 0;
+
+      totalAnnualCommission += annualCommission;
+      totalMonthlyCommission += monthlyCommission;
+      totalContractValue += agreement.contractValue || 0;
+
+      if (rate > 0) {
+        totalRateSum += rate;
+        agreementsWithRate++;
+      }
+    });
+
+    return {
+      totalAgreements: filteredCommissions.length,
+      totalAnnualCommission,
+      totalMonthlyCommission,
+      totalContractValue,
+      averageCommissionRate: agreementsWithRate > 0 ? totalRateSum / agreementsWithRate : 0,
+    };
+  }, [filteredCommissions]);
+
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setCustomStartDate(selectedDate);
+    }
+  };
+
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setCustomEndDate(selectedDate);
+    }
+  };
+
+  const clearDateRange = () => {
+    setCustomStartDate(null);
+    setCustomEndDate(null);
+  };
 
   if (loading) {
     return (
@@ -217,6 +413,75 @@ export function MyCommissionsScreen() {
           </View>
         </View>
 
+        {/* Time Period Filter */}
+        <View style={styles.timeFilterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.timeFilterTabs}>
+              {TIME_PERIOD_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[styles.timeTab, timePeriod === option.key && styles.timeTabActive]}
+                  onPress={() => setTimePeriod(option.key)}>
+                  <Text
+                    style={[
+                      styles.timeTabText,
+                      timePeriod === option.key && styles.timeTabTextActive,
+                    ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Custom Date Range */}
+          {timePeriod === 'custom' && (
+            <View style={styles.dateRangeContainer}>
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowStartPicker(true)}>
+                <Text style={styles.datePickerLabel}>From</Text>
+                <Text style={styles.datePickerValue}>{formatDateShort(customStartDate)}</Text>
+                <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
+              </TouchableOpacity>
+
+              <Text style={styles.dateRangeSeparator}>to</Text>
+
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowEndPicker(true)}>
+                <Text style={styles.datePickerLabel}>To</Text>
+                <Text style={styles.datePickerValue}>{formatDateShort(customEndDate)}</Text>
+                <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
+              </TouchableOpacity>
+
+              {(customStartDate || customEndDate) && (
+                <TouchableOpacity style={styles.clearDateBtn} onPress={clearDateRange}>
+                  <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Date Pickers */}
+        {showStartPicker && (
+          <DateTimePicker
+            value={customStartDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleStartDateChange}
+          />
+        )}
+        {showEndPicker && (
+          <DateTimePicker
+            value={customEndDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleEndDateChange}
+          />
+        )}
+
         {/* Summary Cards */}
         <View style={styles.summaryGrid}>
           <View style={[styles.summaryCard, styles.summaryCardPrimary]}>
@@ -224,27 +489,29 @@ export function MyCommissionsScreen() {
               <Text style={styles.summaryIconText}>$</Text>
             </View>
             <View style={styles.summaryContent}>
-              <Text style={styles.summaryLabelPrimary}>Total Commission</Text>
+              <Text style={styles.summaryLabelPrimary}>Annual Commission</Text>
               <Text style={styles.summaryValuePrimary}>
-                {formatMoney(data.totals.totalContractCommission)}
+                {formatMoney(filteredTotals.totalAnnualCommission)}
               </Text>
             </View>
           </View>
 
           <View style={styles.summaryRow}>
             <View style={[styles.summaryCard, styles.summaryCardSmall]}>
-              <Text style={styles.summaryLabelSmall}>Weekly</Text>
+              <Text style={styles.summaryLabelSmall}>Monthly</Text>
               <Text style={styles.summaryValueSmall}>
-                {formatMoney(data.totals.totalMonthlyCommission)}
+                {formatMoney(filteredTotals.totalMonthlyCommission)}
               </Text>
             </View>
             <View style={[styles.summaryCard, styles.summaryCardSmall]}>
               <Text style={styles.summaryLabelSmall}>Agreements</Text>
-              <Text style={styles.summaryValueSmall}>{data.totals.totalAgreements}</Text>
+              <Text style={styles.summaryValueSmall}>{filteredTotals.totalAgreements}</Text>
             </View>
             <View style={[styles.summaryCard, styles.summaryCardSmall]}>
               <Text style={styles.summaryLabelSmall}>Avg Rate</Text>
-              <Text style={styles.summaryValueSmall}>{formatPercent(data.totals.averageCommissionRate)}%</Text>
+              <Text style={styles.summaryValueSmall}>
+                {formatPercent(filteredTotals.averageCommissionRate)}%
+              </Text>
             </View>
           </View>
         </View>
@@ -262,10 +529,10 @@ export function MyCommissionsScreen() {
                     styles.filterChipText,
                     statusFilter === 'all' && styles.filterChipTextActive,
                   ]}>
-                  All ({data.totals.totalAgreements})
+                  All ({timeFilteredCommissions.length})
                 </Text>
               </TouchableOpacity>
-              {Object.entries(data.byStatus).map(
+              {Object.entries(filteredByStatus).map(
                 ([key, value]) =>
                   value.count > 0 && (
                     <TouchableOpacity
@@ -281,6 +548,13 @@ export function MyCommissionsScreen() {
                           statusFilter === key && styles.filterChipTextActive,
                         ]}>
                         {key.charAt(0).toUpperCase() + key.slice(1)} ({value.count})
+                      </Text>
+                      <Text
+                        style={[
+                          styles.filterChipAmount,
+                          statusFilter === key && styles.filterChipAmountActive,
+                        ]}>
+                        {formatMoney(value.commission)}
                       </Text>
                     </TouchableOpacity>
                   ),
@@ -303,6 +577,12 @@ export function MyCommissionsScreen() {
             filteredCommissions.map(agreement => {
               const statusStyle = STATUS_COLORS[agreement.status] || STATUS_COLORS.draft;
               const isExpanded = expandedId === agreement.id;
+              const commission = agreement.commission || {};
+              const annualCommission =
+                commission.annual ?? (commission.monthly ? commission.monthly * 12 : 0);
+              const rate = commission.rate ?? 0;
+              const monthly = commission.monthly ?? 0;
+              const breakdown = commission.breakdown || {};
 
               return (
                 <View
@@ -334,12 +614,10 @@ export function MyCommissionsScreen() {
                     </View>
 
                     <View style={styles.agreementAmounts}>
-                      <Text style={styles.amountLabel}>Commission</Text>
-                      <Text style={styles.amountValue}>
-                        {formatMoney(agreement.commission.total)}
-                      </Text>
+                      <Text style={styles.amountLabel}>Annual</Text>
+                      <Text style={styles.amountValue}>{formatMoney(annualCommission)}</Text>
                       <View style={styles.rateBadge}>
-                        <Text style={styles.rateBadgeText}>{formatPercent(agreement.commission.rate)}%</Text>
+                        <Text style={styles.rateBadgeText}>{formatPercent(rate)}%</Text>
                       </View>
                     </View>
 
@@ -363,72 +641,68 @@ export function MyCommissionsScreen() {
 
                       <View style={styles.breakdownItem}>
                         <Text style={styles.breakdownLabel}>
-                          Base Rate ({agreement.commission.breakdown.agreementTerm})
+                          Base Rate ({breakdown.agreementTerm || `${agreement.contractMonths}mo`})
                         </Text>
                         <Text style={styles.breakdownValue}>
-                          {formatPercent(agreement.commission.breakdown.baseRate)}%
+                          {formatPercent(breakdown.baseRate ?? rate)}%
                         </Text>
                       </View>
 
                       <View style={styles.breakdownItem}>
                         <Text style={styles.breakdownLabel}>Agreement Multiplier</Text>
                         <Text style={styles.breakdownValue}>
-                          {formatPercent(agreement.commission.breakdown.multiplier)}%
+                          {formatPercent(breakdown.multiplier ?? 100)}%
                         </Text>
                       </View>
 
-                      {agreement.commission.breakdown.accountTypeAdjustment !== 0 && (
+                      {(breakdown.accountTypeAdjustment ?? 0) !== 0 && (
                         <View style={styles.breakdownItem}>
                           <Text style={styles.breakdownLabel}>Account Type Adjustment</Text>
                           <Text
                             style={[
                               styles.breakdownValue,
-                              agreement.commission.breakdown.accountTypeAdjustment < 0
+                              (breakdown.accountTypeAdjustment ?? 0) < 0
                                 ? styles.deduction
                                 : styles.bonus,
                             ]}>
-                            {agreement.commission.breakdown.accountTypeAdjustment > 0
-                              ? '+'
-                              : ''}
-                            {formatPercent(agreement.commission.breakdown.accountTypeAdjustment)}%
+                            {(breakdown.accountTypeAdjustment ?? 0) > 0 ? '+' : ''}
+                            {formatPercent(breakdown.accountTypeAdjustment ?? 0)}%
                           </Text>
                         </View>
                       )}
 
-                      {agreement.commission.breakdown.greenlineBonus > 0 && (
+                      {(breakdown.greenlineBonus ?? 0) > 0 && (
                         <View style={styles.breakdownItem}>
                           <Text style={styles.breakdownLabel}>Greenline Bonus</Text>
                           <Text style={[styles.breakdownValue, styles.bonus]}>
-                            +{formatPercent(agreement.commission.breakdown.greenlineBonus)}%
+                            +{formatPercent(breakdown.greenlineBonus ?? 0)}%
                           </Text>
                         </View>
                       )}
 
-                      {agreement.commission.breakdown.insideSalesDeduction !== 0 && (
+                      {(breakdown.insideSalesDeduction ?? 0) !== 0 && (
                         <View style={styles.breakdownItem}>
                           <Text style={styles.breakdownLabel}>Inside Sales Deduction</Text>
                           <Text style={[styles.breakdownValue, styles.deduction]}>
-                            {formatPercent(agreement.commission.breakdown.insideSalesDeduction)}%
+                            {formatPercent(breakdown.insideSalesDeduction ?? 0)}%
                           </Text>
                         </View>
                       )}
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
                         <Text style={styles.breakdownLabelTotal}>Final Rate</Text>
-                        <Text style={styles.breakdownValueTotal}>{formatPercent(agreement.commission.rate)}%</Text>
+                        <Text style={styles.breakdownValueTotal}>{formatPercent(rate)}%</Text>
                       </View>
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
-                        <Text style={styles.breakdownLabelTotal}>Weekly Commission</Text>
-                        <Text style={styles.breakdownValueTotal}>
-                          {formatMoney(agreement.commission.monthly)}
-                        </Text>
+                        <Text style={styles.breakdownLabelTotal}>Monthly Commission</Text>
+                        <Text style={styles.breakdownValueTotal}>{formatMoney(monthly)}</Text>
                       </View>
 
                       <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
-                        <Text style={styles.breakdownLabelTotal}>Total Commission (12 mo)</Text>
+                        <Text style={styles.breakdownLabelTotal}>Annual Commission</Text>
                         <Text style={styles.breakdownValueTotal}>
-                          {formatMoney(agreement.commission.total)}
+                          {formatMoney(annualCommission)}
                         </Text>
                       </View>
                     </View>
@@ -541,9 +815,81 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
   },
+  // Time Filter Styles
+  timeFilterSection: {
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+  },
+  timeFilterTabs: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    paddingRight: Spacing.lg,
+  },
+  timeTab: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  timeTabActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  timeTabText: {
+    fontSize: FontSize.sm,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  timeTabTextActive: {
+    color: '#fff',
+  },
+  // Date Range Styles
+  dateRangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  datePickerBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    padding: Spacing.sm,
+    backgroundColor: '#f9fafb',
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  datePickerLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+  },
+  datePickerValue: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+  dateRangeSeparator: {
+    fontSize: FontSize.sm,
+    color: '#6b7280',
+  },
+  clearDateBtn: {
+    padding: Spacing.xs,
+  },
   summaryGrid: {
     paddingHorizontal: Spacing.lg,
-    marginTop: -Spacing.lg,
+    marginTop: Spacing.md,
   },
   summaryCard: {
     backgroundColor: '#fff',
@@ -637,6 +983,14 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: '#fff',
+  },
+  filterChipAmount: {
+    fontSize: 10,
+    color: '#9ca3af',
+    marginTop: 2,
+  },
+  filterChipAmountActive: {
+    color: 'rgba(255,255,255,0.8)',
   },
   listSection: {
     paddingHorizontal: Spacing.lg,

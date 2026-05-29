@@ -239,6 +239,18 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('Payroll')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#e0e7ff'}]}>
+                <Ionicons name="cash-outline" size={18} color="#4f46e5" />
+              </View>
+              <Text style={styles.menuRowText}>Payroll</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('BiginAudit')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#ecfdf5'}]}>
