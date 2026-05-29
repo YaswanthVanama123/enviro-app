@@ -159,10 +159,10 @@ export function CreateAgreementScreen() {
               onUpdateService={updateService}
             />
             {/* Commission Summary - shows total commission across all services */}
+            {/* Note: commissionRate is now determined by user's quota level from QuotaContext */}
             <GlobalCommissionSummary
               services={form.services}
               accountTypeCache={accountTypeCache}
-              commissionRate={6}
               showDetectButton={true}
               isDetecting={isDetectingAccountTypes}
               isCompanyMapped={isCompanyMapped}

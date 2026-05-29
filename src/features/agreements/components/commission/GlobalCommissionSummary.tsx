@@ -11,6 +11,7 @@ import {
   GlobalCommissionResult,
 } from '../../hooks/useServiceCommission';
 import {AccountTypeCache} from '../../hooks/useAccountTypeDetection';
+import {useQuotaContext, QuotaLevel} from '../../context/QuotaContext';
 import {AccountType} from '../../../../services/api/endpoints/accountType.api';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -24,10 +25,16 @@ const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   Pit: '#f87171',
 };
 
+// Quota level display config
+const QUOTA_LEVEL_CONFIG: Record<QuotaLevel, {label: string; color: string; bgColor: string}> = {
+  below: {label: 'Below Quota', color: '#dc2626', bgColor: '#fee2e2'},
+  above: {label: 'Above Quota', color: '#059669', bgColor: '#d1fae5'},
+  double: {label: 'Double Quota', color: '#7c3aed', bgColor: '#ede9fe'},
+};
+
 interface GlobalCommissionSummaryProps {
   services: Record<string, any>;
   accountTypeCache: AccountTypeCache;
-  commissionRate?: number;
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
@@ -38,7 +45,6 @@ interface GlobalCommissionSummaryProps {
 export function GlobalCommissionSummary({
   services,
   accountTypeCache,
-  commissionRate = 6,
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
@@ -46,6 +52,11 @@ export function GlobalCommissionSummary({
   onDetect,
 }: GlobalCommissionSummaryProps) {
   const [expanded, setExpanded] = useState(false);
+
+  // Get quota level from context (determines base commission rate)
+  const {quotaLevel, baseCommissionRate, isLoading: quotaLoading} = useQuotaContext();
+  const commissionRate = baseCommissionRate;
+  const quotaConfig = QUOTA_LEVEL_CONFIG[quotaLevel];
 
   const global = useGlobalCommission({
     services,
@@ -64,6 +75,16 @@ export function GlobalCommissionSummary({
         <View style={styles.titleRow}>
           <Text style={styles.icon}>💰</Text>
           <Text style={styles.title}>Commission Summary</Text>
+          {/* Quota Level Badge */}
+          <View
+            style={[
+              styles.quotaBadge,
+              {backgroundColor: quotaConfig.bgColor},
+            ]}>
+            <Text style={[styles.quotaBadgeText, {color: quotaConfig.color}]}>
+              {quotaConfig.label} ({commissionRate}%)
+            </Text>
+          </View>
           {!global.hasDetectedServices && isCompanyMapped && (
             <Text style={styles.needsDetection}>(Detection needed)</Text>
           )}
@@ -173,7 +194,9 @@ export function GlobalCommissionSummary({
         </View>
       )}
 
-      <Text style={styles.rateNote}>Commission rate: {commissionRate}%</Text>
+      <Text style={styles.rateNote}>
+        Commission rate: {commissionRate}% ({quotaConfig.label})
+      </Text>
     </View>
   );
 }
@@ -210,6 +233,15 @@ const styles = StyleSheet.create({
   needsDetection: {
     fontSize: FontSize.xs,
     color: '#f59e0b',
+  },
+  quotaBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: Radius.sm,
+  },
+  quotaBadgeText: {
+    fontSize: FontSize.xs - 1,
+    fontWeight: '600',
   },
   detectButton: {
     flexDirection: 'row',
