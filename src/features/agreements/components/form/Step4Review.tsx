@@ -16,6 +16,7 @@ import {
   DEFAULT_COMMISSION_RULES,
   QUOTA_LEVEL_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
+  getPricingTier,
 } from '../../../admin/types/commission.types';
 
 interface Step4ReviewProps {
@@ -197,6 +198,20 @@ export function Step4Review({form}: Step4ReviewProps) {
       ? totalMonthlyRecurring
       : (contractMonths > 0 ? totalCurrentContract / contractMonths : totalCurrentContract);
 
+    // 12-MONTH-EQUIVALENT CONTRACT TOTALS (basis for quota credit).
+    // Mirrors enviromaster's FormFilling.tsx — regardless of contract length
+    // (12 / 24 / 36 months), only one year's slice of the contract counts
+    // toward quota. monthlyContractValue is a pure contract-total derivation
+    // (it includes prorated one-time charges).
+    const monthlyContractValue = contractMonths > 0
+      ? totalCurrentContract / contractMonths
+      : totalCurrentContract;
+    const monthlyOriginalContractValue = contractMonths > 0
+      ? totalOriginalContract / contractMonths
+      : totalOriginalContract;
+    const currentContract12Months = monthlyContractValue * 12;
+    const originalContract12Months = monthlyOriginalContractValue * 12;
+
     // Derive agreement term from contract months (auto from form)
     const getAgreementTerm = (): AgreementTerm => {
       if (contractMonths >= 36) return '3-year';
@@ -238,6 +253,17 @@ export function Step4Review({form}: Step4ReviewProps) {
     // Commission is always paid for 12 months only
     const contractCommission = annualCommission;
 
+    // Step 6: Quota credit — 12-month contract total × pricing multiplier
+    // (Solange Commission Draft, June 2026): "Redline $1 per $1, Greenline $2
+    // per dollar. Below Redline is half value." Multiplier comes from the V2
+    // PRICING_TIERS table (0.5 / 1.0 / 1.25 / 1.5 / 2.0). Anchor bonus and
+    // Pit/Bread deductions intentionally do NOT enter quota — those are
+    // commission-only adjustments per the spec.
+    const pricingTierV2 = getPricingTier(currentContract12Months, originalContract12Months);
+    const pricingMultiplier = pricingTierV2.quotaMultiplier;
+    const annualContractTotal = currentContract12Months;
+    const annualQuotaCredit = annualContractTotal * pricingMultiplier;
+
     return {
       monthlyValue,
       agreementTerm,
@@ -253,8 +279,15 @@ export function Step4Review({form}: Step4ReviewProps) {
       weeklyCommission,
       annualCommission,
       contractCommission,
+
+      // Quota credit (12-month contract × pricing multiplier)
+      currentContract12Months,
+      pricingTier: pricingTierV2.label,
+      pricingMultiplier,
+      annualContractTotal,
+      annualQuotaCredit,
     };
-  }, [totalCurrentContract, totalMonthlyRecurring, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
+  }, [totalCurrentContract, totalOriginalContract, totalMonthlyRecurring, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
 
   return (
     <View style={styles.container}>
