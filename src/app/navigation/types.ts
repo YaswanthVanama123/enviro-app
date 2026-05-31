@@ -8,6 +8,7 @@ export type RootStackParamList = {
   EditAgreement: { agreementId: string };
   MyCommissions: undefined;
   AdminCommissions: undefined;
+  AdminCommissionRules: undefined;
   MyQuota: undefined;
   MyInsideSales: undefined;
   // New admin screens

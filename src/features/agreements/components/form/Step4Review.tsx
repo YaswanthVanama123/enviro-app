@@ -7,17 +7,28 @@ import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 import {formatCurrency} from '../../../../shared/utils/format.utils';
 import {biginAuditApi} from '../../../../services/api/endpoints/biginAudit.api';
+import {quotaApi} from '../../../../services/api/endpoints/quota.api';
 import {useAdminAuth} from '../../../admin/context/AdminAuthContext';
 import {
   QuotaLevel,
   AccountType,
   PricingLine,
   AgreementTerm,
+  COMMISSION_RULES_V2,
   DEFAULT_COMMISSION_RULES,
   QUOTA_LEVEL_OPTIONS,
   ACCOUNT_TYPE_OPTIONS,
+  ACCOUNT_TYPE_REVENUE_RULES,
   getPricingTier,
+  DEFAULT_QUOTA_TIER_CUTOFFS,
+  PIT_PER_VISIT_THRESHOLD,
+  ANCHOR_PER_VISIT_THRESHOLD,
+  ANCHOR_BONUS_MULTIPLIER,
+  resolveCommissionRules,
+  getPricingTierFromList,
+  type ResolvedCommissionRules,
 } from '../../../admin/types/commission.types';
+import {commissionApi} from '../../../../services/api/endpoints/commission.api';
 
 interface Step4ReviewProps {
   form: FormState;
@@ -167,7 +178,37 @@ export function Step4Review({form}: Step4ReviewProps) {
   const [quotaLevel, setQuotaLevel] = useState<QuotaLevel>('above');
   const [accountType, setAccountType] = useState<AccountType>('Anchor');
   const [isInsideSales, setIsInsideSales] = useState<boolean>(false);
+  // True if this agreement is a brand-new location (no prior contract).
+  // Drives the tiered Anchor calc and per-visit penalties per Solange Draft.
+  const [isNewLocation, setIsNewLocation] = useState<boolean>(true);
+  // Rep's existing QuotaPeriod.actualSales before this agreement, fetched
+  // from the quota API alongside quotaLevel below. Drives the piecewise
+  // commission-rate split (3 / 6 / 9% across cutoffs).
+  const [repActualSalesBefore, setRepActualSalesBefore] = useState<number>(0);
   const [isCommissionExpanded, setIsCommissionExpanded] = useState<boolean>(true);
+
+  // Live commission rules from MongoDB (admin-editable). Defaults to bundled
+  // values until the fetch resolves; resolveCommissionRules() merges any
+  // partial document with bundled fallbacks so the calc never reads undefined.
+  const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
+    resolveCommissionRules(null),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    commissionApi
+      .getActiveRules()
+      .then(loaded => {
+        if (cancelled || !loaded) return;
+        setActiveRules(resolveCommissionRules(loaded));
+      })
+      .catch(err => {
+        console.error('[RULES] Failed to load active commission rules:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Auto-check Inside Sales based on Lisa Rothwell's audit history
   useEffect(() => {
@@ -188,9 +229,29 @@ export function Step4Review({form}: Step4ReviewProps) {
     checkInsideSales();
   }, [adminUser?.fullName, adminUser?.username]);
 
+  // Auto-fetch the rep's QuotaPeriod actualSales so the piecewise commission
+  // tier-split (3 / 6 / 9% across cutoffs, per Solange Draft) sees the rep's
+  // existing position. Falls back to 0 on error or missing user.
+  useEffect(() => {
+    const fetchActualSales = async () => {
+      const salespersonId = adminUser?.username;
+      if (!salespersonId) return;
+      try {
+        const result = await quotaApi.getCurrentLevel(salespersonId);
+        if (result?.actualSales != null) {
+          setRepActualSalesBefore(result.actualSales);
+        }
+      } catch (error) {
+        console.error('[QUOTA] Failed to fetch actualSales:', error);
+      }
+    };
+    fetchActualSales();
+  }, [adminUser?.username]);
+
   // Calculate commission based on form values
   const commissionCalc = useMemo(() => {
-    const rules = DEFAULT_COMMISSION_RULES;
+    const rules = DEFAULT_COMMISSION_RULES;       // V1 (legacy, drives existing mobile display)
+    const rulesV2 = activeRules;                  // V2 (live admin-editable rules)
 
     // Use monthly recurring revenue (accounts for different service frequencies)
     // This properly calculates: Weekly services × 4.33, Monthly × 1, etc.
@@ -198,11 +259,8 @@ export function Step4Review({form}: Step4ReviewProps) {
       ? totalMonthlyRecurring
       : (contractMonths > 0 ? totalCurrentContract / contractMonths : totalCurrentContract);
 
-    // 12-MONTH-EQUIVALENT CONTRACT TOTALS (basis for quota credit).
-    // Mirrors enviromaster's FormFilling.tsx — regardless of contract length
-    // (12 / 24 / 36 months), only one year's slice of the contract counts
-    // toward quota. monthlyContractValue is a pure contract-total derivation
-    // (it includes prorated one-time charges).
+    // 12-MONTH-EQUIVALENT CONTRACT TOTALS — anchor for both pricing ratio
+    // and quota credit. Mirrors web FormFilling.tsx Step 0.
     const monthlyContractValue = contractMonths > 0
       ? totalCurrentContract / contractMonths
       : totalCurrentContract;
@@ -223,48 +281,106 @@ export function Step4Review({form}: Step4ReviewProps) {
     const derivedPricingLine: PricingLine = pricingLine === 'green' ? 'Greenline' : 'Redline';
     const agreementTerm = getAgreementTerm();
 
-    // Base rate from quota level
+    // === V1 LEGACY DOLLAR COMMISSION (drives existing mobile UI) ===
     const baseRate = rules.quotaRates[quotaLevel];
-
-    // Agreement multiplier
     const agreementMultiplier = rules.agreementMultipliers[agreementTerm];
-
-    // Account type adjustment
     const accountTypeAdjustment = rules.accountTypeAdjustments[accountType];
-
-    // Greenline bonus (auto from form pricing)
     const greenlineBonus = derivedPricingLine === 'Greenline' ? rules.greenlineBonus : 0;
-
-    // No renewal bonus - form filling is always new business
-    const renewalBonus = 0;
-
-    // Inside sales deduction
+    const renewalBonus = 0; // form filling is always new business
     const insideSalesDeduction = isInsideSales ? rules.insideSalesDeduction : 0;
-
-    // Effective base rate (before multiplier)
     const effectiveBaseRate = baseRate + accountTypeAdjustment + greenlineBonus + renewalBonus + insideSalesDeduction;
-
-    // Final commission rate after multiplier
     const finalCommissionRate = effectiveBaseRate * (agreementMultiplier / 100);
-
-    // Calculate dollar amounts
     const weeklyCommission = (monthlyValue / 4.33) * (finalCommissionRate / 100);
-    const annualCommission = weeklyCommission * 52;
-    // Commission is always paid for 12 months only
-    const contractCommission = annualCommission;
+    const annualCommissionV1 = weeklyCommission * activeRules.weeksPerAnnualCommission;
+    const contractCommission = annualCommissionV1;
 
-    // Step 6: Quota credit — 12-month contract total × pricing multiplier
-    // (Solange Commission Draft, June 2026): "Redline $1 per $1, Greenline $2
-    // per dollar. Below Redline is half value." Multiplier comes from the V2
-    // PRICING_TIERS table (0.5 / 1.0 / 1.25 / 1.5 / 2.0). Anchor bonus and
-    // Pit/Bread deductions intentionally do NOT enter quota — those are
-    // commission-only adjustments per the spec.
-    const pricingTierV2 = getPricingTier(currentContract12Months, originalContract12Months);
+    // === V2 SPEC-FAITHFUL PIPELINE (Solange Commission Draft, June 2026) ===
+    // Step 1: Pricing tier — uses admin-editable tier list from rulesV2.pricingTiers
+    const pricingTierV2 = getPricingTierFromList(
+      currentContract12Months,
+      originalContract12Months,
+      rulesV2.pricingTiers,
+    );
     const pricingMultiplier = pricingTierV2.quotaMultiplier;
+    const isGreenline = pricingTierV2.label === 'Greenline (130%+)';
+
+    // Step 2: visits per year — admin-editable (rulesV2.frequencyVisitsPerYear.weekly)
+    const visitsPerYear = rulesV2.frequencyVisitsPerYear.weekly;
+
+    // Anchor classification threshold relaxes for Greenline.
+    // Spec: "Anchor — $200 or more per visit ($100 or more if Greenline)."
+    const effectiveAnchorThreshold = isGreenline
+      ? rulesV2.anchorMinGreenline
+      : rulesV2.anchorPerVisitThreshold;
+    const effectivePitThreshold = rulesV2.pitPerVisitThreshold;
+
+    // Per-visit penalty (Bread5 / Bread15 / Pit) — admin-editable.
+    const perVisitPenalty = rulesV2.perVisitPenalties[accountType];
+
+    // Step 3: pricing × agreement multipliers on year-1 value.
+    // Example from spec: $13,333 × 2.0 × 1.35 ≈ $35,999.
+    const v2AgreementMultiplier = rulesV2.agreementMultipliers[agreementTerm];
+    const adjustedAnnual = currentContract12Months * pricingMultiplier * (v2AgreementMultiplier / 100);
+    const adjustedPerVisit = visitsPerYear > 0 ? adjustedAnnual / visitsPerYear : 0;
+    const commissionBaseRaw = adjustedAnnual;
+
+    // Step 4: account-type adjustment (per-visit, then re-annualized).
+    // NEW Anchor: First $100 = 0, $100-$200 = 1×, above $200 = 1.5×.
+    // EXISTING Anchor: First $200 = 1×, above $200 = 1.5× (no Pit zone).
+    // NEW Bread5/Bread15/Pit: subtract per-visit penalty.
+    // EXISTING Bread5/Bread15: no penalty. EXISTING Pit: no penalty if revenue
+    // already > $100/visit; otherwise apply Pit penalty.
+    let commissionablePerVisit = 0;
+    let v2RevenueDeduction = 0;
+    let v2AnchorBonus = 0;
+
+    if (accountType === 'Anchor') {
+      const standardPortionRaw = Math.min(adjustedPerVisit, effectiveAnchorThreshold) -
+        (isNewLocation ? Math.min(adjustedPerVisit, effectivePitThreshold) : 0);
+      const standardSafe = Math.max(0, standardPortionRaw);
+      const anchorPortion = Math.max(0, adjustedPerVisit - effectiveAnchorThreshold);
+      v2AnchorBonus = anchorPortion * (rulesV2.anchorBonusMultiplier - 1);
+      commissionablePerVisit = standardSafe + anchorPortion * rulesV2.anchorBonusMultiplier;
+      v2RevenueDeduction = isNewLocation ? Math.min(adjustedPerVisit, effectivePitThreshold) : 0;
+    } else if (accountType === 'Bread5' || accountType === 'Bread15') {
+      v2RevenueDeduction = isNewLocation ? perVisitPenalty : 0;
+      commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
+    } else { // Pit
+      const isExistingAlreadyOverThreshold = !isNewLocation && adjustedPerVisit > perVisitPenalty;
+      v2RevenueDeduction = isExistingAlreadyOverThreshold ? 0 : perVisitPenalty;
+      commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
+    }
+    const commissionableAnnual = commissionablePerVisit * visitsPerYear;
+
+    // Step 5: quota credit — 12-month contract × pricing multiplier (per spec).
     const annualContractTotal = currentContract12Months;
     const annualQuotaCredit = annualContractTotal * pricingMultiplier;
 
+    // Step 6: tiered commission rate — 3% / 6% / 9% piecewise across cutoffs.
+    const tierCutoffs = rulesV2.quotaTierCutoffs;
+    const positionBefore = repActualSalesBefore;
+    const positionAfter = positionBefore + annualQuotaCredit;
+    const belowQuotaPortion = Math.max(0, Math.min(positionAfter, tierCutoffs.aboveQuota) - positionBefore);
+    const aboveQuotaPortion = Math.max(0, Math.min(positionAfter, tierCutoffs.doubleQuota) - Math.max(positionBefore, tierCutoffs.aboveQuota));
+    const doubleQuotaPortion = Math.max(0, positionAfter - Math.max(positionBefore, tierCutoffs.doubleQuota));
+
+    const v2InsideSalesDeduction = isInsideSales ? rulesV2.insideSalesDeduction : 0;
+    const belowRate = (rulesV2.quotaRates.below + v2InsideSalesDeduction) / 100;
+    const aboveRate = (rulesV2.quotaRates.above + v2InsideSalesDeduction) / 100;
+    const doubleRate = (rulesV2.quotaRates.double + v2InsideSalesDeduction) / 100;
+
+    const totalQuotaCredit = belowQuotaPortion + aboveQuotaPortion + doubleQuotaPortion;
+    const belowShare = totalQuotaCredit > 0 ? (belowQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
+    const aboveShare = totalQuotaCredit > 0 ? (aboveQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
+    const doubleShare = totalQuotaCredit > 0 ? (doubleQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
+
+    const belowQuotaCommission = belowShare * Math.max(0, belowRate);
+    const aboveQuotaCommission = aboveShare * Math.max(0, aboveRate);
+    const doubleQuotaCommission = doubleShare * Math.max(0, doubleRate);
+    const annualCommissionV2 = belowQuotaCommission + aboveQuotaCommission + doubleQuotaCommission;
+
     return {
+      // V1 legacy (drives existing mobile UI)
       monthlyValue,
       agreementTerm,
       derivedPricingLine,
@@ -277,17 +393,44 @@ export function Step4Review({form}: Step4ReviewProps) {
       effectiveBaseRate,
       finalCommissionRate,
       weeklyCommission,
-      annualCommission,
+      annualCommission: annualCommissionV1,
       contractCommission,
 
-      // Quota credit (12-month contract × pricing multiplier)
+      // V2 spec-faithful breakdown
       currentContract12Months,
       pricingTier: pricingTierV2.label,
       pricingMultiplier,
+      visitsPerYear,
+      isNewLocation,
+      commissionBaseRaw,
+      commissionableAnnual,
+      v2AnchorBonus,
+      v2RevenueDeduction,
+      belowQuotaPortion,
+      aboveQuotaPortion,
+      doubleQuotaPortion,
+      belowQuotaCommission,
+      aboveQuotaCommission,
+      doubleQuotaCommission,
+      annualCommissionV2,
+
+      // Quota credit (12-month contract × pricing multiplier)
       annualContractTotal,
       annualQuotaCredit,
     };
-  }, [totalCurrentContract, totalOriginalContract, totalMonthlyRecurring, contractMonths, pricingLine, quotaLevel, accountType, isInsideSales]);
+  }, [
+    totalCurrentContract,
+    totalOriginalContract,
+    totalMonthlyRecurring,
+    contractMonths,
+    pricingLine,
+    quotaLevel,
+    accountType,
+    isInsideSales,
+    isNewLocation,
+    repActualSalesBefore,
+    activeRules,
+  ]);
 
   return (
     <View style={styles.container}>

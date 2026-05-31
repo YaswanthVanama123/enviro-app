@@ -35,6 +35,7 @@ const QUOTA_LEVEL_CONFIG: Record<QuotaLevel, {label: string; color: string; bgCo
 interface GlobalCommissionSummaryProps {
   services: Record<string, any>;
   accountTypeCache: AccountTypeCache;
+  contractMonths?: number;
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
@@ -45,6 +46,7 @@ interface GlobalCommissionSummaryProps {
 export function GlobalCommissionSummary({
   services,
   accountTypeCache,
+  contractMonths = 12,
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
@@ -62,6 +64,7 @@ export function GlobalCommissionSummary({
     services,
     accountTypeCache,
     commissionRate,
+    contractMonths,
   });
 
   // Don't show if no services

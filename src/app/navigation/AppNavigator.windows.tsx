@@ -9,6 +9,7 @@ import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
 import {EditAgreementScreen} from '../../features/agreements/screens/EditAgreementScreen';
 import {MyCommissionsScreen} from '../../features/commissions/screens/MyCommissionsScreen';
 import {AdminCommissionsScreen} from '../../features/admin/screens/AdminCommissionsScreen';
+import {AdminCommissionRulesScreen} from '../../features/admin/screens/AdminCommissionRulesScreen';
 import {MyQuotaScreen} from '../../features/quota/screens/MyQuotaScreen';
 import {QuotaManagementScreen} from '../../features/admin/screens/QuotaManagementScreen';
 import {RouteStarCustomersScreen} from '../../features/admin/screens/RouteStarCustomersScreen';
@@ -48,6 +49,7 @@ export default function AppNavigator() {
         <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
         <Stack.Screen name="MyCommissions" component={MyCommissionsScreen} />
         <Stack.Screen name="AdminCommissions" component={AdminCommissionsScreen} />
+        <Stack.Screen name="AdminCommissionRules" component={AdminCommissionRulesScreen} />
         <Stack.Screen name="MyQuota" component={MyQuotaScreen} />
         <Stack.Screen name="QuotaManagement" component={QuotaManagementScreen} />
         <Stack.Screen name="RouteStarCustomers" component={RouteStarCustomersScreen} />

@@ -179,6 +179,18 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('AdminCommissionRules')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fef3c7'}]}>
+                <Ionicons name="settings-outline" size={18} color="#d97706" />
+              </View>
+              <Text style={styles.menuRowText}>Commission Rules</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('QuotaManagement')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#fef3c7'}]}>
