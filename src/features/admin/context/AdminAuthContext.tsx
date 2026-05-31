@@ -37,9 +37,72 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     (async () => {
       const token = await storage.getToken();
       const storedUser = await storage.getUser();
-      if (token && storedUser) {
-        apiClient.setToken(token);
-        setUser(storedUser);
+
+      // No persisted credentials → straight to login.
+      if (!token || !storedUser) {
+        setAuthReady(true);
+        return;
+      }
+
+      // We have a persisted token — but don't trust it blindly. Validate
+      // against the backend so an expired / revoked / wrong-environment token
+      // doesn't silently put the user past the login screen. If the backend
+      // rejects it, clear storage and force a fresh login.
+      apiClient.setToken(token);
+      const profileEndpoint =
+        storedUser.role === 'admin' ? '/api/admin/me' : '/api/employee/me';
+      const verify = await apiClient.get<{user?: any; admin?: any; role?: string}>(profileEndpoint);
+
+      if (verify.error || verify.status === 401 || verify.status === 403 || verify.status === 0) {
+        // Token rejected (or backend unreachable) — clear and require login.
+        apiClient.setToken(null);
+        await storage.clearAuth();
+        setUser(null);
+      } else {
+        // Token valid — prefer the FRESH profile from the backend over the
+        // stored user (handles renames / role changes / etc).
+        const freshAdmin = verify.data?.admin;
+        const freshEmp = verify.data?.user;
+        let merged: AuthUser = storedUser;
+        if (storedUser.role === 'admin' && freshAdmin) {
+          const adminUsername = (freshAdmin.username || '').trim() || storedUser.username;
+          merged = {
+            ...storedUser,
+            id: freshAdmin.id || storedUser.id,
+            username: adminUsername,
+            fullName: adminUsername,
+            role: 'admin',
+          };
+        } else if (storedUser.role === 'employee' && freshEmp) {
+          const empUsername = (freshEmp.username || '').trim() || storedUser.username;
+          const empFullName = (freshEmp.fullName || '').trim() || empUsername;
+          merged = {
+            ...storedUser,
+            id: freshEmp.id || storedUser.id,
+            username: empUsername,
+            fullName: empFullName,
+            email: freshEmp.email ?? storedUser.email,
+            isActive: freshEmp.isActive ?? storedUser.isActive,
+            role: 'employee',
+          };
+        }
+
+        // Defensive: if after merging we still don't have a usable identity,
+        // treat the session as invalid and force the user back to the login
+        // screen. Avoids the "logged in but home shows blank avatar" state.
+        const hasIdentity =
+          (merged.fullName?.trim() || '').length > 0 ||
+          (merged.username?.trim() || '').length > 0 ||
+          (merged.email?.trim() || '').length > 0;
+
+        if (!hasIdentity) {
+          apiClient.setToken(null);
+          await storage.clearAuth();
+          setUser(null);
+        } else {
+          await storage.setUser(merged);
+          setUser(merged);
+        }
       }
       setAuthReady(true);
     })();
@@ -77,10 +140,11 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
           if (!adminData) {
             return 'Invalid response from server';
           }
+          const adminUsername = (adminData.username || '').trim() || (adminData.id || '').toString();
           authUser = {
             id: adminData.id,
-            username: adminData.username,
-            fullName: adminData.username,
+            username: adminUsername,
+            fullName: adminUsername,
             role: 'admin',
           };
         } else {
@@ -88,10 +152,12 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
           if (!userData) {
             return 'Invalid response from server';
           }
+          const empUsername = (userData.username || '').trim();
+          const empFullName = (userData.fullName || '').trim() || empUsername;
           authUser = {
             id: userData.id,
-            username: userData.username,
-            fullName: userData.fullName || userData.username,
+            username: empUsername,
+            fullName: empFullName,
             email: userData.email,
             isActive: userData.isActive,
             role: 'employee',

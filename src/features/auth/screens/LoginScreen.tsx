@@ -179,14 +179,9 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
+    // Flat — same color as the screen, no card chrome.
+    backgroundColor: 'transparent',
     padding: Spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
   },
   logoContainer: {
     alignItems: 'center',

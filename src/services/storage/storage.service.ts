@@ -21,7 +21,7 @@ export interface AuthUser {
   isActive?: boolean;
 }
 
-const store = Platform.OS === 'windows'
+const rawStore = Platform.OS === 'windows'
   ? {
       getItem: (key: string) => AsyncStorage.getItem(key),
       setItem: (key: string, value: string) => AsyncStorage.setItem(key, value),
@@ -32,6 +32,35 @@ const store = Platform.OS === 'windows'
       setItem: (key: string, value: string) => EncryptedStorage.setItem(key, value),
       removeItem: (key: string) => EncryptedStorage.removeItem(key),
     };
+
+// EncryptedStorage rejects with "An error occurred while removing value"
+// when the key doesn't exist (e.g. fresh install, or after a previous clear).
+// AsyncStorage is more lenient. Wrap every remove so cleanup is idempotent
+// — a missing key should be a successful no-op, never an unhandled rejection
+// and never a noisy log entry.
+const isKeyMissingError = (err: unknown): boolean => {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /removing value/i.test(msg) || /not\s+found/i.test(msg);
+};
+
+const store = {
+  getItem: rawStore.getItem,
+  setItem: rawStore.setItem,
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      await rawStore.removeItem(key);
+    } catch (err) {
+      if (isKeyMissingError(err)) {
+        // Expected: key wasn't there. No-op, no log.
+        return;
+      }
+      // Genuinely unexpected — keep the log so we don't lose signal.
+      if (__DEV__) {
+        console.warn(`[storage] removeItem(${key}) failed:`, err);
+      }
+    }
+  },
+};
 
 export const storage = {
   async getToken(): Promise<string | null> {

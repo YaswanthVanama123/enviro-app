@@ -44,7 +44,8 @@ interface NavItem {
   component: React.ComponentType<any>;
 }
 
-const AUTH_NAV: NavItem[] = [
+// Admin nav — only for users with role === 'admin'
+const ADMIN_NAV: NavItem[] = [
   {name: 'Dashboard', label: 'Dashboard', icon: 'grid-outline',              component: AdminDashboardScreen},
   {name: 'New',       label: 'New',       icon: 'add-circle-outline',        component: CreateAgreementScreen},
   {name: 'Saved',     label: 'Saved',     icon: 'document-text-outline',     component: SavedAgreementsScreen},
@@ -53,7 +54,8 @@ const AUTH_NAV: NavItem[] = [
   {name: 'Admin',     label: 'Admin',     icon: 'shield-checkmark-outline',  component: AdminPanelScreen},
 ];
 
-const PUBLIC_NAV: NavItem[] = [
+// Employee nav — for users with role === 'employee'
+const EMPLOYEE_NAV: NavItem[] = [
   {name: 'Home',  label: 'Home',  icon: 'home-outline',                       component: HomeScreen},
   {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 component: CreateAgreementScreen},
   {name: 'Saved', label: 'Saved', icon: 'document-text-outline',              component: SavedAgreementsScreen},
@@ -61,9 +63,13 @@ const PUBLIC_NAV: NavItem[] = [
   {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', component: AdminPanelScreen},
 ];
 
+// Unauthenticated fallback — should be unreachable after AppNavigator's
+// auth gating (LoginScreen renders instead), kept as belt-and-braces.
+const PUBLIC_NAV: NavItem[] = EMPLOYEE_NAV;
+
 // ── Mobile bottom-tab navigator (iPhone) ─────────────────
 function MobileNav() {
-  const {isAuthenticated, authReady} = useAdminAuth();
+  const {isAuthenticated, isAdmin, authReady} = useAdminAuth();
   const [activeTab, setActiveTab] = useState(0);
 
   if (!authReady) {
@@ -74,7 +80,13 @@ function MobileNav() {
     );
   }
 
-  const navItems = isAuthenticated ? AUTH_NAV : PUBLIC_NAV;
+  // Pick nav based on role: admin → admin tabs; employee → employee tabs;
+  // unauthenticated → fallback (won't render in practice).
+  const navItems = !isAuthenticated
+    ? PUBLIC_NAV
+    : isAdmin
+      ? ADMIN_NAV
+      : EMPLOYEE_NAV;
   const ActiveScreen = navItems[activeTab]?.component ?? navItems[0].component;
 
   return (

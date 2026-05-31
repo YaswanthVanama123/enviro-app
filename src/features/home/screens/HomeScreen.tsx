@@ -11,18 +11,28 @@ import {
   RefreshControl,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Colors, Spacing, Radius, FontSize, Shadow} from '../../../theme';
 import {StatChip} from '../components/StatChip';
 import {ActionCard} from '../components/ActionCard';
 import {BarChart} from '../components/BarChart';
 import {useHomeData, type TimeFilter} from '../hooks/useHomeData';
+import {useAuth} from '../../admin/context/AdminAuthContext';
+import type {RootStackParamList} from '../../../app/navigation/types';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CARD_GAP = Spacing.lg;
 const ACTION_CARD_WIDTH = (SCREEN_WIDTH - Spacing.xl * 2 - CARD_GAP) / 2;
 
-export default function HomeScreen({navigation}: {navigation?: any}) {
+export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  // The Tab navigator only knows tab routes (Home / New / Saved / Trash / More).
+  // Routes like 'MyCommissions' / 'MyQuota' / 'MyInsideSales' are registered
+  // on the parent Stack navigator (AppNavigator), so we grab the typed
+  // navigation from the root context to reach them.
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const {user, isAdmin, logout} = useAuth();
   const {
     counts,
     chartData,
@@ -34,7 +44,67 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
     fetchData,
   } = useHomeData();
 
-  const go = (route: string) => navigation?.navigate(route);
+  // Pick the best display label from whatever the backend returned. trim() so
+  // empty strings (which "" || ... would treat as truthy in some weird storage
+  // states actually go through) are skipped. email is the last fallback.
+  const userLabel =
+    (user?.fullName?.trim() || '') ||
+    (user?.username?.trim() || '') ||
+    (user?.email?.trim() || '');
+
+  // Only show app branding when there's truly no logged-in user — otherwise
+  // we want SOMETHING from the user record, even just their email.
+  const displayName = userLabel || 'Enviro-Master';
+  const initials = userLabel
+    ? userLabel
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0]?.toUpperCase())
+        .join('')
+    : 'EM';
+  const roleLabel = user
+    ? isAdmin
+      ? 'Administrator'
+      : 'Employee'
+    : 'Professional Agreement Management';
+
+  // Helpful while debugging "why doesn't my name show" — visible in Metro logs.
+  React.useEffect(() => {
+    if (user) {
+      console.log('[HomeScreen] logged-in user:', {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      });
+    }
+  }, [user]);
+
+  // Defensive: if we ever land on the home screen without a logged-in user
+  // (or with a user that has no identity), force a logout. This drops the
+  // user back to the LoginScreen via AppNavigator's isAuthenticated gate.
+  React.useEffect(() => {
+    const hasIdentity =
+      !!user &&
+      ((user.fullName?.trim() || '').length > 0 ||
+        (user.username?.trim() || '').length > 0 ||
+        (user.email?.trim() || '').length > 0);
+    if (!hasIdentity) {
+      console.warn('[HomeScreen] No usable user — forcing logout to LoginScreen.');
+      logout();
+    }
+  }, [user, logout]);
+
+  // While the logout effect is firing, render nothing to avoid flashing
+  // the hardcoded fallback branding ("Enviro-Master / Professional…")
+  // before AppNavigator swaps to LoginScreen.
+  if (!user) {
+    return <View style={[styles.safe, {backgroundColor: Colors.background}]} />;
+  }
+
+  const go = (route: keyof RootStackParamList) => navigation.navigate(route as any);
 
   return (
     <SafeAreaView style={styles.safe} edges={[]}>
@@ -56,11 +126,11 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
         <View style={[styles.hero, {paddingTop: insets.top + Spacing.lg}]}>
           <View style={styles.heroRow}>
             <View style={styles.heroLogo}>
-              <Text style={styles.heroLogoText}>EM</Text>
+              <Text style={styles.heroLogoText}>{initials}</Text>
             </View>
             <View style={styles.heroText}>
-              <Text style={styles.heroTitle}>Enviro-Master</Text>
-              <Text style={styles.heroSub}>Professional Agreement Management</Text>
+              <Text style={styles.heroTitle}>{displayName}</Text>
+              <Text style={styles.heroSub}>{roleLabel}</Text>
             </View>
             <View style={styles.heroBadge}>
               <Text style={styles.heroBadgeNum}>{counts.total}</Text>
@@ -125,7 +195,7 @@ export default function HomeScreen({navigation}: {navigation?: any}) {
             iconName="calculator-outline"
             btnLabel="View Commissions →"
             btnColor={Colors.primary}
-            onPress={() => navigation?.navigate('MyCommissions')}
+            onPress={() => navigation.navigate('MyCommissions')}
             fullWidth
           />
         </View>
