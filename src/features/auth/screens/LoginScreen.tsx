@@ -54,7 +54,7 @@ export function LoginScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
-          {/* Logo */}
+          {}
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
               <Text style={styles.logoText}>EM</Text>
@@ -64,7 +64,7 @@ export function LoginScreen() {
           <Text style={styles.title}>EnviroMaster</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
 
-          {/* Tabs */}
+          {}
           <View style={styles.tabContainer}>
             <TouchableOpacity
               style={[
@@ -96,7 +96,7 @@ export function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Form */}
+          {}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Username</Text>
@@ -156,7 +156,7 @@ export function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Info Text */}
+          {}
           <Text style={styles.infoText}>
             {activeTab === 'admin'
               ? 'Admin accounts have full system access including user management.'
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   card: {
-    // Flat — same color as the screen, no card chrome.
+    
     backgroundColor: 'transparent',
     padding: Spacing.xl,
   },

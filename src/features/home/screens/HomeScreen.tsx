@@ -27,10 +27,9 @@ const ACTION_CARD_WIDTH = (SCREEN_WIDTH - Spacing.xl * 2 - CARD_GAP) / 2;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  // The Tab navigator only knows tab routes (Home / New / Saved / Trash / More).
-  // Routes like 'MyCommissions' / 'MyQuota' / 'MyInsideSales' are registered
-  // on the parent Stack navigator (AppNavigator), so we grab the typed
-  // navigation from the root context to reach them.
+
+  
+  
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {user, isAdmin, logout} = useAuth();
   const {
@@ -44,16 +43,14 @@ export default function HomeScreen() {
     fetchData,
   } = useHomeData();
 
-  // Pick the best display label from whatever the backend returned. trim() so
-  // empty strings (which "" || ... would treat as truthy in some weird storage
-  // states actually go through) are skipped. email is the last fallback.
+  
+  
   const userLabel =
     (user?.fullName?.trim() || '') ||
     (user?.username?.trim() || '') ||
     (user?.email?.trim() || '');
 
-  // Only show app branding when there's truly no logged-in user — otherwise
-  // we want SOMETHING from the user record, even just their email.
+  
   const displayName = userLabel || 'Enviro-Master';
   const initials = userLabel
     ? userLabel
@@ -69,7 +66,6 @@ export default function HomeScreen() {
       : 'Employee'
     : 'Professional Agreement Management';
 
-  // Helpful while debugging "why doesn't my name show" — visible in Metro logs.
   React.useEffect(() => {
     if (user) {
       console.log('[HomeScreen] logged-in user:', {
@@ -82,9 +78,8 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  // Defensive: if we ever land on the home screen without a logged-in user
-  // (or with a user that has no identity), force a logout. This drops the
-  // user back to the LoginScreen via AppNavigator's isAuthenticated gate.
+  
+  
   React.useEffect(() => {
     const hasIdentity =
       !!user &&
@@ -97,9 +92,8 @@ export default function HomeScreen() {
     }
   }, [user, logout]);
 
-  // While the logout effect is firing, render nothing to avoid flashing
-  // the hardcoded fallback branding ("Enviro-Master / Professional…")
-  // before AppNavigator swaps to LoginScreen.
+  
+  
   if (!user) {
     return <View style={[styles.safe, {backgroundColor: Colors.background}]} />;
   }

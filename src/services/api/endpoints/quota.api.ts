@@ -1,7 +1,4 @@
-/**
- * Quota Tracking API for Mobile
- * API client for sales person management, agreements, and quota tracking
- */
+
 
 import {apiClient} from '../client';
 import type {
@@ -18,14 +15,8 @@ import type {
 
 const BASE_PATH = '/api/quota';
 
-// ============================================================
-// SALES PERSON API
-// ============================================================
-
 export const salesPersonApi = {
-  /**
-   * Get all sales persons
-   */
+  
   async getAll(params?: {
     active?: boolean;
     role?: string;
@@ -51,9 +42,6 @@ export const salesPersonApi = {
     }
   },
 
-  /**
-   * Get a single sales person by ID
-   */
   async getById(id: string): Promise<SalesPerson | null> {
     try {
       const response = await apiClient.get<{success: boolean; data: SalesPerson}>(
@@ -66,9 +54,6 @@ export const salesPersonApi = {
     }
   },
 
-  /**
-   * Create a new sales person
-   */
   async create(input: CreateSalesPersonInput): Promise<SalesPerson | null> {
     try {
       const response = await apiClient.post<{success: boolean; data: SalesPerson}>(
@@ -83,14 +68,8 @@ export const salesPersonApi = {
   },
 };
 
-// ============================================================
-// AGREEMENT API
-// ============================================================
-
 export const agreementApi = {
-  /**
-   * Get all agreements
-   */
+  
   async getAll(params?: {
     salesPersonId?: string;
     status?: AgreementStatus;
@@ -127,9 +106,6 @@ export const agreementApi = {
     }
   },
 
-  /**
-   * Get agreement by ID
-   */
   async getById(id: string): Promise<Agreement | null> {
     try {
       const response = await apiClient.get<{success: boolean; data: Agreement}>(
@@ -142,9 +118,6 @@ export const agreementApi = {
     }
   },
 
-  /**
-   * Create a new agreement
-   */
   async create(input: CreateAgreementInput): Promise<{
     agreement: Agreement;
     quotaPeriod: {
@@ -175,9 +148,6 @@ export const agreementApi = {
     }
   },
 
-  /**
-   * Update agreement status
-   */
   async updateStatus(
     id: string,
     status: AgreementStatus,
@@ -196,14 +166,8 @@ export const agreementApi = {
   },
 };
 
-// ============================================================
-// QUOTA API
-// ============================================================
-
 export const quotaApi = {
-  /**
-   * Get quota status for a sales person
-   */
+  
   async getStatus(
     salesPersonId: string,
     params?: {periodType?: 'monthly' | 'quarterly' | 'annual'; date?: string},
@@ -225,9 +189,6 @@ export const quotaApi = {
     }
   },
 
-  /**
-   * Get quota history for a sales person
-   */
   async getHistory(
     salesPersonId: string,
     limit?: number,
@@ -247,9 +208,6 @@ export const quotaApi = {
     }
   },
 
-  /**
-   * Get current quota level for commission calculation
-   */
   async getCurrentLevel(salesPersonId: string): Promise<QuotaLevelResponse | null> {
     try {
       const response = await apiClient.get<{
@@ -264,9 +222,6 @@ export const quotaApi = {
     }
   },
 
-  /**
-   * Get leaderboard
-   */
   async getLeaderboard(params?: {
     periodType?: 'monthly' | 'quarterly' | 'annual';
     date?: string;

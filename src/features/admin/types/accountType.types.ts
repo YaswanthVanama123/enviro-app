@@ -1,15 +1,9 @@
-/**
- * Account Type Detection Types for Mobile
- * Types for auto-detecting account types based on revenue and distance
- */
 
-// Account type constants
+
 export type AccountType = 'Anchor' | 'Bread5' | 'Bread15' | 'Pit';
 
-// Detection confidence level
 export type DetectionConfidence = 'high' | 'medium' | 'low';
 
-// Thresholds used for detection
 export interface AccountTypeThresholds {
   anchorMinRevenue: number;
   anchorMinRevenueGreenline: number;
@@ -18,7 +12,6 @@ export interface AccountTypeThresholds {
   milesPerMinute: number;
 }
 
-// Input for account type detection
 export interface AccountTypeDetectionInput {
   perVisitRevenue: number;
   distanceToAnchorMiles?: number | null;
@@ -27,7 +20,6 @@ export interface AccountTypeDetectionInput {
   customerName?: string;
 }
 
-// Result of account type detection
 export interface AccountTypeDetectionResult {
   accountType: AccountType;
   confidence: DetectionConfidence;
@@ -36,7 +28,6 @@ export interface AccountTypeDetectionResult {
   distanceMiles: number | null;
 }
 
-// Full detection response
 export interface AccountTypeDetectionResponse {
   success: boolean;
   input: {
@@ -48,7 +39,6 @@ export interface AccountTypeDetectionResponse {
   thresholds: AccountTypeThresholds;
 }
 
-// Account type info for display
 export interface AccountTypeInfo {
   type: AccountType;
   description: string;
@@ -56,14 +46,12 @@ export interface AccountTypeInfo {
   deduction: number;
 }
 
-// Thresholds response
 export interface ThresholdsResponse {
   success: boolean;
   thresholds: AccountTypeThresholds;
   accountTypes: AccountTypeInfo[];
 }
 
-// Default thresholds
 export const DEFAULT_THRESHOLDS: AccountTypeThresholds = {
   anchorMinRevenue: 200,
   anchorMinRevenueGreenline: 100,
@@ -72,7 +60,6 @@ export const DEFAULT_THRESHOLDS: AccountTypeThresholds = {
   milesPerMinute: 0.5,
 };
 
-// Account type display info
 export const ACCOUNT_TYPE_INFO: AccountTypeInfo[] = [
   {
     type: 'Anchor',
@@ -100,9 +87,6 @@ export const ACCOUNT_TYPE_INFO: AccountTypeInfo[] = [
   },
 ];
 
-/**
- * Estimate driving time from distance
- */
 export function estimateDrivingTime(
   distanceMiles: number,
   milesPerMinute = 0.5,
@@ -110,9 +94,6 @@ export function estimateDrivingTime(
   return distanceMiles / milesPerMinute;
 }
 
-/**
- * Client-side account type detection
- */
 export function detectAccountTypeClient(
   perVisitRevenue: number,
   distanceToAnchorMiles: number | null,
@@ -177,27 +158,21 @@ export function detectAccountTypeClient(
   };
 }
 
-/**
- * Get color for account type (for UI display)
- */
 export function getAccountTypeColor(type: AccountType): string {
   switch (type) {
     case 'Anchor':
-      return '#16a34a'; // green
+      return '#16a34a'; 
     case 'Bread5':
-      return '#2563eb'; // blue
+      return '#2563eb'; 
     case 'Bread15':
-      return '#7c3aed'; // purple
+      return '#7c3aed'; 
     case 'Pit':
-      return '#dc2626'; // red
+      return '#dc2626'; 
     default:
-      return '#6b7280'; // gray
+      return '#6b7280'; 
   }
 }
 
-/**
- * Get background color for account type badge
- */
 export function getAccountTypeBgColor(type: AccountType): string {
   switch (type) {
     case 'Anchor':

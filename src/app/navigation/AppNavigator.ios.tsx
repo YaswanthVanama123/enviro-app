@@ -1,4 +1,4 @@
-// iOS — uses WebTheme for consistent desktop branding on Mac Catalyst
+
 import React from 'react';
 import {View, ActivityIndicator, StyleSheet} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
@@ -43,9 +43,8 @@ const WebTheme = {
 export default function AppNavigator() {
   const {isAuthenticated, authReady} = useAuth();
 
-  // Show loading screen while we check stored credentials + validate them
-  // against /api/{role}/me. This avoids flashing the auth-gated stack
-  // before AdminAuthContext finishes its initial check.
+  
+  
   if (!authReady) {
     return (
       <View style={styles.loadingContainer}>
@@ -58,7 +57,7 @@ export default function AppNavigator() {
     <NavigationContainer theme={WebTheme}>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         {isAuthenticated ? (
-          // Authenticated screens
+          
           <>
             <Stack.Screen name="Main" component={TabNavigator} />
             <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
@@ -80,7 +79,7 @@ export default function AppNavigator() {
             <Stack.Screen name="PayrollSettings" component={PayrollSettingsScreen} />
           </>
         ) : (
-          // Unauthenticated — only the login screen is reachable
+          
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
       </Stack.Navigator>

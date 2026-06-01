@@ -43,7 +43,6 @@ export function QuotaSection() {
   const [activeTab, setActiveTab] = useState<SubTab>('dashboard');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Data state
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [quotaStatus, setQuotaStatus] = useState<QuotaStatusResponse | null>(null);
@@ -51,10 +50,8 @@ export function QuotaSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Picker state
   const [showPersonPicker, setShowPersonPicker] = useState(false);
 
-  // Load sales persons
   useEffect(() => {
     const loadSalesPersons = async () => {
       const result = await salesPersonApi.getAll({active: true});
@@ -68,7 +65,6 @@ export function QuotaSection() {
     loadSalesPersons();
   }, []);
 
-  // Load data when person or tab changes
   const loadData = useCallback(async () => {
     if (!selectedPersonId) return;
 
@@ -123,7 +119,7 @@ export function QuotaSection() {
 
     return (
       <View style={styles.dashboardContainer}>
-        {/* Quota Progress Card */}
+        {}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{quotaStatus.period.label}</Text>
 
@@ -173,7 +169,7 @@ export function QuotaSection() {
           </Text>
         </View>
 
-        {/* Stats Cards */}
+        {}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Agreements</Text>
@@ -211,7 +207,7 @@ export function QuotaSection() {
           </View>
         </View>
 
-        {/* Recent Agreements */}
+        {}
         {quotaStatus.recentAgreements.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Recent Agreements</Text>
@@ -329,7 +325,7 @@ export function QuotaSection() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={styles.title}>Quota Tracking</Text>
         <Text style={styles.subtitle}>
@@ -337,7 +333,7 @@ export function QuotaSection() {
         </Text>
       </View>
 
-      {/* Person Selector */}
+      {}
       <TouchableOpacity
         style={styles.personSelector}
         onPress={() => setShowPersonPicker(!showPersonPicker)}>
@@ -381,7 +377,7 @@ export function QuotaSection() {
         </View>
       )}
 
-      {/* Tab Bar */}
+      {}
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'dashboard' && styles.tabActive]}
@@ -407,7 +403,7 @@ export function QuotaSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
+      {}
       {loading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={Colors.primary} />

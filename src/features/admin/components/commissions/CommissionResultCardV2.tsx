@@ -19,7 +19,6 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
   const {breakdown} = result;
   const [isExplanationExpanded, setIsExplanationExpanded] = useState(false);
 
-  // Helper to get step number accounting for optional steps
   const getStepNumber = (baseStep: number) => {
     if (breakdown.revenueDeduction > 0 || breakdown.anchorBonus > 0) {
       return baseStep;
@@ -31,7 +30,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
     <View style={styles.container}>
       <Text style={styles.title}>Commission Result</Text>
 
-      {/* Main Results */}
+      {}
       <View style={styles.mainResults}>
         <View style={styles.resultCard}>
           <Text style={styles.resultLabel}>Final Rate</Text>
@@ -55,7 +54,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </View>
       </View>
 
-      {/* Pricing Tier Badge */}
+      {}
       <View style={[styles.tierBadge, {backgroundColor: getPricingTierColor(breakdown.pricingTier) + '15'}]}>
         <Text style={[styles.tierLabel, {color: getPricingTierColor(breakdown.pricingTier)}]}>
           {breakdown.pricingTier}
@@ -68,11 +67,11 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         )}
       </View>
 
-      {/* Breakdown */}
+      {}
       <View style={styles.breakdown}>
         <Text style={styles.breakdownTitle}>Calculation Breakdown</Text>
 
-        {/* Revenue Section */}
+        {}
         <View style={styles.breakdownSection}>
           <Text style={styles.sectionTitle}>Revenue</Text>
 
@@ -115,7 +114,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
           </View>
         </View>
 
-        {/* Quota Credit Section */}
+        {}
         <View style={styles.breakdownSection}>
           <Text style={styles.sectionTitle}>Quota Credit</Text>
 
@@ -138,7 +137,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
           </View>
         </View>
 
-        {/* Commission Rate Section */}
+        {}
         <View style={styles.breakdownSection}>
           <Text style={styles.sectionTitle}>Commission Rate</Text>
 
@@ -187,7 +186,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </View>
       </View>
 
-      {/* Commission Amounts */}
+      {}
       <View style={styles.amounts}>
         <Text style={styles.amountsTitle}>Commission Amounts</Text>
 
@@ -236,7 +235,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </View>
       </View>
 
-      {/* Formula */}
+      {}
       <View style={styles.formula}>
         <Text style={styles.formulaText}>
           <Text style={styles.formulaBold}>Formula: </Text>
@@ -249,7 +248,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
         </Text>
       </View>
 
-      {/* Expandable Explanation Section */}
+      {}
       <View style={styles.explanationContainer}>
         <TouchableOpacity
           style={styles.explanationHeader}
@@ -576,7 +575,7 @@ const styles = StyleSheet.create({
   formulaBold: {
     fontWeight: '700',
   },
-  // Explanation Section Styles
+  
   explanationContainer: {
     borderTopWidth: 1,
     borderTopColor: '#d1fae5',

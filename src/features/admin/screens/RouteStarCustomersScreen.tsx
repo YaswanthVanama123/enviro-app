@@ -1,7 +1,4 @@
-/**
- * RouteStar Customers Screen
- * Wrapper screen for RouteStarCustomersSection component
- */
+
 
 import React from 'react';
 import {View, StyleSheet} from 'react-native';

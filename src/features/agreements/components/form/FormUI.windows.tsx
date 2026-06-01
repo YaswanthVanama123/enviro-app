@@ -1,13 +1,4 @@
-/**
- * FormUI.windows.tsx
- * Desktop-size UI primitives — exact web app values:
- *  • contract-input:   padding 12px 16px, 16px font, border 2px #e5e7eb, radius 8px
- *  • contract-label:  13px, 600, #4b5563
- *  • card-title:      16px, 700, uppercase, border-bottom 2px #f3f4f6
- *  • breakdown-row:   bg #f9fafb, radius 8px, padding 12px 16px
- *  • total-section:   green gradient, border 3px #86efac, 42px amount
- *  • dropdown-menu:   border 2px #ff4500, shadow
- */
+
 import React from 'react';
 import {
   View,
@@ -21,7 +12,6 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// ── Web app exact palette ────────────────────────────────
 const C = {
   primary:       '#c00000',
   orange:        '#ff4500',
@@ -51,8 +41,6 @@ const C = {
   inputFocus:    '#ff4500',
 };
 
-// ── FormSection ──────────────────────────────────────────
-// Matches web app .contract-card + .card-title
 export function FormSection({icon, title, children}: {icon: string; title: string; children?: React.ReactNode}) {
   return (
     <View style={ss.card}>
@@ -69,8 +57,6 @@ export function FormSection({icon, title, children}: {icon: string; title: strin
   );
 }
 
-// ── FieldRow ─────────────────────────────────────────────
-// Matches web app .contract-field-group + .contract-label + .contract-input
 interface FieldRowProps {
   label: string;
   value: string;
@@ -104,7 +90,6 @@ export function FieldRow({label, value, onChangeText, placeholder, keyboardType,
   );
 }
 
-// ── NumberRow ────────────────────────────────────────────
 interface NumberRowProps {
   label: string;
   value: number;
@@ -140,7 +125,6 @@ export function NumberRow({label, value, onChange, placeholder, prefix, suffix, 
   );
 }
 
-// ── SelectRow ────────────────────────────────────────────
 interface SelectRowProps {
   label: string;
   value: string;
@@ -168,8 +152,6 @@ export function SelectRow({label, value, options, onChange}: SelectRowProps) {
   );
 }
 
-// ── DropdownRow ──────────────────────────────────────────
-// Matches web app .frequency-dropdown-trigger / .frequency-dropdown-menu
 interface DropdownRowProps {
   label: string;
   value: string;
@@ -184,7 +166,7 @@ export function DropdownRow({label, value, options, onChange}: DropdownRowProps)
     <View style={ss.fieldGroup}>
       <Text style={ss.fieldLabel}>{label}</Text>
       <View style={ss.dropdownWrap}>
-        {/* Trigger */}
+        {}
         <TouchableOpacity
           style={[ss.dropdownTrigger, open && ss.dropdownTriggerOpen]}
           onPress={() => setOpen(p => !p)}
@@ -196,7 +178,7 @@ export function DropdownRow({label, value, options, onChange}: DropdownRowProps)
             color={open ? C.orange : C.textMuted}
           />
         </TouchableOpacity>
-        {/* Menu */}
+        {}
         {open && (
           <View style={ss.dropdownMenu}>
             <ScrollView style={ss.dropdownScroll} showsVerticalScrollIndicator={true} nestedScrollEnabled>
@@ -221,7 +203,6 @@ export function DropdownRow({label, value, options, onChange}: DropdownRowProps)
   );
 }
 
-// ── ToggleRow ────────────────────────────────────────────
 interface ToggleRowProps {
   label: string;
   value: boolean;
@@ -246,8 +227,6 @@ export function ToggleRow({label, value, onChange, subtitle}: ToggleRowProps) {
   );
 }
 
-// ── CalcRow ──────────────────────────────────────────────
-// Larger, desktop-friendly calc row (qty @ $rate = total)
 interface CalcRowProps {
   label: string;
   qty: number;
@@ -263,7 +242,7 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
     <View style={ss.fieldGroup}>
       <Text style={ss.fieldLabel}>{label}</Text>
       <View style={ss.calcFields}>
-        {/* Qty */}
+        {}
         <View style={ss.calcCell}>
           <Text style={ss.calcMeta}>QTY</Text>
           <TextInput
@@ -276,7 +255,7 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
           />
         </View>
         <Text style={ss.calcOp}>×</Text>
-        {/* Rate */}
+        {}
         <View style={ss.calcCell}>
           <Text style={ss.calcMeta}>RATE ($)</Text>
           <TextInput
@@ -290,7 +269,7 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
           />
         </View>
         <Text style={ss.calcOp}>=</Text>
-        {/* Total */}
+        {}
         <View style={[ss.calcCell, ss.calcTotalCell]}>
           <Text style={ss.calcMeta}>TOTAL</Text>
           <Text style={ss.calcTotal} numberOfLines={1}>{formatDollar(total)}</Text>
@@ -300,8 +279,6 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
   );
 }
 
-// ── DollarRow ────────────────────────────────────────────
-// Matches web app .breakdown-row
 export function DollarRow({label, value, highlight}: {label: string; value: number; highlight?: boolean}) {
   return (
     <View style={[ss.breakdownRow, highlight && ss.breakdownRowHighlight]}>
@@ -315,12 +292,10 @@ export function DollarRow({label, value, highlight}: {label: string; value: numb
   );
 }
 
-// ── FormDivider ──────────────────────────────────────────
 export function FormDivider() {
   return <View style={ss.divider} />;
 }
 
-// ── StepIndicator ────────────────────────────────────────
 export function StepIndicator({current, total}: {current: number; total: number}) {
   return (
     <View style={ss.stepRow}>
@@ -339,15 +314,12 @@ export function StepIndicator({current, total}: {current: number; total: number}
   );
 }
 
-// ── Helpers ──────────────────────────────────────────────
 function formatDollar(v: number): string {
   return '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-// ── Styles — web app values in React Native ──────────────
 const ss = StyleSheet.create({
 
-  // ── Card (contract-card) ──
   card: {
     backgroundColor: C.surface,
     borderWidth:     2,
@@ -362,7 +334,7 @@ const ss = StyleSheet.create({
     elevation:       2,
     overflow:        'hidden',
   },
-  // Card header (card-title style)
+  
   cardHeader: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -395,14 +367,12 @@ const ss = StyleSheet.create({
     paddingBottom:     20,
   },
 
-  // ── Field group (contract-field-group) ──
   fieldGroup: {
     flexDirection:   'column',
     gap: 8,
     marginBottom:    20,
   },
 
-  // ── Label (contract-label) ──
   fieldLabel: {
     fontSize:   13,
     fontWeight: '600',
@@ -413,7 +383,6 @@ const ss = StyleSheet.create({
     color: C.primary,
   },
 
-  // ── Text input (contract-input) ──
   input: {
     backgroundColor: C.surface,
     borderWidth:     2,
@@ -431,7 +400,6 @@ const ss = StyleSheet.create({
     textAlignVertical: 'top',
   },
 
-  // ── Number input ──
   numberRow: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -463,7 +431,6 @@ const ss = StyleSheet.create({
     fontFamily: 'Arial',
   },
 
-  // ── Chips (SelectRow) ──
   chips: {
     flexDirection: 'row',
     flexWrap:      'wrap',
@@ -492,7 +459,6 @@ const ss = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Dropdown ──
   dropdownWrap: {
     position: 'relative',
     zIndex:   200,
@@ -564,7 +530,6 @@ const ss = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Toggle ──
   toggleRow: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -583,7 +548,6 @@ const ss = StyleSheet.create({
     fontFamily: 'Arial',
   },
 
-  // ── Calc row ──
   calcFields: {
     flexDirection: 'row',
     alignItems:    'flex-end',
@@ -640,7 +604,6 @@ const ss = StyleSheet.create({
     fontFamily:         'Arial',
   },
 
-  // ── Breakdown row (DollarRow) — matches web .breakdown-row ──
   breakdownRow: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -679,14 +642,12 @@ const ss = StyleSheet.create({
     color: '#92400e',
   },
 
-  // ── Divider ──
   divider: {
     height:          2,
     backgroundColor: '#e5e7eb',
     marginVertical:   12,
   },
 
-  // ── Step indicator ──
   stepRow: {
     flexDirection:   'row',
     alignItems:      'center',

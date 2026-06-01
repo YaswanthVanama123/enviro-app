@@ -18,7 +18,6 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
     input,
   } = result;
 
-  // Calculate weekly commission from annual
   const weeklyCommission = annualCommission / 52;
 
   const formatCurrency = (value: number) => {
@@ -39,7 +38,7 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
     <View style={styles.container}>
       <Text style={styles.title}>Commission Result</Text>
 
-      {/* Main Results */}
+      {}
       <View style={styles.mainResults}>
         <View style={styles.resultCard}>
           <Text style={styles.resultLabel}>Final Rate</Text>
@@ -63,7 +62,7 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
         </View>
       </View>
 
-      {/* Breakdown */}
+      {}
       <View style={styles.breakdown}>
         <Text style={styles.breakdownTitle}>Calculation Breakdown</Text>
 
@@ -147,7 +146,7 @@ export function CommissionResultCard({result}: CommissionResultCardProps) {
         </View>
       </View>
 
-      {/* Formula */}
+      {}
       <View style={styles.formula}>
         <Text style={styles.formulaText}>
           <Text style={styles.formulaBold}>Formula: </Text>

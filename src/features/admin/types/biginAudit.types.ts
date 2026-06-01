@@ -1,7 +1,4 @@
-/**
- * Bigin Audit Types for Mobile
- * Types for audit logs scraped from Zoho Bigin
- */
+
 
 export interface BiginAuditLog {
   _id: string;
@@ -77,50 +74,46 @@ export interface AuditLogsQueryParams {
   skip?: number;
 }
 
-// Helper function to get action color
 export function getActionColor(action: string): string {
   const lowerAction = action.toLowerCase();
   if (lowerAction.includes('create') || lowerAction.includes('add')) {
-    return '#16a34a'; // green
+    return '#16a34a'; 
   }
   if (lowerAction.includes('delete') || lowerAction.includes('remove')) {
-    return '#dc2626'; // red
+    return '#dc2626'; 
   }
   if (lowerAction.includes('update') || lowerAction.includes('edit') || lowerAction.includes('modify')) {
-    return '#2563eb'; // blue
+    return '#2563eb'; 
   }
   if (lowerAction.includes('login') || lowerAction.includes('logout')) {
-    return '#d97706'; // orange
+    return '#d97706'; 
   }
-  return '#64748b'; // gray
+  return '#64748b'; 
 }
 
-// Helper function to get action background color
 export function getActionBackgroundColor(action: string): string {
   const lowerAction = action.toLowerCase();
   if (lowerAction.includes('create') || lowerAction.includes('add')) {
-    return '#dcfce7'; // green light
+    return '#dcfce7'; 
   }
   if (lowerAction.includes('delete') || lowerAction.includes('remove')) {
-    return '#fee2e2'; // red light
+    return '#fee2e2'; 
   }
   if (lowerAction.includes('update') || lowerAction.includes('edit') || lowerAction.includes('modify')) {
-    return '#dbeafe'; // blue light
+    return '#dbeafe'; 
   }
   if (lowerAction.includes('login') || lowerAction.includes('logout')) {
-    return '#fef3c7'; // orange light
+    return '#fef3c7'; 
   }
-  return '#f1f5f9'; // gray light
+  return '#f1f5f9'; 
 }
 
-// Helper function to format date
 export function formatAuditDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const date = new Date(dateStr);
   return date.toLocaleString();
 }
 
-// Helper function to format bytes to human-readable size
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;

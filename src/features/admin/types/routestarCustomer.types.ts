@@ -1,11 +1,4 @@
-/**
- * RouteStar Customer Types for Mobile
- * Types for RouteStar customer management and sync
- */
 
-// ============================================================
-// ROUTESTAR CUSTOMER TYPES
-// ============================================================
 
 export interface RouteStarCustomer {
   _id: string;
@@ -33,10 +26,6 @@ export interface RouteStarCustomer {
   updatedAt: string;
 }
 
-// ============================================================
-// SYNC STATUS TYPES
-// ============================================================
-
 export interface CustomerSyncStatus {
   isRunning: boolean;
   progress: number;
@@ -47,10 +36,6 @@ export interface CustomerSyncStatus {
   error: string | null;
 }
 
-// ============================================================
-// STATS TYPES
-// ============================================================
-
 export interface CustomerStats {
   total: number;
   active: number;
@@ -58,10 +43,6 @@ export interface CustomerStats {
   uniqueStates: number;
   states: string[];
 }
-
-// ============================================================
-// API RESPONSE TYPES
-// ============================================================
 
 export interface CustomersListResponse {
   success: boolean;
@@ -82,27 +63,14 @@ export interface CustomersQueryParams {
   skip?: number;
 }
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-/**
- * Get status color for customer active state
- */
 export function getCustomerStatusColor(isActive: boolean): string {
   return isActive ? '#16a34a' : '#dc2626';
 }
 
-/**
- * Get status background color
- */
 export function getCustomerStatusBgColor(isActive: boolean): string {
   return isActive ? '#dcfce7' : '#fee2e2';
 }
 
-/**
- * Get sync result color
- */
 export function getSyncResultColor(
   result: 'success' | 'partial' | 'failed' | null,
 ): string {
@@ -118,9 +86,6 @@ export function getSyncResultColor(
   }
 }
 
-/**
- * Get sync result background color
- */
 export function getSyncResultBgColor(
   result: 'success' | 'partial' | 'failed' | null,
 ): string {
@@ -136,9 +101,6 @@ export function getSyncResultBgColor(
   }
 }
 
-/**
- * Format phone number for display
- */
 export function formatPhoneNumber(phone: string): string {
   if (!phone) return '-';
   const cleaned = phone.replace(/\D/g, '');
@@ -148,9 +110,6 @@ export function formatPhoneNumber(phone: string): string {
   return phone;
 }
 
-/**
- * Get full address string
- */
 export function getFullAddress(customer: RouteStarCustomer): string {
   const parts = [
     customer.address,

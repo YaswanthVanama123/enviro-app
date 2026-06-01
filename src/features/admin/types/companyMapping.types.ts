@@ -1,7 +1,4 @@
-/**
- * Company Mapping Types for Mobile
- * Types for mapping Bigin Companies to RouteStar Customers
- */
+
 
 export interface CompanyMapping {
   _id: string;
@@ -42,7 +39,6 @@ export interface RouteStarCustomerOption {
 
 export type MappingFilterTab = 'all' | 'mapped' | 'unmapped';
 
-// Helper function to format mapping date
 export function formatMappingDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const date = new Date(dateStr);
@@ -53,12 +49,10 @@ export function formatMappingDate(dateStr: string | null): string {
   });
 }
 
-// Helper function to get status color
 export function getMappingStatusColor(status: 'mapped' | 'unmapped'): string {
   return status === 'mapped' ? '#059669' : '#dc2626';
 }
 
-// Helper function to get status background color
 export function getMappingStatusBgColor(status: 'mapped' | 'unmapped'): string {
   return status === 'mapped' ? '#dcfce7' : '#fee2e2';
 }

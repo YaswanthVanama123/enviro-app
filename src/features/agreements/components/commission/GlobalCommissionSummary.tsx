@@ -17,7 +17,6 @@ import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
 
-// Color scheme for account types
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   Anchor: '#fbbf24',
   Bread5: '#34d399',
@@ -25,7 +24,6 @@ const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   Pit: '#f87171',
 };
 
-// Quota level display config
 const QUOTA_LEVEL_CONFIG: Record<QuotaLevel, {label: string; color: string; bgColor: string}> = {
   below: {label: 'Below Quota', color: '#dc2626', bgColor: '#fee2e2'},
   above: {label: 'Above Quota', color: '#059669', bgColor: '#d1fae5'},
@@ -55,7 +53,6 @@ export function GlobalCommissionSummary({
 }: GlobalCommissionSummaryProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Get quota level from context (determines base commission rate)
   const {quotaLevel, baseCommissionRate, isLoading: quotaLoading} = useQuotaContext();
   const commissionRate = baseCommissionRate;
   const quotaConfig = QUOTA_LEVEL_CONFIG[quotaLevel];
@@ -67,7 +64,6 @@ export function GlobalCommissionSummary({
     contractMonths,
   });
 
-  // Don't show if no services
   if (global.serviceCount === 0) {
     return null;
   }
@@ -78,7 +74,7 @@ export function GlobalCommissionSummary({
         <View style={styles.titleRow}>
           <Text style={styles.icon}>💰</Text>
           <Text style={styles.title}>Commission Summary</Text>
-          {/* Quota Level Badge */}
+          {}
           <View
             style={[
               styles.quotaBadge,

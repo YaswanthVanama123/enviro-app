@@ -1,7 +1,4 @@
-/**
- * Bigin Companies Section
- * Mobile component for viewing and syncing companies from Zoho Bigin
- */
+
 
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -46,7 +43,6 @@ export function BiginCompaniesSection() {
     hasMore: false,
   });
 
-  // Load companies
   const loadCompanies = useCallback(
     async (reset = false) => {
       if (reset) {
@@ -82,7 +78,6 @@ export function BiginCompaniesSection() {
     [searchTerm, cityFilter, stateFilter, ownerFilter, pagination.limit, pagination.skip],
   );
 
-  // Load stats
   const loadStats = useCallback(async () => {
     const result = await biginCompanyApi.getStats();
     if (result) {
@@ -90,7 +85,6 @@ export function BiginCompaniesSection() {
     }
   }, []);
 
-  // Load fetch status
   const loadFetchStatus = useCallback(async () => {
     const result = await biginCompanyApi.getFetchStatus();
     if (result) {
@@ -98,14 +92,12 @@ export function BiginCompaniesSection() {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     loadCompanies(true);
     loadStats();
     loadFetchStatus();
   }, []);
 
-  // Poll fetch status when fetching
   useEffect(() => {
     if (fetchStatus?.isRunning) {
       const interval = setInterval(() => {
@@ -118,7 +110,6 @@ export function BiginCompaniesSection() {
     }
   }, [fetchStatus?.isRunning, fetchStatus?.lastFetchResult]);
 
-  // Handle fetch
   const handleFetch = async () => {
     const result = await biginCompanyApi.startFetch();
     if (result) {
@@ -126,12 +117,10 @@ export function BiginCompaniesSection() {
     }
   };
 
-  // Handle search
   const handleSearch = () => {
     loadCompanies(true);
   };
 
-  // Handle refresh
   const handleRefresh = () => {
     setRefreshing(true);
     loadCompanies(true);
@@ -139,13 +128,11 @@ export function BiginCompaniesSection() {
     loadFetchStatus();
   };
 
-  // Apply filters
   const applyFilters = () => {
     setShowFilters(false);
     loadCompanies(true);
   };
 
-  // Clear filters
   const clearFilters = () => {
     setCityFilter('');
     setStateFilter('');
@@ -154,14 +141,12 @@ export function BiginCompaniesSection() {
     loadCompanies(true);
   };
 
-  // Load more
   const handleLoadMore = () => {
     if (!loading && pagination.hasMore) {
       loadCompanies(false);
     }
   };
 
-  // Render stat card
   const renderStatCard = (
     label: string,
     value: number,
@@ -178,7 +163,6 @@ export function BiginCompaniesSection() {
     </View>
   );
 
-  // Render company item
   const renderCompanyItem = ({item}: {item: BiginCompany}) => (
     <TouchableOpacity
       style={styles.companyItem}
@@ -218,7 +202,6 @@ export function BiginCompaniesSection() {
     </TouchableOpacity>
   );
 
-  // Render footer
   const renderFooter = () => {
     if (!loading) return null;
     return (
@@ -228,7 +211,6 @@ export function BiginCompaniesSection() {
     );
   };
 
-  // Render empty
   const renderEmpty = () => {
     if (loading) return null;
     return (
@@ -244,7 +226,7 @@ export function BiginCompaniesSection() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Bigin Companies</Text>
@@ -274,7 +256,7 @@ export function BiginCompaniesSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Stats */}
+      {}
       <View style={styles.statsGrid}>
         {renderStatCard(
           'Total',
@@ -306,7 +288,7 @@ export function BiginCompaniesSection() {
         )}
       </View>
 
-      {/* Fetch Status Banner */}
+      {}
       {fetchStatus?.isRunning && (
         <View style={styles.fetchStatusBanner}>
           <View style={styles.progressBar}>
@@ -321,7 +303,7 @@ export function BiginCompaniesSection() {
         </View>
       )}
 
-      {/* Last Sync Info */}
+      {}
       {fetchStatus && !fetchStatus.isRunning && fetchStatus.lastFetchAt && (
         <View style={styles.syncInfoBanner}>
           <View style={styles.syncInfoRow}>
@@ -347,7 +329,7 @@ export function BiginCompaniesSection() {
         </View>
       )}
 
-      {/* Search & Filters */}
+      {}
       <View style={styles.searchRow}>
         <View style={styles.searchInputWrap}>
           <Ionicons
@@ -380,7 +362,7 @@ export function BiginCompaniesSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Active filters */}
+      {}
       {(cityFilter || stateFilter || ownerFilter) && (
         <View style={styles.activeFilters}>
           <Text style={styles.activeFiltersLabel}>Filters:</Text>
@@ -411,10 +393,10 @@ export function BiginCompaniesSection() {
         </View>
       )}
 
-      {/* Results count */}
+      {}
       <Text style={styles.resultsCount}>{pagination.total} companies found</Text>
 
-      {/* Companies List */}
+      {}
       <FlatList
         data={companies}
         renderItem={renderCompanyItem}
@@ -430,7 +412,7 @@ export function BiginCompaniesSection() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Company Detail Modal */}
+      {}
       <Modal
         visible={!!selectedCompany}
         animationType="slide"
@@ -512,7 +494,7 @@ export function BiginCompaniesSection() {
         </View>
       </Modal>
 
-      {/* Filters Modal */}
+      {}
       <Modal
         visible={showFilters}
         animationType="slide"

@@ -39,7 +39,6 @@ export type FormStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PaymentOption = 'online' | 'cash' | 'others';
 
-// Import account type cache type
 import type {AccountTypeCache} from './useAccountTypeDetection';
 
 export interface FormState {
@@ -69,10 +68,10 @@ export interface FormState {
   saving: boolean;
   saveError: string | null;
   savedId: string | null;
-  // Bigin integration for account type detection
+  
   biginCompanyId: string | null;
   isConnectedToBigin: boolean;
-  // Account type cache loaded from saved agreement
+  
   accountTypeCache: AccountTypeCache | null;
   accountTypeCacheLoadedFromSaved: boolean;
 }
@@ -135,13 +134,13 @@ export function useFormFilling(editAgreementId?: string) {
     console.log('[FormFilling] Starting initial API load...', editAgreementId ? `editMode=${editAgreementId}` : 'createMode');
 
     const apiCalls: Promise<any>[] = [
-      formApi.getAdminHeaders(),       // [0] header template
-      formApi.getAllServicePricing(),   // [1] pricing + service agreement template
-      formApi.getProductCatalog(),     // [2] product catalog
-      formApi.getAllServiceConfigs(),   // [3] service configs list
+      formApi.getAdminHeaders(),       
+      formApi.getAllServicePricing(),   
+      formApi.getProductCatalog(),     
+      formApi.getAllServiceConfigs(),   
     ];
     if (editAgreementId) {
-      apiCalls.push(formApi.getAgreementForEdit(editAgreementId)); // [4] saved agreement
+      apiCalls.push(formApi.getAgreementForEdit(editAgreementId)); 
     }
 
     Promise.allSettled(apiCalls).then(([adminRes, pricingRes, catalogRes, svcConfigsRes, editRes]) => {
@@ -251,15 +250,15 @@ export function useFormFilling(editAgreementId?: string) {
           const SERVICE_ID_ALIASES: Record<string, string> = {
             carpetCleaning: 'carpetclean',
             stripWax:       'stripwax',
-            pureJanitorial: 'janitorial', // Web app saves pureJanitorial as 'janitorial'
+            pureJanitorial: 'janitorial', 
           };
 
           const map: Record<string, any> = {};
           serviceConfigs.forEach((sc: any) => {
             if (sc.serviceId) {
-              map[sc.serviceId] = sc;                      // original key
+              map[sc.serviceId] = sc;                      
               const alias = SERVICE_ID_ALIASES[sc.serviceId];
-              if (alias) {map[alias] = sc;}                // aliased key
+              if (alias) {map[alias] = sc;}                
             }
           });
           next.pricingConfigs = map;
@@ -289,7 +288,6 @@ export function useFormFilling(editAgreementId?: string) {
           next.serviceConfigsList = svcConfigsRes.value;
         }
 
-        // ── Edit mode: override state with saved agreement data ──────────
         if (editRes && editRes.status === 'fulfilled' && editRes.value) {
           const doc = editRes.value;
           const payload = doc.payload ?? {};
@@ -297,7 +295,6 @@ export function useFormFilling(editAgreementId?: string) {
 
           next.savedId = doc._id ?? doc.id ?? editAgreementId!;
 
-          // Capture Bigin integration data for account type detection
           if (doc.biginCompanyId) {
             next.biginCompanyId = doc.biginCompanyId;
           }
@@ -305,7 +302,6 @@ export function useFormFilling(editAgreementId?: string) {
             next.isConnectedToBigin = doc.isConnectedToBigin;
           }
 
-          // Load account type cache from saved agreement (to avoid re-detection)
           if (doc.accountTypeCache && typeof doc.accountTypeCache === 'object' && Object.keys(doc.accountTypeCache).length > 0) {
             next.accountTypeCache = doc.accountTypeCache;
             next.accountTypeCacheLoadedFromSaved = true;

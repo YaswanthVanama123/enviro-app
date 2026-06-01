@@ -18,7 +18,6 @@ import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocu
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 
-// â”€â”€ Exact web app color palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   primary:        '#c00000',
   navBg:          '#ffffff',
@@ -78,9 +77,9 @@ export function TabNavigator() {
   return (
     <View style={ss.shell}>
 
-      {/* â”€â”€ Top Nav Bar â€” exact web app layout â”€â”€ */}
+      {}
       <View style={ss.topnav}>
-        {/* Brand / Logo */}
+        {}
         <View style={ss.brand}>
           <View style={ss.logoBox}>
             <Text style={ss.logoText}>EM</Text>
@@ -88,7 +87,7 @@ export function TabNavigator() {
           <Text style={ss.brandName}>EnviroMaster</Text>
         </View>
 
-        {/* Nav links â€” right-aligned, exact web app style */}
+        {}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -117,7 +116,7 @@ export function TabNavigator() {
         </ScrollView>
       </View>
 
-      {/* â”€â”€ Page Body â”€â”€ */}
+      {}
       <View style={ss.pageBody}>
         <ActiveScreen />
       </View>
@@ -135,7 +134,6 @@ const ss = StyleSheet.create({
     backgroundColor: C.bg,
   },
 
-  // â”€â”€ Top Nav â”€â”€
   topnav: {
     height:            NAV_HEIGHT,
     flexDirection:     'row',
@@ -147,7 +145,6 @@ const ss = StyleSheet.create({
     gap: 16,
   },
 
-  // Brand
   brand: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -175,7 +172,6 @@ const ss = StyleSheet.create({
     fontFamily: 'Arial',
   },
 
-  // Nav scroll + items
   navScroll: {
     flex: 1,
   },
@@ -209,7 +205,6 @@ const ss = StyleSheet.create({
     color: C.navTextActive,
   },
 
-  // Page body below nav
   pageBody: {
     flex:            1,
     backgroundColor: C.bg,

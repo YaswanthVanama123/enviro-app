@@ -152,7 +152,6 @@ function FileRow({file, onDelete}: FileRowProps) {
 
   const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
 
-  // Format last edit time for file
   const fileEditInfo = file.updatedAt && file.updatedBy
     ? {
         by: file.updatedBy,
@@ -237,7 +236,7 @@ function FileRow({file, onDelete}: FileRowProps) {
             </>
           )}
         </View>
-        {/* File Edit Info */}
+        {}
         {fileEditInfo && (
           <View style={styles.fileEditInfoRow}>
             <Ionicons name="create-outline" size={9} color="#6b7280" />
@@ -315,7 +314,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
 
   const timeline = calcTimelineStatus(agreement.startDate, agreement.contractMonths);
 
-  // Get creator and last editor from files (with agreement-level fallback)
   const getCreatorAndEditor = () => {
     const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
     const sortedByUpdate = [...agreement.files].sort(
@@ -323,7 +321,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
     );
     const latestEdit = sortedByUpdate[0];
 
-    // Use file-level data if available, otherwise fall back to agreement-level
     return {
       createdBy: mainFile?.createdBy || agreement.files[0]?.createdBy || agreement.createdBy || null,
       lastEditedBy: latestEdit?.updatedBy || latestEdit?.createdBy || agreement.updatedBy || agreement.createdBy || null,
@@ -332,7 +329,6 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   };
   const {createdBy, lastEditedBy, lastEditTime} = getCreatorAndEditor();
 
-  // Format last edit time for display
   const formattedEditTime = lastEditTime
     ? new Date(lastEditTime).toLocaleString('en-US', {
         month: 'short',
@@ -421,7 +417,7 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             <Text style={styles.cardMeta}>
               {agreement.fileCount} {agreement.fileCount === 1 ? 'file' : 'files'}{'  ·  '}{timeAgo(agreement.latestUpdate)}
             </Text>
-            {/* Creator and Editor Info */}
+            {}
             <View style={styles.creatorEditorRow}>
               {createdBy && (
                 <View style={[styles.userInfoTag, {backgroundColor: '#dcfce7', borderColor: '#bbf7d0'}]}>

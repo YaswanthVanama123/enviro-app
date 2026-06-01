@@ -85,7 +85,6 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       if (result) {
         let items = result.groups ?? [];
 
-        // Apply ownership filter client-side
         if (ownership === 'mine' && user?.username) {
           items = items.filter(agreement =>
             agreement.files.some(

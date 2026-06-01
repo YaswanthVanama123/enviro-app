@@ -95,7 +95,6 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
 };
 
-// Time period filter options
 type TimePeriod = 'all' | 'weekly' | '14days' | 'monthly' | 'quarterly' | 'annually' | 'custom';
 
 const TIME_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
@@ -121,7 +120,6 @@ function formatPercent(value: number): string {
   return value.toFixed(2);
 }
 
-// Helper to format quota level for display
 function formatQuotaLevel(quotaLevel: string | null | undefined): string {
   if (!quotaLevel) return '';
   const level = quotaLevel.toLowerCase();
@@ -137,7 +135,6 @@ function formatQuotaLevel(quotaLevel: string | null | undefined): string {
   }
 }
 
-// Helper to get quota level color
 function getQuotaLevelStyle(quotaLevel: string | null | undefined): {bg: string; text: string} {
   if (!quotaLevel) return {bg: '#f3f4f6', text: '#6b7280'};
   const level = quotaLevel.toLowerCase();
@@ -172,7 +169,6 @@ function formatDateShort(date: Date | null): string {
   });
 }
 
-// Helper to check if a date falls within the time period
 function isWithinTimePeriod(
   dateStr: string | null,
   period: TimePeriod,
@@ -242,7 +238,6 @@ export function MyCommissionsScreen() {
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Date picker state
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
@@ -268,7 +263,6 @@ export function MyCommissionsScreen() {
     fetchData();
   }, []);
 
-  // Time-filtered commissions (without status filter) for status counts
   const timeFilteredCommissions = useMemo(() => {
     if (!data?.commissions) return [];
 
@@ -278,12 +272,11 @@ export function MyCommissionsScreen() {
     });
   }, [data?.commissions, timePeriod, customStartDate, customEndDate]);
 
-  // Filtered commissions (with both status and time filter)
   const filteredCommissions = useMemo(() => {
     if (!data?.commissions) return [];
 
     return data.commissions.filter(c => {
-      // Filter by status
+      
       let statusMatch = true;
       if (statusFilter !== 'all') {
         if (statusFilter === 'approved') {
@@ -293,7 +286,6 @@ export function MyCommissionsScreen() {
         }
       }
 
-      // Filter by time period
       const dateToCheck = c.startDate || c.createdAt;
       const timeMatch = isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate);
 
@@ -301,7 +293,6 @@ export function MyCommissionsScreen() {
     });
   }, [data?.commissions, statusFilter, timePeriod, customStartDate, customEndDate]);
 
-  // Calculate status counts from time-filtered commissions
   const filteredByStatus = useMemo(() => {
     const counts: Record<string, {count: number; commission: number}> = {
       draft: {count: 0, commission: 0},
@@ -329,7 +320,6 @@ export function MyCommissionsScreen() {
     return counts;
   }, [timeFilteredCommissions]);
 
-  // Calculate filtered totals
   const filteredTotals = useMemo(() => {
     let totalAnnualCommission = 0;
     let totalMonthlyCommission = 0;
@@ -431,7 +421,7 @@ export function MyCommissionsScreen() {
             colors={[Colors.primary]}
           />
         }>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <View style={styles.iconBox}>
@@ -446,7 +436,7 @@ export function MyCommissionsScreen() {
           </View>
         </View>
 
-        {/* Time Period Filter */}
+        {}
         <View style={styles.timeFilterSection}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.timeFilterTabs}>
@@ -467,7 +457,7 @@ export function MyCommissionsScreen() {
             </View>
           </ScrollView>
 
-          {/* Custom Date Range */}
+          {}
           {timePeriod === 'custom' && (
             <View style={styles.dateRangeContainer}>
               <TouchableOpacity
@@ -497,7 +487,7 @@ export function MyCommissionsScreen() {
           )}
         </View>
 
-        {/* Date Pickers */}
+        {}
         {showStartPicker && (
           <DateTimePicker
             value={customStartDate || new Date()}
@@ -515,7 +505,7 @@ export function MyCommissionsScreen() {
           />
         )}
 
-        {/* Summary Cards */}
+        {}
         <View style={styles.summaryGrid}>
           <View style={[styles.summaryCard, styles.summaryCardPrimary]}>
             <View style={styles.summaryIconPrimary}>
@@ -549,7 +539,7 @@ export function MyCommissionsScreen() {
           </View>
         </View>
 
-        {/* Status Filters */}
+        {}
         <View style={styles.filterSection}>
           <Text style={styles.sectionTitle}>Filter by Status</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -596,7 +586,7 @@ export function MyCommissionsScreen() {
           </ScrollView>
         </View>
 
-        {/* Agreements List */}
+        {}
         <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>
             Agreements ({filteredCommissions.length})
@@ -857,7 +847,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
   },
-  // Time Filter Styles
+  
   timeFilterSection: {
     paddingHorizontal: Spacing.lg,
     marginTop: Spacing.md,
@@ -887,7 +877,7 @@ const styles = StyleSheet.create({
   timeTabTextActive: {
     color: '#fff',
   },
-  // Date Range Styles
+  
   dateRangeContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -67,7 +67,6 @@ export function CreateAgreementScreen() {
     allServicesOneTime,
   } = useFormFilling(editAgreementId);
 
-  // Account type detection for commission calculation
   const {
     accountTypeCache,
     detectAccountTypes,
@@ -78,14 +77,13 @@ export function CreateAgreementScreen() {
     biginCompanyId: form.biginCompanyId,
     services: form.services,
     autoDetect: false,
-    // Pass agreement ID for auto-saving cache after detection
+    
     agreementId: form.savedId,
-    // Pass initial cache loaded from saved agreement
+    
     initialCache: form.accountTypeCache,
     initialCacheLoadedFromSaved: form.accountTypeCacheLoadedFromSaved,
   });
 
-  // Detect account types when entering services step with active services
   useEffect(() => {
     if (step === 3 && form.biginCompanyId && Object.keys(form.services).length > 0) {
       detectAccountTypes();
@@ -158,8 +156,8 @@ export function CreateAgreementScreen() {
               onRemoveService={removeService}
               onUpdateService={updateService}
             />
-            {/* Commission Summary - shows total commission across all services */}
-            {/* Note: commissionRate is now determined by user's quota level from QuotaContext */}
+            {}
+            {}
             <GlobalCommissionSummary
               services={form.services}
               accountTypeCache={accountTypeCache}

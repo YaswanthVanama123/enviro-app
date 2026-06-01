@@ -334,7 +334,6 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
     );
   }
 
-  // Employee Detail View
   if (selectedEmployee) {
     if (employeeLoading) {
       return (

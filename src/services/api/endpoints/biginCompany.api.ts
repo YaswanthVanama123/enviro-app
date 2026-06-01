@@ -1,7 +1,4 @@
-/**
- * Bigin Company API for Mobile
- * API client for Bigin company management
- */
+
 
 import {apiClient} from '../client';
 import type {
@@ -14,14 +11,8 @@ import type {
 
 const BASE_PATH = '/api/bigin-companies';
 
-// ============================================================
-// BIGIN COMPANY API
-// ============================================================
-
 export const biginCompanyApi = {
-  /**
-   * Get all companies with pagination and filters
-   */
+  
   async getAll(
     params?: CompaniesQueryParams,
   ): Promise<CompaniesListResponse | null> {
@@ -57,9 +48,6 @@ export const biginCompanyApi = {
     }
   },
 
-  /**
-   * Get a single company by ID
-   */
   async getById(id: string): Promise<BiginCompany | null> {
     try {
       const response = await apiClient.get<{
@@ -73,9 +61,6 @@ export const biginCompanyApi = {
     }
   },
 
-  /**
-   * Get company statistics
-   */
   async getStats(): Promise<CompanyStats | null> {
     try {
       const response = await apiClient.get<{
@@ -93,9 +78,6 @@ export const biginCompanyApi = {
     }
   },
 
-  /**
-   * Get fetch status
-   */
   async getFetchStatus(): Promise<FetchStatus | null> {
     try {
       const response = await apiClient.get<{
@@ -113,9 +95,6 @@ export const biginCompanyApi = {
     }
   },
 
-  /**
-   * Start fetch from Bigin
-   */
   async startFetch(): Promise<{message: string; sessionId?: string} | null> {
     try {
       const response = await apiClient.post<{

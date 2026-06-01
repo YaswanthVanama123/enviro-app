@@ -16,10 +16,6 @@ interface Props {
   pricingConfig?: any;
 }
 
-/**
- * Compute saniscrub contract totals with installation, non-bathroom area,
- * and twicePerMonth discount logic (mirrors web version).
- */
 function calcSaniscrubTotals(
   fixtureCount: number,
   fixtureRate: number,
@@ -43,13 +39,11 @@ function calcSaniscrubTotals(
   const isOneTime = frequency === 'oneTime';
   const isEveryFourWeeks = frequency === 'everyFourWeeks';
 
-  // Fixture base amount
   const rawFixture = fixtureCount * fixtureRate;
   const fixtureBase = fixtureCount > 0 && applyMinimum && minimumCharge > 0
     ? Math.max(rawFixture, minimumCharge)
     : rawFixture;
 
-  // Non-bathroom per-visit
   let nonBathPerVisit = 0;
   if (nonBathSqFt > 0 && nonBathBlockSize > 0) {
     if (nonBathSqFt <= nonBathBlockSize) {
@@ -68,14 +62,11 @@ function calcSaniscrubTotals(
 
   const perVisit = fixtureBase + nonBathPerVisit;
 
-  // Installation
   const installMultiplier = isDirty ? dirtyMultiplier : cleanMultiplier;
   const installOneTime = includeInstall && perVisit > 0 ? perVisit * installMultiplier : 0;
 
-  // Monthly visits
-  const monthlyVisits = mult; // e.g., 4.33 for weekly, 2 for twicePerMonth
+  const monthlyVisits = mult; 
 
-  // First month & contract total
   let firstMonth = 0;
   let monthlyRecurring = isOneTime ? 0 : perVisit * mult;
   let contractTotal = 0;
@@ -130,7 +121,7 @@ function calcSaniscrubTotals(
       contractTotal = totalVisits * perVisit;
     }
   } else {
-    // bimonthly, quarterly, biannual, annual
+    
     const totalVisits = Math.round(contractMonths * mult);
     if (includeInstall && installOneTime > 0) {
       firstMonth = installOneTime;
@@ -153,20 +144,17 @@ export function SaniscrubForm({data, onChange, contractMonths, onRemove, pricing
   const minimumChargePerVisit  = data?.minimumChargePerVisit  ?? cfg.bathroomPricing?.monthly?.minimumCharge ?? 0;
   const applyMinimum           = data?.applyMinimum !== false;
 
-  // Non-bathroom
   const nonBathSqFt            = data?.nonBathSqFt            ?? 0;
   const nonBathFirstRate       = data?.nonBathFirstRate       ?? cfg.nonBathroomSqFtPricingRule?.priceFirstBlock ?? 250;
   const nonBathAdditionalRate  = data?.nonBathAdditionalRate  ?? cfg.nonBathroomSqFtPricingRule?.priceAdditionalBlock ?? 125;
   const nonBathBlockSize       = cfg.nonBathroomSqFtPricingRule?.sqFtBlockUnit ?? 500;
   const useExactSqFt           = data?.useExactSqFt           ?? false;
 
-  // Installation
   const includeInstall         = data?.includeInstall         ?? false;
   const isDirty                = data?.isDirty                ?? false;
   const dirtyMultiplier        = data?.dirtyMultiplier        ?? cfg.installationPricing?.installMultiplierDirtyOrFirstTime ?? 3;
   const cleanMultiplier        = data?.cleanMultiplier        ?? 1;
 
-  // Twice-per-month discount
   const hasSaniClean           = data?.hasSaniClean           ?? false;
   const twicePerMonthDiscount  = cfg.twicePerMonthPricing?.discountFromMonthlyRate ?? 15;
 
@@ -202,7 +190,6 @@ export function SaniscrubForm({data, onChange, contractMonths, onRemove, pricing
       nf, contractMonths,
     );
 
-    // Baseline at admin rates (no rate changes)
     const origRate  = cfg.bathroomPricing?.monthly?.ratePerFixture ?? 25;
     const origMin   = cfg.bathroomPricing?.monthly?.minimumCharge ?? 0;
     const origFirst = cfg.nonBathroomSqFtPricingRule?.priceFirstBlock ?? 250;

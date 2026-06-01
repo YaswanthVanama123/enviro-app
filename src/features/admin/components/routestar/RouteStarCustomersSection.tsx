@@ -35,24 +35,20 @@ export function RouteStarCustomersSection() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Data state
   const [customers, setCustomers] = useState<RouteStarCustomer[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [syncStatus, setSyncStatus] = useState<CustomerSyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [pagination, setPagination] = useState({total: 0, skip: 0, limit: 20});
 
-  // Modal state
   const [selectedCustomer, setSelectedCustomer] = useState<RouteStarCustomer | null>(null);
   const [showStateFilter, setShowStateFilter] = useState(false);
 
-  // Load customers
   const loadCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -79,7 +75,6 @@ export function RouteStarCustomersSection() {
     setLoading(false);
   }, [searchTerm, stateFilter, activeFilter, pagination.limit, pagination.skip]);
 
-  // Load stats
   const loadStats = useCallback(async () => {
     const result = await routestarCustomersApi.getStats();
     if (result) {
@@ -87,7 +82,6 @@ export function RouteStarCustomersSection() {
     }
   }, []);
 
-  // Load sync status
   const loadSyncStatus = useCallback(async () => {
     const result = await routestarCustomersApi.getSyncStatus();
     if (result) {
@@ -95,19 +89,16 @@ export function RouteStarCustomersSection() {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     loadCustomers();
     loadStats();
     loadSyncStatus();
   }, []);
 
-  // Reload when filters change
   useEffect(() => {
     loadCustomers();
   }, [loadCustomers]);
 
-  // Poll sync status when syncing
   useEffect(() => {
     if (syncStatus?.isRunning) {
       const interval = setInterval(() => {
@@ -115,7 +106,7 @@ export function RouteStarCustomersSection() {
       }, 2000);
       return () => clearInterval(interval);
     } else if (syncStatus?.lastSyncResult === 'success') {
-      // Reload data after successful sync
+      
       loadCustomers();
       loadStats();
     }
@@ -127,7 +118,6 @@ export function RouteStarCustomersSection() {
     setRefreshing(false);
   }, [loadCustomers, loadStats, loadSyncStatus]);
 
-  // Handle sync
   const handleSync = async () => {
     const result = await routestarCustomersApi.startSync();
     if (result) {
@@ -135,13 +125,11 @@ export function RouteStarCustomersSection() {
     }
   };
 
-  // Handle search
   const handleSearch = () => {
     setPagination(prev => ({...prev, skip: 0}));
     loadCustomers();
   };
 
-  // Format date
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
@@ -369,13 +357,13 @@ export function RouteStarCustomersSection() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={styles.title}>RouteStar Customers</Text>
         <Text style={styles.subtitle}>Sync and manage customers from RouteStar</Text>
       </View>
 
-      {/* Sync Button */}
+      {}
       <TouchableOpacity
         style={[styles.syncBtn, syncStatus?.isRunning && styles.syncBtnDisabled]}
         onPress={handleSync}
@@ -395,7 +383,7 @@ export function RouteStarCustomersSection() {
         )}
       </TouchableOpacity>
 
-      {/* Sync Status */}
+      {}
       {syncStatus && (
         <View style={styles.syncStatusCard}>
           <View style={styles.syncStatusRow}>
@@ -429,7 +417,7 @@ export function RouteStarCustomersSection() {
         </View>
       )}
 
-      {/* Stats Cards */}
+      {}
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{stats?.total || 0}</Text>
@@ -453,7 +441,7 @@ export function RouteStarCustomersSection() {
         </View>
       </View>
 
-      {/* Filters */}
+      {}
       <View style={styles.filtersContainer}>
         <View style={styles.searchRow}>
           <TextInput
@@ -540,7 +528,7 @@ export function RouteStarCustomersSection() {
         </Text>
       </View>
 
-      {/* Customers List */}
+      {}
       {loading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -566,7 +554,7 @@ export function RouteStarCustomersSection() {
         <View style={styles.customersList}>
           {customers.map(renderCustomerCard)}
 
-          {/* Pagination */}
+          {}
           {pagination.total > pagination.limit && (
             <View style={styles.pagination}>
               <TouchableOpacity
@@ -607,7 +595,7 @@ export function RouteStarCustomersSection() {
         </View>
       )}
 
-      {/* Customer Detail Modal */}
+      {}
       {renderCustomerModal()}
     </ScrollView>
   );
@@ -919,7 +907,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
   },
-  // Modal styles
+  
   modalContainer: {
     flex: 1,
     backgroundColor: Colors.background,

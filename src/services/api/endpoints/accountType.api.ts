@@ -1,6 +1,4 @@
-/**
- * Account Type Detection API for Mobile
- */
+
 
 import {apiClient} from '../client';
 import type {
@@ -12,10 +10,8 @@ import type {
 const BASE_PATH = '/api/account-type';
 const MAP_DISTANCE_PATH = '/api/map-distance';
 
-// Account type union
 export type AccountType = 'Anchor' | 'Bread5' | 'Bread15' | 'Pit';
 
-// Server-side detection response (from map-distance API)
 export interface ServerAccountTypeDetectionResult {
   success: boolean;
   accountType: AccountType;
@@ -35,7 +31,6 @@ export interface ServerAccountTypeDetectionResult {
   error?: string;
 }
 
-// Mapbox-based detection types
 export interface DestinationResult {
   destination: string;
   address?: string;
@@ -62,7 +57,6 @@ export interface MapboxDetectionResult {
   };
 }
 
-// Batch detection types for form filling
 export interface FrequencyDetectionResult {
   accountType: AccountType;
   confidence: 'high' | 'low';
@@ -89,9 +83,7 @@ export interface BatchFrequencyDetectionResult {
 }
 
 export const accountTypeApi = {
-  /**
-   * Get account type detection thresholds and rules
-   */
+  
   async getThresholds(): Promise<ThresholdsResponse | null> {
     try {
       const response = await apiClient.get<ThresholdsResponse>(
@@ -104,9 +96,6 @@ export const accountTypeApi = {
     }
   },
 
-  /**
-   * Detect account type for a single location (client-side calculation)
-   */
   async detect(
     input: AccountTypeDetectionInput,
   ): Promise<AccountTypeDetectionResponse | null> {
@@ -122,14 +111,6 @@ export const accountTypeApi = {
     }
   },
 
-  /**
-   * Detect account type using server-side distance data
-   * Uses the mapped RouteStar customer and stored map distance records
-   *
-   * @param biginCompanyId - The Bigin company ID (Zoho ID string)
-   * @param perVisitRevenue - Optional per-visit revenue for revenue-based detection
-   * @param isGreenline - Whether this is a Greenline customer
-   */
   async detectFromDistance(params: {
     biginCompanyId?: string;
     routeStarCustomerId?: string;
@@ -169,11 +150,6 @@ export const accountTypeApi = {
     }
   },
 
-  /**
-   * Detect account type using Mapbox for accurate driving time calculation
-   * @param biginCompanyId - The Bigin company ID (biginId field)
-   * @param frequency - Optional frequency filter (1=Weekly, 2=Bi-Weekly, etc.)
-   */
   async detectWithMapbox(
     biginCompanyId: string,
     frequency?: number,
@@ -202,12 +178,6 @@ export const accountTypeApi = {
     }
   },
 
-  /**
-   * Detect account types for multiple frequencies in a batch call
-   * Optimized for form filling where multiple services have different frequencies
-   * @param biginCompanyId - The Bigin company ID
-   * @param frequencies - Array of frequency numbers (1=Weekly, 2=Bi-Weekly, etc.)
-   */
   async detectWithMapboxBatch(
     biginCompanyId: string,
     frequencies: number[],

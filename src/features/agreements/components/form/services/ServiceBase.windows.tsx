@@ -1,10 +1,4 @@
-/**
- * ServiceBase.windows.tsx
- * Desktop-size service card & totals block — matches web app:
- *  • ServiceCard: 16px title, border 2px #e5e7eb, radius 12px, padding 24px
- *  • TotalsBlock: breakdown-row bg #f9fafb, highlight yellow gradient
- *                 total-section: green gradient bg, 42px amount, border 3px #86efac
- */
+
 import React from 'react';
 import {
   View,
@@ -20,7 +14,6 @@ import {DropdownRow, DollarRow, FormDivider, NumberRow, ToggleRow, CalcRow} from
 
 export {DropdownRow, DollarRow, FormDivider, NumberRow, ToggleRow, CalcRow, FREQ_OPTIONS, FREQ_LABELS};
 
-// ── Web app palette ──────────────────────────────────────
 const C = {
   surface:      '#ffffff',
   bg:           '#f9fafb',
@@ -43,7 +36,6 @@ const C = {
   yellowBg2:    '#fde68a',
 };
 
-// ── ServiceCard ──────────────────────────────────────────
 interface ServiceCardProps {
   serviceId:     string;
   displayName:   string;
@@ -63,7 +55,7 @@ export function ServiceCard({
 }: ServiceCardProps) {
   return (
     <View style={sc.card}>
-      {/* Header — card-title style */}
+      {}
       <View style={sc.header}>
         <View style={[sc.iconBox, {backgroundColor: iconBg}]}>
           <Ionicons name={icon} size={18} color={iconColor} />
@@ -74,7 +66,7 @@ export function ServiceCard({
         </TouchableOpacity>
       </View>
 
-      {/* Loading */}
+      {}
       {loading && (
         <View style={sc.loading}>
           <ActivityIndicator size="small" color={C.orange} />
@@ -82,10 +74,10 @@ export function ServiceCard({
         </View>
       )}
 
-      {/* Body — each inner component has its own padding via FormUI.windows.tsx */}
+      {}
       {!loading && <View style={sc.body}>{children}</View>}
 
-      {/* Notes */}
+      {}
       {!loading && onNotesChange !== undefined && (
         <View style={sc.notesWrap}>
           <Text style={sc.notesLabel}>Service Notes</Text>
@@ -103,8 +95,6 @@ export function ServiceCard({
   );
 }
 
-// ── TotalsBlock ──────────────────────────────────────────
-// Matches web app .contract-total-section + .breakdown-row
 interface TotalsBlockProps {
   frequency:        string;
   perVisit:         number;
@@ -124,7 +114,7 @@ export function TotalsBlock({
 
   return (
     <View style={tb.wrap}>
-      {/* Section label */}
+      {}
       <View style={tb.sectionHeader}>
         <Text style={tb.sectionTitle}>Pricing Summary</Text>
       </View>
@@ -154,7 +144,7 @@ export function TotalsBlock({
         )}
       </View>
 
-      {/* Big green total — matches .contract-total-section */}
+      {}
       <View style={tb.totalSection}>
         <Text style={tb.totalLabel}>CONTRACT TOTAL</Text>
         <Text style={tb.totalAmount}>{formatDollar(contractTotal)}</Text>
@@ -164,7 +154,6 @@ export function TotalsBlock({
   );
 }
 
-// ── BreakdownRow (internal to TotalsBlock) ───────────────
 function BreakdownRow({label, value, highlight}: {label: string; value: number; highlight?: boolean}) {
   return (
     <View style={[tb.row, highlight && tb.rowHighlight]}>
@@ -178,7 +167,6 @@ function formatDollar(v: number): string {
   return '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-// ── calcTotals & getFreqMultiplier (unchanged logic) ─────
 export function calcTotals(perVisitBase: number, frequency: string, contractMonths: number, customFieldsTotal = 0) {
   const mult        = getFreqMultiplier(frequency);
   const isOneTime   = frequency === 'oneTime';
@@ -198,9 +186,8 @@ export function getFreqMultiplier(frequency: string): number {
   return map[frequency] ?? 1.0;
 }
 
-// ── Styles ───────────────────────────────────────────────
 const sc = StyleSheet.create({
-  // Card — contract-card
+  
   card: {
     backgroundColor: C.surface,
     borderWidth:     2,
@@ -215,7 +202,7 @@ const sc = StyleSheet.create({
     elevation:       2,
     overflow:        'hidden',
   },
-  // Header — card-title style
+  
   header: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -261,7 +248,7 @@ const sc = StyleSheet.create({
     paddingTop:        20,
     paddingBottom:     8,
   },
-  // Notes
+  
   notesWrap: {
     borderTopWidth:  1,
     borderTopColor:  C.borderLight,
@@ -298,7 +285,7 @@ const tb = StyleSheet.create({
     borderTopColor:  C.borderLight,
     paddingTop:      4,
   },
-  // Section sub-header
+  
   sectionHeader: {
     paddingHorizontal: 24,
     paddingVertical:    12,
@@ -318,7 +305,7 @@ const tb = StyleSheet.create({
     paddingBottom:     0,
     gap: 0,
   },
-  // Breakdown row — .breakdown-row
+  
   row: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -359,7 +346,7 @@ const tb = StyleSheet.create({
     backgroundColor: '#e5e7eb',
     marginVertical:   8,
   },
-  // Contract total section — .contract-total-section
+  
   totalSection: {
     marginHorizontal: 24,
     marginVertical:   16,
@@ -375,7 +362,7 @@ const tb = StyleSheet.create({
     shadowRadius:     12,
     elevation:         3,
   },
-  // .total-label
+  
   totalLabel: {
     fontSize:        14,
     fontWeight:      '700',
@@ -385,7 +372,7 @@ const tb = StyleSheet.create({
     marginBottom:    8,
     fontFamily:      'Arial',
   },
-  // .total-amount — 42px, 800 weight
+  
   totalAmount: {
     fontSize:   42,
     fontWeight: '800',
@@ -393,7 +380,7 @@ const tb = StyleSheet.create({
     marginBottom: 6,
     fontFamily: 'Arial',
   },
-  // .total-breakdown
+  
   totalSub: {
     fontSize:   13,
     fontWeight: '500',

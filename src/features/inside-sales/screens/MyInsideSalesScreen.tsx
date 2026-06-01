@@ -1,8 +1,4 @@
-/**
- * My Inside Sales Screen
- * Employee screen to view their Inside Sales status
- * based on Lisa Rothwell's audit history within 1 year
- */
+
 
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -132,9 +128,8 @@ export function MyInsideSalesScreen() {
     );
   }
 
-  // Colors based on inside sales status
-  // NOT inside sales = GREEN (good - no deduction)
-  // Inside sales = AMBER (warning - 3% deduction)
+  
+  
   const statusColor = result?.isInsideSales ? '#d97706' : '#059669';
   const statusBgColor = result?.isInsideSales ? '#fef3c7' : '#dcfce7';
   const statusBorderColor = result?.isInsideSales ? '#fcd34d' : '#86efac';
@@ -151,7 +146,7 @@ export function MyInsideSalesScreen() {
             colors={[Colors.primary]}
           />
         }>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <View style={styles.iconBox}>
@@ -239,7 +234,7 @@ export function MyInsideSalesScreen() {
               </View>
             )}
 
-            {/* All Agreements */}
+            {}
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>
                 Your Agreements ({result.totalAgreementsByUser || 0} total, {result.agreementCount || 0} uploaded)
@@ -296,7 +291,7 @@ export function MyInsideSalesScreen() {
               )}
             </View>
 
-            {/* Info Card */}
+            {}
             <View style={styles.infoCard}>
               <Text style={styles.infoTitle}>How Inside Sales Works</Text>
               <View style={styles.infoItem}>

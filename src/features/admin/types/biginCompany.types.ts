@@ -1,7 +1,4 @@
-/**
- * Bigin Company Types for Mobile
- * Types for companies fetched from Zoho Bigin
- */
+
 
 export interface BiginCompany {
   _id: string;
@@ -76,14 +73,12 @@ export interface CompaniesQueryParams {
   skip?: number;
 }
 
-// Helper function to format date
 export function formatCompanyDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const date = new Date(dateStr);
   return date.toLocaleString();
 }
 
-// Helper function to format address
 export function formatAddress(company: BiginCompany): string {
   const parts = [
     company.street,

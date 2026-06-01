@@ -219,7 +219,6 @@ interface AgreementRowProps {
 function AgreementRow({agreement, employeeUsername, employeeFullName, onRefresh}: AgreementRowProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Filter files to only show those created by this employee
   const employeeFiles = agreement.files.filter(
     (file) =>
       file.createdBy === employeeUsername ||
@@ -366,7 +365,7 @@ export function EmployeeAgreementsScreen() {
     }
 
     try {
-      // Fetch users and agreements in parallel
+      
       const [usersResult, agreementsResult] = await Promise.all([
         adminApi.listUsers(),
         agreementsApi.getGrouped({
@@ -381,10 +380,8 @@ export function EmployeeAgreementsScreen() {
       const users = usersResult?.users ?? [];
       const agreements = agreementsResult?.groups ?? [];
 
-      // Group agreements by creator
       const employeeMap = new Map<string, EmployeeWithAgreements>();
 
-      // Initialize all users
       users.forEach(user => {
         employeeMap.set(user.username.toLowerCase(), {
           user,
@@ -402,7 +399,6 @@ export function EmployeeAgreementsScreen() {
         }
       });
 
-      // Assign agreements to creators
       agreements.forEach(agreement => {
         const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
         const createdBy = mainFile?.createdBy || agreement.files[0]?.createdBy;
@@ -418,7 +414,6 @@ export function EmployeeAgreementsScreen() {
         }
       });
 
-      // Deduplicate and collect unique employees
       const seen = new Set<string>();
       const employeeList: EmployeeWithAgreements[] = [];
 
@@ -428,14 +423,12 @@ export function EmployeeAgreementsScreen() {
           const byUsername = employeeMap.get(user.username.toLowerCase());
           const byFullName = user.fullName ? employeeMap.get(user.fullName.toLowerCase()) : null;
 
-          // Merge agreements from both keys
           const mergedAgreements = new Map<string, SavedFileGroup>();
           byUsername?.agreements.forEach(a => mergedAgreements.set(a.id, a));
           byFullName?.agreements.forEach(a => mergedAgreements.set(a.id, a));
 
           const agreements = Array.from(mergedAgreements.values());
 
-          // Count only files created by this employee
           const employeeFileCount = agreements.reduce((sum, a) => {
             const filesCreatedByEmployee = a.files.filter(
               f => f.createdBy === user.username || f.createdBy === user.fullName
@@ -452,7 +445,6 @@ export function EmployeeAgreementsScreen() {
         }
       });
 
-      // Sort by agreement count descending, then alphabetically
       employeeList.sort((a, b) => {
         if (b.agreementCount !== a.agreementCount) {
           return b.agreementCount - a.agreementCount;
@@ -496,13 +488,13 @@ export function EmployeeAgreementsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Employee Agreements</Text>
         <Text style={styles.headerSubtitle}>Browse agreements by employee</Text>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
           <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
@@ -523,7 +515,7 @@ export function EmployeeAgreementsScreen() {
         </View>
       </View>
 
-      {/* Stats */}
+      {}
       {!loading && (
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
@@ -546,7 +538,7 @@ export function EmployeeAgreementsScreen() {
         </View>
       )}
 
-      {/* List */}
+      {}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -699,7 +691,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Employee card styles
   card: {
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.lg,
@@ -780,7 +771,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Agreements container
   agreementsContainer: {
     backgroundColor: '#f8fafc',
     borderTopWidth: 1,
@@ -810,7 +800,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
 
-  // Agreement row styles
   agreementCard: {
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -848,7 +837,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // Files container
   filesContainer: {
     backgroundColor: '#f1f5f9',
     borderTopWidth: 1,
@@ -866,7 +854,6 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md + 28,
   },
 
-  // File row styles
   fileRow: {
     flexDirection: 'row',
     alignItems: 'center',

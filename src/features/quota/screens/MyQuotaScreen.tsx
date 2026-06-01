@@ -66,7 +66,6 @@ export function MyQuotaScreen() {
       }
       setError(null);
 
-      // Fetch quota status and history in parallel
       const [statusResult, historyResult] = await Promise.all([
         quotaApi.getStatus(adminUser._id, {periodType}),
         quotaApi.getHistory(adminUser._id, 6),
@@ -101,7 +100,7 @@ export function MyQuotaScreen() {
 
   const getProgressPercentage = (actual: number, target: number): number => {
     if (target <= 0) return 0;
-    return Math.min((actual / target) * 100, 200); // Cap at 200%
+    return Math.min((actual / target) * 100, 200); 
   };
 
   if (loading) {
@@ -163,7 +162,7 @@ export function MyQuotaScreen() {
             colors={[Colors.primary]}
           />
         }>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <View style={styles.iconBox}>
@@ -178,7 +177,7 @@ export function MyQuotaScreen() {
           </View>
         </View>
 
-        {/* Period Toggle */}
+        {}
         <View style={styles.periodToggle}>
           {(['monthly', 'quarterly', 'annual'] as PeriodType[]).map((type) => (
             <TouchableOpacity
@@ -199,7 +198,7 @@ export function MyQuotaScreen() {
           ))}
         </View>
 
-        {/* Quota Status Card */}
+        {}
         <View style={styles.quotaCard}>
           <View style={styles.periodLabel}>
             <Text style={styles.periodLabelText}>{quotaStatus.period.label}</Text>
@@ -208,7 +207,7 @@ export function MyQuotaScreen() {
             </Text>
           </View>
 
-          {/* Progress Circle/Bar */}
+          {}
           <View style={styles.progressSection}>
             <View style={[styles.quotaLevelBadge, {backgroundColor: quotaLevelBg}]}>
               <Ionicons
@@ -232,7 +231,7 @@ export function MyQuotaScreen() {
             </Text>
             <Text style={styles.percentageLabel}>of quota</Text>
 
-            {/* Progress Bar */}
+            {}
             <View style={styles.progressBar}>
               <View
                 style={[
@@ -243,9 +242,9 @@ export function MyQuotaScreen() {
                   },
                 ]}
               />
-              {/* 100% marker */}
+              {}
               <View style={styles.progressMarker100} />
-              {/* 200% marker for double quota */}
+              {}
               {progressPercent > 100 && (
                 <View
                   style={[
@@ -265,7 +264,7 @@ export function MyQuotaScreen() {
             </View>
           </View>
 
-          {/* Stats Grid */}
+          {}
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Target</Text>
@@ -294,7 +293,7 @@ export function MyQuotaScreen() {
           </View>
         </View>
 
-        {/* Progress to Next Tier */}
+        {}
         <View style={styles.progressCard}>
           <Text style={styles.cardTitle}>Progress to Next Tier</Text>
 

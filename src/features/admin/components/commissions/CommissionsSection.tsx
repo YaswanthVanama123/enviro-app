@@ -71,7 +71,6 @@ interface CommissionsSectionProps {
 export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline}: CommissionsSectionProps = {}) {
   const insets = useSafeAreaInsets();
 
-  // Form state - V2 inputs
   const [perVisitRevenueInput, setPerVisitRevenueInput] = useState('');
   const [redlinePrice, setRedlinePrice] = useState('');
   const [frequency, setFrequency] = useState<ServiceFrequency>('monthly');
@@ -84,7 +83,6 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
   const [isInsideSales, setIsInsideSales] = useState(false);
   const [customerName, setCustomerName] = useState('');
 
-  // Auto-detect state
   const [autoDetectEnabled, setAutoDetectEnabled] = useState(false);
   const [perVisitRevenue, setPerVisitRevenue] = useState('');
   const [distanceToAnchor, setDistanceToAnchor] = useState('');
@@ -94,15 +92,12 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
     useState<ServerAccountTypeDetectionResult | null>(null);
   const [serverDetectionLoading, setServerDetectionLoading] = useState(false);
 
-  // UI state
   const [activePicker, setActivePicker] = useState<PickerType>(null);
 
-  // Result state
   const [result, setResult] = useState<CommissionCalculationResultV2 | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Server-side auto-detect when biginCompanyId is provided
   useEffect(() => {
     if (!biginCompanyId) {
       setServerDetectionResult(null);
@@ -130,10 +125,9 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
     detectFromServer();
   }, [biginCompanyId, propIsGreenline, perVisitRevenueInput, redlinePrice]);
 
-  // Client-side auto-detect effect (fallback when no biginCompanyId)
   useEffect(() => {
     if (biginCompanyId) {
-      // Skip client-side detection if server-side is available
+      
       return;
     }
 
@@ -162,7 +156,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
       return;
     }
 
-    const redline = parseFloat(redlinePrice) || perVisit; // Default to per-visit if no redline
+    const redline = parseFloat(redlinePrice) || perVisit; 
     const months = parseInt(contractMonths, 10) || 12;
 
     setCalculating(true);
@@ -181,7 +175,6 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
       quotaLevel,
     };
 
-    // Use local V2 calculation
     const calculationResult = calculateCommissionV2(input);
     setResult(calculationResult);
     setCalculating(false);
@@ -212,7 +205,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
     setCustomerName('');
     setResult(null);
     setError(null);
-    // Clear auto-detect state
+    
     setAutoDetectEnabled(false);
     setPerVisitRevenue('');
     setDistanceToAnchor('');
@@ -269,7 +262,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           Calculate sales commissions based on deal parameters
         </Text>
 
-        {/* Per-Visit Revenue Input */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Per-Visit Revenue ($)</Text>
           <View style={styles.inputRow}>
@@ -285,7 +278,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         </View>
 
-        {/* Redline Price Input */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Redline Price ($) - Standard price for this service</Text>
           <View style={styles.inputRow}>
@@ -301,7 +294,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         </View>
 
-        {/* Service Frequency */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Service Frequency</Text>
           <TouchableOpacity
@@ -326,7 +319,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </View>
 
-        {/* Contract Length */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Contract Length (months)</Text>
           <View style={styles.inputRow}>
@@ -342,7 +335,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         </View>
 
-        {/* Customer Name */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Customer Name (Optional)</Text>
           <View style={styles.inputRow}>
@@ -357,7 +350,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         </View>
 
-        {/* Account Type */}
+        {}
         <View style={styles.formGroup}>
           <View style={styles.labelRow}>
             <Text style={styles.label}>Account Type</Text>
@@ -379,7 +372,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
             )}
           </View>
 
-          {/* Server-side detection (when biginCompanyId is available) */}
+          {}
           {biginCompanyId ? (
             <View style={styles.autoDetectContainer}>
               {serverDetectionLoading ? (
@@ -494,7 +487,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </View>
 
-        {/* Agreement Term */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Agreement Term</Text>
           <TouchableOpacity
@@ -521,7 +514,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </View>
 
-        {/* Quota Level */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Quota Achievement</Text>
           <TouchableOpacity
@@ -546,7 +539,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           )}
         </View>
 
-        {/* Business Type */}
+        {}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Business Type</Text>
           <View style={styles.toggleRow}>
@@ -581,7 +574,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         </View>
 
-        {/* Years as Customer (for renewals) */}
+        {}
         {businessType === 'renewal' && (
           <View style={styles.formGroup}>
             <Text style={styles.label}>Years as Customer (4% bonus at 2+ years)</Text>
@@ -603,7 +596,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </View>
         )}
 
-        {/* Inside Sales Toggle */}
+        {}
         <TouchableOpacity
           style={styles.checkboxRow}
           onPress={() => setIsInsideSales(!isInsideSales)}>
@@ -618,7 +611,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
           </Text>
         </TouchableOpacity>
 
-        {/* Calculate Button */}
+        {}
         <TouchableOpacity
           style={[styles.calculateBtn, calculating && {opacity: 0.6}]}
           onPress={handleCalculate}
@@ -650,7 +643,7 @@ export function CommissionsSection({biginCompanyId, isGreenline: propIsGreenline
         )}
       </View>
 
-      {/* Result Card */}
+      {}
       {result && <CommissionResultCardV2 result={result} />}
     </ScrollView>
   );
@@ -833,7 +826,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   errorText: {fontSize: FontSize.xs, color: '#ef4444', flex: 1},
-  // Auto-detect styles
+  
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',

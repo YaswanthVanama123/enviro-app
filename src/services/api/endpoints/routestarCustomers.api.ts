@@ -1,7 +1,4 @@
-/**
- * RouteStar Customers API for Mobile
- * API client for RouteStar customer management and sync
- */
+
 
 import {apiClient} from '../client';
 import type {
@@ -14,14 +11,8 @@ import type {
 
 const BASE_PATH = '/api/routestar-customers';
 
-// ============================================================
-// CUSTOMERS API
-// ============================================================
-
 export const routestarCustomersApi = {
-  /**
-   * Get all customers with pagination and filters
-   */
+  
   async getAll(
     params?: CustomersQueryParams,
   ): Promise<CustomersListResponse | null> {
@@ -57,9 +48,6 @@ export const routestarCustomersApi = {
     }
   },
 
-  /**
-   * Get a single customer by ID
-   */
   async getById(id: string): Promise<RouteStarCustomer | null> {
     try {
       const response = await apiClient.get<{
@@ -73,9 +61,6 @@ export const routestarCustomersApi = {
     }
   },
 
-  /**
-   * Get customer statistics
-   */
   async getStats(): Promise<CustomerStats | null> {
     try {
       const response = await apiClient.get<{
@@ -84,7 +69,7 @@ export const routestarCustomersApi = {
       }>(`${BASE_PATH}/stats`);
 
       if (response.success !== false) {
-        // Handle both nested and flat response
+        
         return response.data || (response as unknown as CustomerStats);
       }
       return null;
@@ -94,9 +79,6 @@ export const routestarCustomersApi = {
     }
   },
 
-  /**
-   * Get sync status
-   */
   async getSyncStatus(): Promise<CustomerSyncStatus | null> {
     try {
       const response = await apiClient.get<{
@@ -105,7 +87,7 @@ export const routestarCustomersApi = {
       }>(`${BASE_PATH}/sync/status`);
 
       if (response.success !== false) {
-        // Handle both nested and flat response
+        
         return response.data || (response as unknown as CustomerSyncStatus);
       }
       return null;
@@ -115,9 +97,6 @@ export const routestarCustomersApi = {
     }
   },
 
-  /**
-   * Start sync from RouteStar
-   */
   async startSync(): Promise<{message: string; syncId?: string} | null> {
     try {
       const response = await apiClient.post<{
@@ -139,9 +118,6 @@ export const routestarCustomersApi = {
     }
   },
 
-  /**
-   * Search customers
-   */
   async search(query: string): Promise<RouteStarCustomer[] | null> {
     try {
       const response = await apiClient.get<{

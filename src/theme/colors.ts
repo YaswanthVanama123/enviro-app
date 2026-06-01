@@ -18,7 +18,6 @@ export const Colors = {
   blueLight: '#dbeafe',
   blueDark: '#2563eb',
 
-  // Gray scale (Tailwind-style)
   gray50: '#f9fafb',
   gray100: '#f3f4f6',
   gray200: '#e5e7eb',

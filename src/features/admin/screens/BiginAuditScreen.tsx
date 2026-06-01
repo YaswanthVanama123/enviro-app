@@ -1,7 +1,4 @@
-/**
- * Bigin Audit Screen
- * Wrapper screen for BiginAuditSection component
- */
+
 
 import React from 'react';
 import {View, StyleSheet} from 'react-native';

@@ -1,7 +1,4 @@
-/**
- * Bigin Audit API for Mobile
- * API client for Bigin audit log management
- */
+
 
 import {apiClient} from '../client';
 import type {
@@ -14,14 +11,8 @@ import type {
 
 const BASE_PATH = '/api/bigin-audit';
 
-// ============================================================
-// BIGIN AUDIT API
-// ============================================================
-
 export const biginAuditApi = {
-  /**
-   * Get all audit logs with pagination and filters
-   */
+  
   async getAll(
     params?: AuditLogsQueryParams,
   ): Promise<AuditLogsListResponse | null> {
@@ -59,9 +50,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Get a single audit log by ID
-   */
   async getById(id: string): Promise<BiginAuditLog | null> {
     try {
       const response = await apiClient.get<{
@@ -75,9 +63,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Get audit statistics
-   */
   async getStats(): Promise<AuditStats | null> {
     try {
       const response = await apiClient.get<{
@@ -95,9 +80,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Get scrape status
-   */
   async getScrapeStatus(): Promise<ScrapeStatus | null> {
     try {
       const response = await apiClient.get<{
@@ -115,9 +97,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Start scrape from Bigin
-   */
   async startScrape(): Promise<{message: string; sessionId?: string} | null> {
     try {
       const response = await apiClient.post<{
@@ -139,9 +118,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Upload CSV file with audit logs
-   */
   async uploadCsv(fileUri: string, fileName: string): Promise<{
     success: boolean;
     message: string;
@@ -191,9 +167,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Delete all audit logs
-   */
   async deleteAll(): Promise<{
     success: boolean;
     message: string;
@@ -220,9 +193,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Delete unnecessary audit logs (keeps Lisa Rothwell's records)
-   */
   async deleteUnnecessary(): Promise<{
     success: boolean;
     message: string;
@@ -249,10 +219,6 @@ export const biginAuditApi = {
     }
   },
 
-  /**
-   * Check if a salesperson's records exist in Lisa Rothwell's audit history within 1 year
-   * Used to determine if "Inside Sales" checkbox should be checked
-   */
   async checkInsideSalesEligibility(salespersonName: string): Promise<{
     success: boolean;
     data?: {

@@ -1,8 +1,4 @@
-/**
- * CreateAgreementSinglePage.tsx
- * Shared single-page layout used by both .windows.tsx and .macos.tsx
- * All 6 sections visible at once on one scrollable page — exactly like the web app.
- */
+
 import React, {useRef} from 'react';
 import {
   View,
@@ -23,7 +19,6 @@ import {Step4Review}    from '../components/form/Step4Review';
 import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 
-// ── Web app exact palette ────────────────────────────────
 const C = {
   primary:      '#c00000',
   orange:       '#ff4500',
@@ -97,7 +92,7 @@ export function CreateAgreementSinglePage() {
   return (
     <View style={ss.root}>
 
-      {/* ── Top bar — matches web app topnav sub-header ── */}
+      {}
       <View style={ss.topBar}>
         <TouchableOpacity style={ss.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={16} color={C.draftText} />
@@ -114,7 +109,7 @@ export function CreateAgreementSinglePage() {
         ) : null}
       </View>
 
-      {/* ── Single scrollable page — all sections ── */}
+      {}
       <ScrollView
         ref={scrollRef}
         style={ss.scroll}
@@ -122,7 +117,7 @@ export function CreateAgreementSinglePage() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={true}>
 
-        {/* ── Section 1: Customer ── */}
+        {}
         <SectionHeader {...SECTIONS[0]} />
         <Step1Customer
           headerTitle={form.headerTitle}
@@ -133,7 +128,7 @@ export function CreateAgreementSinglePage() {
 
         <SectionDivider />
 
-        {/* ── Section 2: Products ── */}
+        {}
         <SectionHeader {...SECTIONS[1]} />
         <Step2Products
           smallProducts={form.smallProducts}
@@ -151,7 +146,7 @@ export function CreateAgreementSinglePage() {
 
         <SectionDivider />
 
-        {/* ── Section 3: Services ── */}
+        {}
         <SectionHeader {...SECTIONS[2]} />
         <Step3Services
           visibleServices={form.visibleServices}
@@ -166,7 +161,7 @@ export function CreateAgreementSinglePage() {
 
         <SectionDivider />
 
-        {/* ── Section 4: Contract Details ── */}
+        {}
         <SectionHeader {...SECTIONS[3]} />
         <Step2Contract
           contractMonths={form.contractMonths}
@@ -190,7 +185,7 @@ export function CreateAgreementSinglePage() {
 
         <SectionDivider />
 
-        {/* ── Section 5: Terms ── */}
+        {}
         <SectionHeader {...SECTIONS[4]} />
         <Step5Agreement
           enviroOf={form.enviroOf}
@@ -202,14 +197,14 @@ export function CreateAgreementSinglePage() {
 
         <SectionDivider />
 
-        {/* ── Section 6: Review ── */}
+        {}
         <SectionHeader {...SECTIONS[5]} />
         <Step4Review form={form} />
 
         <View style={ss.scrollPad} />
       </ScrollView>
 
-      {/* ── Bottom action bar — matches web .formfilling__actions ── */}
+      {}
       <View style={ss.actionBar}>
         <View style={ss.actionLeft}>
           <Text style={ss.actionHint}>
@@ -217,7 +212,7 @@ export function CreateAgreementSinglePage() {
           </Text>
         </View>
         <View style={ss.actionRight}>
-          {/* Save Draft — matches .formfilling__draftBtn */}
+          {}
           <TouchableOpacity
             style={[ss.draftBtn, saving && ss.btnDisabled]}
             onPress={() => saveDraft()}
@@ -229,7 +224,7 @@ export function CreateAgreementSinglePage() {
             <Text style={ss.draftBtnText}>{savedId ? 'Save' : 'Save Draft'}</Text>
           </TouchableOpacity>
 
-          {/* Generate — matches .formfilling__saveBtn (#ff4500) */}
+          {}
           <TouchableOpacity
             style={[ss.saveBtn, saving && ss.btnDisabled]}
             onPress={handleGenerate}
@@ -248,7 +243,6 @@ export function CreateAgreementSinglePage() {
   );
 }
 
-// ── Section header — matches web .contract-summary-header h2 ──
 function SectionHeader({icon, title, sub}: {icon: string; title: string; sub: string}) {
   return (
     <View style={sh.wrap}>
@@ -263,12 +257,10 @@ function SectionHeader({icon, title, sub}: {icon: string; title: string; sub: st
   );
 }
 
-// ── Section divider — visual separator between major sections ──
 function SectionDivider() {
   return <View style={sd.wrap}><View style={sd.line} /></View>;
 }
 
-// ── Styles ───────────────────────────────────────────────
 const ss = StyleSheet.create({
   root: {
     flex:            1,
@@ -276,7 +268,6 @@ const ss = StyleSheet.create({
     backgroundColor: C.bg,
   },
 
-  // Top bar
   topBar: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -331,7 +322,6 @@ const ss = StyleSheet.create({
     fontFamily: 'Arial',
   },
 
-  // Scroll
   scroll: {
     flex:            1,
     backgroundColor: C.bg,
@@ -346,7 +336,6 @@ const ss = StyleSheet.create({
   },
   scrollPad: {height: 32},
 
-  // Bottom action bar — .formfilling__actions
   actionBar: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -371,7 +360,6 @@ const ss = StyleSheet.create({
     gap: 16,
   },
 
-  // .formfilling__draftBtn
   draftBtn: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -390,7 +378,6 @@ const ss = StyleSheet.create({
     fontFamily: 'Arial',
   },
 
-  // .formfilling__saveBtn — #ff4500 orange-red
   saveBtn: {
     flexDirection:   'row',
     alignItems:      'center',
@@ -411,7 +398,6 @@ const ss = StyleSheet.create({
   btnDisabled: {opacity: 0.6},
 });
 
-// Section header styles — .contract-summary-header h2
 const sh = StyleSheet.create({
   wrap: {
     flexDirection:  'row',
@@ -443,7 +429,6 @@ const sh = StyleSheet.create({
   },
 });
 
-// Section divider styles
 const sd = StyleSheet.create({
   wrap: {
     paddingVertical: 24,

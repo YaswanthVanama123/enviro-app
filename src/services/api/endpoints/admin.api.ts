@@ -171,7 +171,6 @@ export const adminApi = {
     return res.data.settings;
   },
 
-  // Payroll API methods
   async getPayrollPeriods(): Promise<PayrollPeriodsResponse | null> {
     const res = await apiClient.get<PayrollPeriodsResponse>('/api/payroll/periods');
     if (res.error || !res.data?.success) return null;

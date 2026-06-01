@@ -1,6 +1,5 @@
-// iOS — adaptive FormUI components
-// Mac Catalyst / iPad (width >= 768): large desktop styles from FormUI.windows
-// iPhone (width < 768): compact mobile styles from FormUI.base
+
+
 import React from 'react';
 import {useWindowDimensions} from 'react-native';
 import * as D from './FormUI.windows';

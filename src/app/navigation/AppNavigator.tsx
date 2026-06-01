@@ -32,7 +32,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   const {isAuthenticated, authReady} = useAuth();
 
-  // Show loading screen while checking auth
   if (!authReady) {
     return (
       <View style={styles.loadingContainer}>
@@ -45,7 +44,7 @@ export default function AppNavigator() {
     <NavigationContainer theme={DefaultTheme}>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         {isAuthenticated ? (
-          // Authenticated screens
+          
           <>
             <Stack.Screen name="Main" component={TabNavigator} />
             <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
@@ -69,7 +68,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Payroll" component={PayrollScreen} />
           </>
         ) : (
-          // Unauthenticated - show login
+          
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
       </Stack.Navigator>

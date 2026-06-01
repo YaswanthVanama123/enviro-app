@@ -11,7 +11,7 @@ export type RootStackParamList = {
   AdminCommissionRules: undefined;
   MyQuota: undefined;
   MyInsideSales: undefined;
-  // New admin screens
+  
   QuotaManagement: undefined;
   RouteStarCustomers: undefined;
   CompanyMapping: undefined;
@@ -29,7 +29,7 @@ export type TabParamList = {
   Saved: undefined;
   Trash: undefined;
   More: undefined;
-  // Admin tabs
+  
   Dashboard: undefined;
   Approvals: undefined;
   Pricing: undefined;

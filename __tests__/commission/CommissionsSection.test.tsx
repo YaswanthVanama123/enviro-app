@@ -1,7 +1,4 @@
-/**
- * CommissionsSection Component Tests
- * Basic tests for commission calculation display logic
- */
+
 
 describe('CommissionsSection Component Logic', () => {
   describe('Currency Formatting', () => {

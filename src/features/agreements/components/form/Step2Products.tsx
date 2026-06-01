@@ -56,7 +56,6 @@ function displayNum(n: number): string {
   return n === 0 ? '' : String(n);
 }
 
-// ─── Catalog Picker Modal ──────────────────────────────────────────
 type PickCallback = (item: CatalogItemFlat) => void;
 
 function CatalogPickerModal({
@@ -181,7 +180,6 @@ function CatalogPickerModal({
   );
 }
 
-// ─── Section Header ────────────────────────────────────────────────
 function SectionHeader({title, icon, count, onAdd}: {
   title: string; icon: string; count: number; onAdd: () => void;
 }) {
@@ -204,7 +202,6 @@ function SectionHeader({title, icon, count, onAdd}: {
   );
 }
 
-// ─── Table Column Header ───────────────────────────────────────────
 function TableColHeader({priceLabel}: {priceLabel?: string}) {
   return (
     <View style={styles.colHeaderRow}>
@@ -218,7 +215,6 @@ function TableColHeader({priceLabel}: {priceLabel?: string}) {
   );
 }
 
-// ─── Frequency Chips (Expanded) ────────────────────────────────────
 function FreqChips({value, onChange}: {value: string; onChange: (v: string) => void}) {
   return (
     <View style={styles.freqRow}>
@@ -236,7 +232,6 @@ function FreqChips({value, onChange}: {value: string; onChange: (v: string) => v
   );
 }
 
-// ─── Cost Type Toggle (Expanded) ───────────────────────────────────
 function CostTypeToggle({value, onChange, labels}: {
   value: 'productCost' | 'warranty';
   onChange: (v: 'productCost' | 'warranty') => void;
@@ -264,7 +259,6 @@ function CostTypeToggle({value, onChange, labels}: {
   );
 }
 
-// ─── Autocomplete Input ─────────────────────────────────────────────
 function AutocompleteInput({
   value,
   onChangeText,
@@ -287,7 +281,7 @@ function AutocompleteInput({
     return catalogItems.filter(it =>
       it.name.toLowerCase().includes(q) ||
       it.familyLabel.toLowerCase().includes(q)
-    ).slice(0, 8); // Limit to 8 suggestions
+    ).slice(0, 8); 
   }, [catalogItems, value]);
 
   const shouldShowDropdown = isFocused && filteredItems.length > 0;
@@ -308,7 +302,7 @@ function AutocompleteInput({
           setShowSuggestions(true);
         }}
         onBlur={() => {
-          // Delay to allow tap on suggestion
+          
           setTimeout(() => {
             setIsFocused(false);
             setShowSuggestions(false);
@@ -411,7 +405,6 @@ const acStyles = StyleSheet.create({
   },
 });
 
-// ─── Compact Product Row ───────────────────────────────────────────
 function CompactProductRow({
   product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
 }: {
@@ -428,7 +421,7 @@ function CompactProductRow({
 
   return (
     <View style={[styles.compactCard, isExpanded && styles.compactCardExpanded]}>
-      {/* Compact row */}
+      {}
       <TouchableOpacity style={styles.compactRow} onPress={onToggle} activeOpacity={0.7}>
         <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
         <TextInput
@@ -458,7 +451,7 @@ function CompactProductRow({
         </TouchableOpacity>
       </TouchableOpacity>
 
-      {/* Expanded detail */}
+      {}
       {isExpanded && (
         <View style={[styles.expandPanel, {zIndex: 100}]}>
           <View style={[styles.expandNameRow, {zIndex: 101}]}>
@@ -487,7 +480,6 @@ function CompactProductRow({
   );
 }
 
-// ─── Compact Dispenser Row ─────────────────────────────────────────
 function CompactDispenserRow({
   product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
 }: {
@@ -505,7 +497,7 @@ function CompactDispenserRow({
 
   return (
     <View style={[styles.compactCard, isExpanded && styles.compactCardExpanded]}>
-      {/* Compact row */}
+      {}
       <TouchableOpacity style={styles.compactRow} onPress={onToggle} activeOpacity={0.7}>
         <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
         <TextInput
@@ -538,7 +530,7 @@ function CompactDispenserRow({
         </TouchableOpacity>
       </TouchableOpacity>
 
-      {/* Expanded detail */}
+      {}
       {isExpanded && (
         <View style={[styles.expandPanel, {zIndex: 100}]}>
           <View style={[styles.expandNameRow, {zIndex: 101}]}>
@@ -571,7 +563,6 @@ function CompactDispenserRow({
   );
 }
 
-// ─── Main Component ────────────────────────────────────────────────
 export function Step2Products({
   smallProducts,
   dispensers,
@@ -631,7 +622,7 @@ export function Step2Products({
         onClose={() => setPickerCallback(null)}
       />
 
-      {/* ── Small Products Section ── */}
+      {}
       <View style={styles.section}>
         <SectionHeader
           icon="document-outline"
@@ -662,7 +653,7 @@ export function Step2Products({
         )}
       </View>
 
-      {/* ── Dispensers Section ── */}
+      {}
       <View style={styles.section}>
         <SectionHeader
           icon="cube-outline"
@@ -697,7 +688,7 @@ export function Step2Products({
         )}
       </View>
 
-      {/* ── Include checkbox ── */}
+      {}
       <TouchableOpacity
         style={styles.includeCheckboxRow}
         onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
@@ -714,7 +705,6 @@ export function Step2Products({
   );
 }
 
-// ─── Styles ────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     paddingBottom: Spacing.xl,
@@ -752,7 +742,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  // Section
   section: {
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
@@ -822,7 +811,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
 
-  // Column header
   colHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -841,7 +829,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Compact row
   compactCard: {
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -907,7 +894,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
 
-  // Expanded panel
   expandPanel: {
     paddingHorizontal: Spacing.sm,
     paddingTop: 4,
@@ -941,7 +927,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
   },
 
-  // Frequency chips
   freqRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -969,7 +954,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Cost type toggle
   costToggleRow: {
     flexDirection: 'row',
     gap: Spacing.xs,

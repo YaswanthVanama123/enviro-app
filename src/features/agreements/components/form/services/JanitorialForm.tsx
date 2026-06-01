@@ -74,7 +74,6 @@ const BILLING_CONVERSIONS: Record<string, {annualMultiplier: number; monthlyMult
 
 const VISIT_BASED_FREQUENCIES = ['everyFourWeeks', 'bimonthly', 'quarterly', 'biannual', 'annual'];
 
-// Frequency labels for PDF display
 const FREQUENCY_LABELS: Record<string, string> = {
   oneTime:       'One-Time',
   weekly:        'Weekly',
@@ -104,7 +103,7 @@ function calcJanitorial(
   const conv = BILLING_CONVERSIONS[frequency] ?? BILLING_CONVERSIONS.weekly;
   const annualMultiplier = conv.annualMultiplier;
 
-  const weeklyLabor = perOccurrenceLabor; // kept for display
+  const weeklyLabor = perOccurrenceLabor; 
   const annualBaseLabor = perOccurrenceLabor * annualMultiplier;
   const annualLaborTax = annualBaseLabor * (laborTaxPct / 100);
   const totalAnnualSupplies = supplies.reduce((s, x) => s + x.amount, 0);
@@ -131,10 +130,8 @@ function calcJanitorial(
 export function JanitorialForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
-  // Build production rates from backend config only
   const productionRates: Record<string, number> = cfg.productionRates ?? {};
 
-  // Dropdown options derived from backend production rates
   const placeTypeOptions = Object.keys(productionRates).map(key => ({
     value: key,
     label: placeTypeLabel(key),
@@ -144,7 +141,6 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
   const adminLaborTaxPct    = cfg.laborTaxPct    ?? 15;
   const adminGrossProfitPct = cfg.grossProfitPct ?? 33;
 
-  // Build admin-configured supply defaults (merge overrides into canonical order)
   const adminDefaultSupplies: SupplyItem[] = DEFAULT_SUPPLIES.map(item => {
     const key = item.name.replace(/\s+/g, '').charAt(0).toLowerCase() +
                 item.name.replace(/\s+/g, '').slice(1);
@@ -162,29 +158,27 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     return item;
   });
 
-  // Extract form values - prioritize _restoreData for editing mode
   const restoreData = data?._restoreData;
 
-  // Helper to get value from restoreData or fall back to direct data properties
   const getValue = <T,>(key: string, defaultValue: T): T => {
-    // First try _restoreData (new format)
+    
     if (restoreData?.[key] !== undefined) {
       return restoreData[key] as T;
     }
-    // Then try direct value (backward compatibility for old format or simple values)
+    
     const directValue = data?.[key];
     if (directValue !== undefined && directValue !== null) {
-      // If it's a display object with a value property, extract the raw value
+      
       if (typeof directValue === 'object' && 'value' in directValue) {
-        // For frequency, try frequencyKey first
+        
         if (key === 'frequency' && directValue.frequencyKey) {
           return directValue.frequencyKey as T;
         }
-        // For placeType, try placeTypeKey first
+        
         if (key === 'placeType' && directValue.placeTypeKey) {
           return directValue.placeTypeKey as T;
         }
-        // Parse numeric values from strings
+        
         if (typeof defaultValue === 'number') {
           const parsed = parseFloat(directValue.value);
           return (isNaN(parsed) ? defaultValue : parsed) as T;
@@ -204,8 +198,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
     ? rawPlaceType
     : (availablePlaceTypes[0] ?? 'office');
   const sqFt           = getValue<number>('sqFt', 0);
-  // Restore salesperson's saved values (or use admin defaults for new forms)
-  // Greenline/Redline comparison uses adminRates separately via origCalc
+
   const costPerHour    = getValue<number>('costPerHour', adminCostPerHour);
   const laborTaxPct    = getValue<number>('laborTaxPct', adminLaborTaxPct);
   const grossProfitPct = getValue<number>('grossProfitPct', adminGrossProfitPct);
@@ -243,8 +236,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       contractTotal: newCalc.contractTotal,
       originalContractTotal: origCalc.contractTotal,
       perVisit: newCalc.perVisit,
-      // Store form input values for restoration when editing
-      // Using _restoreData to avoid conflict with resolveServiceData() in pdfService
+
       _restoreData: {
         frequency: newFreq,
         visitsPerWeek: newVisits,
@@ -257,7 +249,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         contractMonths,
         notes: newNotes,
       },
-      // Formatted display fields for PDF generation
+      
       frequency: {
         isDisplay: true,
         orderNo: 1,
@@ -370,11 +362,11 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       notes={restoreData?.notes ?? data?.notes ?? ''}
       onNotesChange={v => update({notes: v})}>
 
-      {/* Frequency */}
+      {}
       <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
 
-      {/* Visits per Week */}
+      {}
       <DropdownRow
         label="Visits per Week"
         value={String(visitsPerWeek)}
@@ -382,7 +374,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         onChange={v => update({visitsPerWeek: Number(v)})}
       />
 
-      {/* Place Type */}
+      {}
       <DropdownRow
         label="Place Type"
         value={placeType}
@@ -390,10 +382,10 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         onChange={v => update({placeType: v})}
       />
 
-      {/* Square Feet */}
+      {}
       <NumberRow label="Square Feet" value={sqFt} onChange={v => update({sqFt: v})} decimals={0} suffix="sq ft" />
 
-      {/* Hours Per Visit (read-only) */}
+      {}
       <View style={styles.readOnlyRow}>
         <Text style={styles.readOnlyLabel}>Hours Per Visit</Text>
         <Text style={styles.readOnlyValue}>{calc.hoursPerVisit.toFixed(2)} hrs</Text>
@@ -401,14 +393,14 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
 
       <FormDivider />
 
-      {/* Editable rates */}
+      {}
       <NumberRow label="Cost Per Hour" value={costPerHour} onChange={v => update({costPerHour: v})} prefix="$" decimals={2} />
       <NumberRow label="Labor Tax %" value={laborTaxPct} onChange={v => update({laborTaxPct: v})} suffix="%" decimals={1} />
       <NumberRow label="Gross Profit %" value={grossProfitPct} onChange={v => update({grossProfitPct: v})} suffix="%" decimals={1} />
 
       <FormDivider />
 
-      {/* Supply Line Items */}
+      {}
       <View style={styles.suppliesHeader}>
         <Text style={styles.suppliesTitle}>Supply Line Items (Annual)</Text>
       </View>
@@ -429,7 +421,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         </View>
       ))}
 
-      {/* Pricing Summary */}
+      {}
       <View style={styles.summarySection}>
         <View style={styles.summaryHeader}>
           <Text style={styles.summaryHeaderText}>Pricing Summary</Text>
@@ -444,11 +436,11 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         <DollarRow label={`Gross Profit (${grossProfitPct}%)`} value={calc.grossProfit} />
         <DollarRow label="Annual Contract Value" value={calc.annualContractValue} />
         <FormDivider />
-        {/* Show Monthly Recurring for month-based frequencies */}
+        {}
         {freq !== 'oneTime' && !VISIT_BASED_FREQUENCIES.includes(freq) && (
           <DollarRow label="Monthly Recurring" value={monthlyRecurring} />
         )}
-        {/* Show Recurring Visit Total for visit-based frequencies */}
+        {}
         {VISIT_BASED_FREQUENCIES.includes(freq) && (
           <DollarRow label="Recurring Visit Total" value={calc.perVisit} />
         )}

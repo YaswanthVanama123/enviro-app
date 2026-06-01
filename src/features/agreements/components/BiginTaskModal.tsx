@@ -44,18 +44,15 @@ export function BiginTaskModal({
   const [linkedDeal, setLinkedDeal] = useState<{id: string; name: string} | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<ZohoCompany | null>(null);
 
-  // Users
   const [users, setUsers] = useState<ZohoUser[]>([]);
   const [selectedOwner, setSelectedOwner] = useState<ZohoUser | null>(null);
   const [ownerSearch, setOwnerSearch] = useState('');
   const [ownerDropOpen, setOwnerDropOpen] = useState(false);
 
-  // Companies
   const [companies, setCompanies] = useState<ZohoCompany[]>([]);
   const [companySearch, setCompanySearch] = useState('');
   const [loadingCompanies, setLoadingCompanies] = useState(false);
 
-  // Task fields
   const [taskName, setTaskName] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [description, setDescription] = useState('');
@@ -68,13 +65,11 @@ export function BiginTaskModal({
   const [repeatFrequency, setRepeatFrequency] = useState('Every Day');
   const [repeatUntil, setRepeatUntil] = useState('');
 
-  // Inline dropdowns
   const [reminderWhenOpen, setReminderWhenOpen] = useState(false);
   const [repeatFreqOpen, setRepeatFreqOpen] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Reset & load on open
   useEffect(() => {
     if (!visible) {return;}
     setStep('loading');
@@ -123,7 +118,6 @@ export function BiginTaskModal({
     });
   }, [visible, agreementId]);
 
-  // Load companies for selector
   useEffect(() => {
     if (step !== 'select-company') {return;}
     setLoadingCompanies(true);
@@ -155,7 +149,6 @@ export function BiginTaskModal({
       return;
     }
 
-    // Validations
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (dueDate) {
@@ -329,7 +322,6 @@ export function BiginTaskModal({
       );
     }
 
-    // form
     return (
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -337,7 +329,7 @@ export function BiginTaskModal({
         style={{maxHeight: 520}}>
         <View style={styles.formBody}>
 
-          {/* Section header + Owner */}
+          {}
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeaderText}>Task Information</Text>
             <TouchableOpacity
@@ -356,7 +348,7 @@ export function BiginTaskModal({
             </TouchableOpacity>
           </View>
 
-          {/* Owner dropdown */}
+          {}
           {ownerDropOpen && (
             <View style={styles.dropdownBox}>
               <View style={styles.searchRow}>
@@ -398,7 +390,7 @@ export function BiginTaskModal({
             </View>
           )}
 
-          {/* Task Name */}
+          {}
           <Text style={styles.fieldLabel}>
             Task Name <Text style={{color: '#ef4444'}}>*</Text>
           </Text>
@@ -411,7 +403,7 @@ export function BiginTaskModal({
             autoCapitalize="sentences"
           />
 
-          {/* Due Date */}
+          {}
           <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Due Date</Text>
           <TextInput
             style={styles.textInput}
@@ -423,7 +415,7 @@ export function BiginTaskModal({
             maxLength={10}
           />
 
-          {/* Repeat */}
+          {}
           <TouchableOpacity
             style={styles.checkRow}
             onPress={() => setRepeat(v => !v)}
@@ -474,7 +466,7 @@ export function BiginTaskModal({
             </View>
           )}
 
-          {/* Reminder */}
+          {}
           <TouchableOpacity
             style={styles.checkRow}
             onPress={() => setReminder(v => !v)}
@@ -522,7 +514,7 @@ export function BiginTaskModal({
             </View>
           )}
 
-          {/* Related To */}
+          {}
           <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Related To</Text>
           <View style={styles.relatedToBox}>
             <Ionicons name="business-outline" size={14} color={Colors.textMuted} />
@@ -534,7 +526,7 @@ export function BiginTaskModal({
             </View>
           </View>
 
-          {/* Description */}
+          {}
           <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Description</Text>
           <TextInput
             style={[styles.textInput, styles.textInputMulti]}
@@ -546,7 +538,7 @@ export function BiginTaskModal({
             textAlignVertical="top"
           />
 
-          {/* High Priority */}
+          {}
           <TouchableOpacity style={styles.checkRow} onPress={() => setHighPriority(v => !v)} activeOpacity={0.7}>
             <View style={[styles.checkbox, highPriority && styles.checkboxChecked]}>
               {highPriority && <Ionicons name="checkmark" size={11} color="#fff" />}
@@ -554,7 +546,7 @@ export function BiginTaskModal({
             <Text style={styles.checkLabel}>Mark as High Priority</Text>
           </TouchableOpacity>
 
-          {/* Mark Completed */}
+          {}
           <TouchableOpacity style={styles.checkRow} onPress={() => setMarkCompleted(v => !v)} activeOpacity={0.7}>
             <View style={[styles.checkbox, markCompleted && styles.checkboxChecked]}>
               {markCompleted && <Ionicons name="checkmark" size={11} color="#fff" />}
@@ -569,7 +561,7 @@ export function BiginTaskModal({
             </View>
           ) : null}
 
-          {/* Footer */}
+          {}
           <View style={styles.footerRow}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.cancelBtnText}>Cancel</Text>

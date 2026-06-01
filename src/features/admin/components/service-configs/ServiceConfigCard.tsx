@@ -17,7 +17,6 @@ interface ServiceConfigCardProps {
 export function ServiceConfigCard({config, onEdit, onEditPricing}: ServiceConfigCardProps) {
   const {width} = useWindowDimensions();
 
-  // Check if description contains HTML (from rich text editor)
   const isHtmlContent = config.description && (
     config.description.includes('<') ||
     config.description.includes('&lt;')

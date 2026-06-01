@@ -6,7 +6,6 @@ const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 const ROLE_KEY = 'user_role';
 
-// Legacy keys for migration
 const LEGACY_TOKEN_KEY = 'admin_token';
 const LEGACY_USER_KEY = 'admin_user';
 
@@ -33,11 +32,6 @@ const rawStore = Platform.OS === 'windows'
       removeItem: (key: string) => EncryptedStorage.removeItem(key),
     };
 
-// EncryptedStorage rejects with "An error occurred while removing value"
-// when the key doesn't exist (e.g. fresh install, or after a previous clear).
-// AsyncStorage is more lenient. Wrap every remove so cleanup is idempotent
-// — a missing key should be a successful no-op, never an unhandled rejection
-// and never a noisy log entry.
 const isKeyMissingError = (err: unknown): boolean => {
   const msg = err instanceof Error ? err.message : String(err);
   return /removing value/i.test(msg) || /not\s+found/i.test(msg);
@@ -51,10 +45,10 @@ const store = {
       await rawStore.removeItem(key);
     } catch (err) {
       if (isKeyMissingError(err)) {
-        // Expected: key wasn't there. No-op, no log.
+        
         return;
       }
-      // Genuinely unexpected — keep the log so we don't lose signal.
+      
       if (__DEV__) {
         console.warn(`[storage] removeItem(${key}) failed:`, err);
       }
@@ -64,7 +58,7 @@ const store = {
 
 export const storage = {
   async getToken(): Promise<string | null> {
-    // Try new key first, then fallback to legacy
+    
     let token = await store.getItem(TOKEN_KEY);
     if (!token) {
       token = await store.getItem(LEGACY_TOKEN_KEY);
@@ -84,12 +78,12 @@ export const storage = {
   async getUser(): Promise<AuthUser | null> {
     const raw = await store.getItem(USER_KEY);
     if (!raw) {
-      // Try legacy key
+      
       const legacyRaw = await store.getItem(LEGACY_USER_KEY);
       if (legacyRaw) {
         try {
           const legacyUser = JSON.parse(legacyRaw);
-          // Convert legacy admin user to new format
+          
           return {
             id: legacyUser.id,
             username: legacyUser.username,
@@ -118,7 +112,7 @@ export const storage = {
     if (role === 'admin' || role === 'employee') {
       return role;
     }
-    // Check if we have a user with role
+    
     const user = await this.getUser();
     return user?.role || null;
   },
@@ -131,7 +125,7 @@ export const storage = {
     await store.removeItem(TOKEN_KEY);
     await store.removeItem(USER_KEY);
     await store.removeItem(ROLE_KEY);
-    // Also clear legacy keys
+    
     await store.removeItem(LEGACY_TOKEN_KEY);
     await store.removeItem(LEGACY_USER_KEY);
   },
@@ -142,7 +136,6 @@ export const storage = {
     return !!(token && user);
   },
 
-  // Legacy methods for backwards compatibility
   async getAdminUser(): Promise<AuthUser | null> {
     return this.getUser();
   },

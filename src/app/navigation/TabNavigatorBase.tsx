@@ -56,18 +56,17 @@ export function TabNavigator() {
   const tabs = isAuthenticated ? AUTH_TABS : PUBLIC_TABS;
   const ActiveScreen = tabs[activeTab]?.component ?? tabs[0].component;
 
-  // Total height of the tab bar including the bottom safe-area inset
   const tabBarTotalHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   return (
     <View style={styles.shell}>
 
-      {/* ── Screen content — padded so it never slides under the tab bar ── */}
+      {}
       <View style={[styles.content, {paddingBottom: tabBarTotalHeight}]}>
         <ActiveScreen />
       </View>
 
-      {/* ── Bottom tab bar (absolutely positioned, always on top) ── */}
+      {}
       <View style={[styles.tabBar, {height: tabBarTotalHeight, paddingBottom: insets.bottom}]}>
         {tabs.map((tab, idx) => {
           const focused = idx === activeTab;
@@ -131,7 +130,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
     borderTopWidth: 1,
     zIndex: 999,
-    elevation: 8,          // Android shadow
+    elevation: 8,          
     paddingTop: Spacing.sm,
     paddingHorizontal: Spacing.sm,
   },

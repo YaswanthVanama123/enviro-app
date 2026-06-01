@@ -1,12 +1,4 @@
-/**
- * CommissionRulesManager (mobile)
- *
- * Mirrors enviromaster/src/components/admin/commissions/CommissionRulesManager.tsx.
- * Lets an admin edit commission rules — including the V2 spec-faithful fields
- * (per-visit penalties, Anchor / Pit thresholds, pricing tiers, frequency
- * visits-per-year, quota tier cutoffs) — and persists via the existing
- * commissionApi.updateRules PUT.
- */
+
 
 import React, {useEffect, useState} from 'react';
 import {
@@ -47,9 +39,6 @@ const DEFAULT_PRICING_TIERS = [
   {minRatio: 1.3,  maxRatio: Infinity, quotaMultiplier: 2.0, label: 'Greenline (130%+)', requiresApproval: false},
 ];
 
-// Hydrate any V2 fields missing on the DB document with bundled defaults so
-// legacy CommissionRules documents render with editable values. The admin's
-// first Save will persist the hydrated values to MongoDB.
 function hydrateV2Fields(rules: CommissionRules): CommissionRules {
   return {
     ...rules,
@@ -131,7 +120,6 @@ export const CommissionRulesManager: React.FC = () => {
     }
   };
 
-  // Numeric input helper — parses on change, preserves zero/empty correctly.
   const num = (value: number | undefined, fallback: number) =>
     String(value ?? fallback);
   const parseNum = (value: string) => parseFloat(value) || 0;
@@ -201,7 +189,7 @@ export const CommissionRulesManager: React.FC = () => {
     } else if (field === 'requiresApproval') {
       next[index] = {...next[index], requiresApproval: Boolean(value)};
     } else if (field === 'minRatio' || field === 'maxRatio') {
-      // Inputs are PERCENT values (e.g. "110"); store as decimal ratio.
+      
       const pct = parseFloat(String(value));
       const ratio = isFinite(pct) ? pct / 100 : 0;
       next[index] = {...next[index], [field]: ratio};
@@ -251,7 +239,7 @@ export const CommissionRulesManager: React.FC = () => {
         </View>
       )}
 
-      {/* Quota Achievement Rates */}
+      {}
       <Section title="Quota Achievement Rates (%)">
         <NumberField
           label="Below Quota"
@@ -270,7 +258,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* Agreement Term Multipliers */}
+      {}
       <Section title="Agreement Term Multipliers (%)">
         <NumberField
           label="3-Year"
@@ -294,7 +282,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* V2 — Per-Visit Penalties */}
+      {}
       <Section
         title="Per-Visit Penalties (V2 — $)"
         subtitle="Subtracted from per-visit revenue for new Bread / Pit accounts. Existing accounts pay no penalty.">
@@ -315,7 +303,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* V2 — Anchor Thresholds */}
+      {}
       <Section title="Anchor Thresholds (V2 — per visit $)">
         <NumberField
           label="Anchor Min ($)"
@@ -355,7 +343,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* V2 — Pricing Tiers */}
+      {}
       <Section
         title="Pricing Tiers (V2 — % range → multiplier)"
         subtitle="Drives both quota credit and commission base. Range is the agreement's current/redline ratio expressed as a percentage. Spec: Redline $1 per $1, Greenline $2 per dollar.">
@@ -408,7 +396,7 @@ export const CommissionRulesManager: React.FC = () => {
         })}
       </Section>
 
-      {/* V2 — Frequency Visits Per Year */}
+      {}
       <Section
         title="Visits Per Year by Frequency (V2)"
         subtitle="Spec: weekly billing uses 50 weeks (holidays excluded), monthly 12, quarterly 4.">
@@ -446,7 +434,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* V2 — Quota Tier Cutoffs */}
+      {}
       <Section
         title="Quota Tier Cutoffs (V2 — $)"
         subtitle="Piecewise commission rate splits at these annualized quota-credit positions.">
@@ -464,7 +452,7 @@ export const CommissionRulesManager: React.FC = () => {
         />
       </Section>
 
-      {/* Other Settings */}
+      {}
       <Section title="Other Settings">
         <NumberField
           label="Greenline Bonus (V1 legacy %)"
@@ -519,8 +507,6 @@ export const CommissionRulesManager: React.FC = () => {
     </ScrollView>
   );
 };
-
-// ── Sub-components ────────────────────────────────────────────────────────
 
 interface SectionProps {
   title: string;

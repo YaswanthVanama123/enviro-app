@@ -1,9 +1,4 @@
-/**
- * CreateAgreementDesktop.tsx
- * Desktop form — exact EnviroMaster web-app look.
- * Used by CreateAgreementScreen.windows.tsx and CreateAgreementScreen.ios.tsx (width >= 768).
- * Mobile / tablet wizard is untouched.
- */
+
 import React, {useState} from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -19,11 +14,10 @@ import {Step5Agreement}        from '../components/form/Step5Agreement';
 import {Step4Review}           from '../components/form/Step4Review';
 import {formatCurrency} from '../../../shared/utils/format.utils';
 
-// ── Exact web-app palette ────────────────────────────────
 const C = {
-  primary:     '#c00000',   // dark red — all headers, active tabs, labels
+  primary:     '#c00000',   
   primaryDark: '#a00000',
-  orange:      '#ff4500',   // save button
+  orange:      '#ff4500',   
   surface:     '#ffffff',
   bg:          '#f5f5f5',
   border:      '#e5e7eb',
@@ -31,15 +25,14 @@ const C = {
   text:        '#212121',
   textMuted:   '#4a4a4a',
   textMutedLt: '#9ca3af',
-  labelRed:    '#FF0000',   // customer field labels (exact from CustomerSection.css)
+  labelRed:    '#FF0000',   
   greenDark:   '#1a7a1a',
   greenBg:     '#f0fdf4',
-  blueBg:      '#dae9f8',   // table column headers (from ProductsSection.css)
+  blueBg:      '#dae9f8',   
   yellowBg:    '#fef3c7',
   yellow:      '#fbbf24',
 };
 
-// ── Duration options ─────────────────────────────────────
 const DURATION_OPTIONS = Array.from({length: 35}, (_, i) => ({
   value: String(i + 2), label: `${i + 2} months`,
 }));
@@ -69,14 +62,10 @@ function fmt$(v: number) {
   return '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-// ── Reusable atoms ───────────────────────────────────────
-
-/** Red uppercase label like "CUSTOMER NAME:" */
 function RLabel({text}: {text: string}) {
   return <Text style={f.rlabel}>{text}:</Text>;
 }
 
-/** Underline-only text input (exact web app CustomerSection.css style) */
 function UInput({
   value, onChange, placeholder, keyboard, multiline,
 }: {
@@ -98,7 +87,6 @@ function UInput({
   );
 }
 
-/** Dark-red section header bar exactly like .prod__title / .svc-title */
 function SectionBar({
   title, onAdd, onRemove, addLabel = '+ Row',
 }: {
@@ -141,7 +129,6 @@ const bar = StyleSheet.create({
   btnText: {color: C.primary, fontWeight: '700', fontSize: 13},
 });
 
-/** Tab pill button — active = #c00000 bg, inactive = white bg + #c00000 border */
 function TabPill({
   label, active, onPress,
 }: {label: string; active: boolean; onPress: () => void}) {
@@ -165,7 +152,6 @@ const tp = StyleSheet.create({
   textActive: {color: '#fff'},
 });
 
-/** Money input row: $ prefix + underline input */
 function MoneyRow({
   label, value, onChange, suffix,
 }: {label: string; value: number; onChange: (v: number) => void; suffix?: string}) {
@@ -199,7 +185,6 @@ const m = StyleSheet.create({
   suffix: {fontSize: 12, color: C.textMuted, marginLeft: 4},
 });
 
-/** Dropdown with overlay menu */
 function Dropdown({
   label, value, options, onChange, small,
 }: {
@@ -267,7 +252,6 @@ const dd = StyleSheet.create({
   optTextSel: {color: '#fff', fontWeight: '700'},
 });
 
-/** Month / year modal date picker */
 function DatePicker({value, onChange}: {value: string; onChange: (v: string) => void}) {
   const [show, setShow] = useState(false);
   const today = new Date();
@@ -343,7 +327,6 @@ const dp = StyleSheet.create({
   cancel: {marginTop: 16, paddingVertical: 10, alignItems: 'center'},
 });
 
-/** Pricing breakdown row */
 function PRow({label, value, color, highlight}: {label: string; value: string; color?: string; highlight?: boolean}) {
   return (
     <View style={[pr.row, highlight && pr.rowHL]}>
@@ -359,10 +342,6 @@ const pr = StyleSheet.create({
   val: {fontSize: 15, fontWeight: '700', color: C.text},
 });
 
-/**
- * Reference table — shown when user clicks "Products Reference" or "Dispensers Reference" tab.
- * Matches web app ProductsSection.tsx ProductsReferenceTable / DispensersReferenceTable layout.
- */
 function ReferenceTable({
   title, products,
 }: {
@@ -381,7 +360,7 @@ function ReferenceTable({
       <View style={ref.titleBar}>
         <Text style={ref.titleText}>{title}</Text>
       </View>
-      {/* Header row */}
+      {}
       <View style={ref.headerRow}>
         <Text style={[ref.hCell, {flex: 2}]}>Product Name</Text>
         <Text style={[ref.hCell, {flex: 3}]}>Description</Text>
@@ -436,14 +415,13 @@ const ref = StyleSheet.create({
   emptyText: {fontSize: 14, color: C.textMuted},
 });
 
-// ── Field styles ─────────────────────────────────────────
 const f = StyleSheet.create({
-  // Red uppercase label (CustomerSection.css: color #FF0000, text-transform uppercase)
+  
   rlabel: {
     fontSize: 12, fontWeight: '700', color: C.labelRed,
     textTransform: 'uppercase', marginBottom: 2,
   },
-  // Underline-only input (CustomerSection.css: border:none; border-bottom:2px solid #000)
+  
   uinput: {
     borderBottomWidth: 2, borderBottomColor: C.borderDark,
     paddingVertical: 5, paddingHorizontal: 2,
@@ -453,7 +431,6 @@ const f = StyleSheet.create({
   uinputMulti: {minHeight: 72, textAlignVertical: 'top'},
 });
 
-// ── Main component ───────────────────────────────────────
 export function CreateAgreementDesktop() {
   const navigation = useNavigation();
   const [activeFormTab, setActiveFormTab] = useState<'form' | 'products-ref' | 'dispensers-ref'>('form');
@@ -476,7 +453,6 @@ export function CreateAgreementDesktop() {
   const {saving, saveError, savedId} = form;
   const rows = form.headerRows ?? [];
 
-  // Flatten catalog into reference arrays for the two reference tabs
   const allCatalogProducts: any[] = (form.productCatalog?.families ?? []).flatMap((f: any) => f.products ?? []);
   const productsRefList  = allCatalogProducts.filter(p => p.familyKey !== 'dispensers');
   const dispensersRefList = allCatalogProducts.filter(p => p.familyKey === 'dispensers');
@@ -496,7 +472,6 @@ export function CreateAgreementDesktop() {
     }
   };
 
-  // Simple totals for pricing breakdown
   const tripMonthly  = (form.tripCharge   ?? 0) * (form.tripChargeFrequency   ?? 1);
   const parkMonthly  = (form.parkingCharge ?? 0) * (form.parkingChargeFrequency ?? 1);
   const contractTotal = (tripMonthly + parkMonthly) * (form.contractMonths ?? 12);
@@ -504,7 +479,7 @@ export function CreateAgreementDesktop() {
   return (
     <View style={ss.root}>
 
-      {/* ── Top action bar ── */}
+      {}
       <View style={ss.topBar}>
         <TouchableOpacity style={ss.backBtn} onPress={goBack}>
           <Ionicons name="arrow-back" size={16} color="#4a4a4a" />
@@ -521,26 +496,23 @@ export function CreateAgreementDesktop() {
         ) : null}
       </View>
 
-      {/* ── Scrollable body ── */}
+      {}
       <ScrollView
         style={ss.scroll}
         contentContainerStyle={ss.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator>
 
-        {/* ════════════════════════════════════
-            CUSTOMER HEADER SECTION
-            (matches web app CustomerSection layout)
-        ════════════════════════════════════ */}
+        {}
         <View style={ss.customerSection}>
-          {/* Top row: logo | title | spacer */}
+          {}
           <View style={ss.customerTop}>
-            {/* EM logo box */}
+            {}
             <View style={ss.logoBox}>
               <Text style={ss.logoText}>EM</Text>
             </View>
 
-            {/* Agreement title — centered, red, editable */}
+            {}
             <View style={ss.titleWrap}>
               <TextInput
                 style={ss.agreementTitle}
@@ -552,13 +524,13 @@ export function CreateAgreementDesktop() {
               />
             </View>
 
-            {/* + Add field placeholder */}
+            {}
             <TouchableOpacity style={ss.addFieldBtn}>
               <Text style={ss.addFieldText}>+ Add field</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Customer fields — 2-column grid, red labels, underline inputs */}
+          {}
           <View style={ss.customerGrid}>
             <View style={ss.customerCol}>
               <RLabel text="Customer Name" />
@@ -616,7 +588,7 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ── Section tabs: Form / Products Ref / Dispensers Ref ── */}
+        {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ss.tabRow}>
           <TabPill label="Form"                 active={activeFormTab === 'form'}           onPress={() => setActiveFormTab('form')} />
           <TabPill label="Products Reference"   active={activeFormTab === 'products-ref'}   onPress={() => setActiveFormTab('products-ref')} />
@@ -625,9 +597,7 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            PRODUCTS REFERENCE TAB
-        ════════════════════════════════════ */}
+        {}
         {activeFormTab === 'products-ref' && (
           <ReferenceTable
             title="Products Reference — For Salespeople"
@@ -635,9 +605,7 @@ export function CreateAgreementDesktop() {
           />
         )}
 
-        {/* ════════════════════════════════════
-            DISPENSERS REFERENCE TAB
-        ════════════════════════════════════ */}
+        {}
         {activeFormTab === 'dispensers-ref' && (
           <ReferenceTable
             title="Dispensers Reference — For Salespeople"
@@ -645,14 +613,10 @@ export function CreateAgreementDesktop() {
           />
         )}
 
-        {/* ════════════════════════════════════
-            MAIN FORM (hidden when on a reference tab)
-        ════════════════════════════════════ */}
+        {}
         {activeFormTab === 'form' && (<>
 
-        {/* ════════════════════════════════════
-            PRODUCTS section
-        ════════════════════════════════════ */}
+        {}
         <SectionBar
           title="Products"
           onAdd={() => addSmallProduct()}
@@ -676,9 +640,7 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            SERVICES section
-        ════════════════════════════════════ */}
+        {}
         <SectionBar
           title="Services"
           addLabel="+ Service"
@@ -699,13 +661,10 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            CONTRACT DETAILS + PRICING BREAKDOWN
-            2-column layout (exact web app Step2Contract)
-        ════════════════════════════════════ */}
+        {}
         <View style={ss.contractRow}>
 
-          {/* Left: CONTRACT DETAILS card */}
+          {}
           <View style={[ss.contractCard, ss.contractLeft]}>
             <Text style={ss.cardTitle}>CONTRACT DETAILS</Text>
 
@@ -774,7 +733,7 @@ export function CreateAgreementDesktop() {
             </View>
           </View>
 
-          {/* Right: PRICING BREAKDOWN card */}
+          {}
           <View style={[ss.contractCard, ss.contractRight]}>
             <Text style={ss.cardTitle}>PRICING BREAKDOWN</Text>
             <PRow label="Trip Charge / visit"   value={fmt$(form.tripCharge)}   />
@@ -793,12 +752,9 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            PAYMENT OPTIONS
-            (exact web app layout: 3 cards in a row)
-        ════════════════════════════════════ */}
+        {}
         <View style={ss.payCard}>
-          {/* Header row */}
+          {}
           <View style={ss.payHeaderRow}>
             <View style={{flex: 1}}>
               <Text style={ss.payTitle}>Payment Options</Text>
@@ -811,7 +767,7 @@ export function CreateAgreementDesktop() {
             </Text>
           </View>
 
-          {/* 3 payment cards */}
+          {}
           <View style={ss.payOptRow}>
             {PAYMENT_OPTS.map(opt => (
               <TouchableOpacity
@@ -827,7 +783,7 @@ export function CreateAgreementDesktop() {
             ))}
           </View>
 
-          {/* Note textarea */}
+          {}
           <Text style={ss.noteLabel}>Note</Text>
           <TextInput
             style={ss.noteInput}
@@ -841,9 +797,7 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            SERVICE AGREEMENT
-        ════════════════════════════════════ */}
+        {}
         <Step5Agreement
           enviroOf={form.enviroOf}
           onEnviroOfChange={setEnviroOf}
@@ -854,16 +808,14 @@ export function CreateAgreementDesktop() {
 
         <View style={ss.gap} />
 
-        {/* ════════════════════════════════════
-            REVIEW
-        ════════════════════════════════════ */}
+        {}
         <Step4Review form={form} />
 
         <View style={{height: 24}} />
         </>)}
       </ScrollView>
 
-      {/* ── Bottom action bar ── */}
+      {}
       <View style={ss.actionBar}>
         <Text style={ss.actionHint}>
           {savedId ? 'Draft saved' : 'All changes are unsaved'}
@@ -897,11 +849,9 @@ export function CreateAgreementDesktop() {
   );
 }
 
-// ── Page-level styles ────────────────────────────────────
 const ss = StyleSheet.create({
   root: {flex: 1, flexDirection: 'column', backgroundColor: C.bg},
 
-  // Top action bar
   topBar: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingHorizontal: 20, paddingVertical: 12,
@@ -924,15 +874,12 @@ const ss = StyleSheet.create({
   },
   errText: {fontSize: 12, color: '#b91c1c', fontWeight: '500'},
 
-  // Scroll
   scroll: {flex: 1, backgroundColor: C.bg},
   content: {paddingTop: 16, paddingHorizontal: 16, paddingBottom: 16},
 
-  // Gap spacer
   gap: {height: 16},
 
-  // ── Customer section ────────────────────────────────────
-  // White background, no card border (matches web app CustomerSection)
+  
   customerSection: {
     backgroundColor: C.surface,
     paddingHorizontal: 20, paddingVertical: 20,
@@ -964,21 +911,17 @@ const ss = StyleSheet.create({
   },
   addFieldText: {fontSize: 13, color: C.textMuted, fontWeight: '500'},
 
-  // Customer fields 2-column grid
   customerGrid: {flexDirection: 'row', flexWrap: 'wrap', gap: 16},
   customerCol: {flex: 1, minWidth: 240, marginBottom: 4},
 
-  // ── Section tabs ────────────────────────────────────────
   tabRow: {flexDirection: 'row', gap: 8, paddingVertical: 2},
 
-  // ── Section body (white card below section header bar) ──
   sectionBody: {
     backgroundColor: C.surface,
     borderWidth: 1, borderTopWidth: 0, borderColor: 'rgba(0,0,0,0.2)',
     padding: 12,
   },
 
-  // ── Contract 2-column row ────────────────────────────────
   contractRow: {flexDirection: 'row', gap: 16, flexWrap: 'wrap'},
   contractCard: {
     backgroundColor: C.surface,
@@ -1008,7 +951,6 @@ const ss = StyleSheet.create({
   tripTextInput: {flex: 1, fontSize: 14, color: C.text, paddingVertical: 0},
   inlineDivider: {height: 1, backgroundColor: C.border, marginVertical: 14},
 
-  // ── Payment Options ─────────────────────────────────────
   payCard: {
     backgroundColor: C.surface,
     borderWidth: 1, borderColor: C.border, borderRadius: 8,
@@ -1039,7 +981,6 @@ const ss = StyleSheet.create({
     minHeight: 80, textAlignVertical: 'top',
   },
 
-  // ── Bottom action bar ────────────────────────────────────
   actionBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: C.surface,

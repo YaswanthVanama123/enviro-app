@@ -16,7 +16,6 @@ interface Props {
 export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
-  // Extract backend config values using correct nested property paths
   const cfgStandardDrainRate     = cfg.standardPricing?.standardDrainRate       ?? cfg.standardDrainRate      ?? 10;
   const cfgGreaseWeeklyRate      = cfg.greaseTrapPricing?.weeklyRatePerTrap     ?? cfg.greaseTrapWeeklyRate   ?? 125;
   const cfgGreenWeeklyRate       = cfg.greenDrainPricing?.weeklyRatePerDrain    ?? cfg.greenDrainWeeklyRate   ?? 5;
@@ -61,7 +60,7 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
     const raw      = sd * sdr + gt * gwr + gn * gnr + (np ? pd * par : 0);
     const newBase  = applyMin && mn > 0 ? Math.max(raw, mn) : raw;
     const newTotals = calcTotals(newBase, nf, contractMonths);
-    // Use the same config values for original calculation
+    
     const origRaw   = sd * cfgStandardDrainRate + gt * cfgGreaseWeeklyRate + gn * cfgGreenWeeklyRate + (np ? pd * cfgPlumbingAddonRate : 0);
     const originalPerVisitBase = applyMin && cfgMinimumChargePerVisit > 0 ? Math.max(origRaw, cfgMinimumChargePerVisit) : origRaw;
     const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
@@ -81,7 +80,6 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
     });
   }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange, cfgStandardDrainRate, cfgGreaseWeeklyRate, cfgGreenWeeklyRate, cfgPlumbingAddonRate, cfgMinimumChargePerVisit]);
 
-  // Use the same config values for original calculation (greenline comparison)
   const origRawCost =
     standardDrainCount * cfgStandardDrainRate +
     greaseTrapCount    * cfgGreaseWeeklyRate  +
@@ -90,7 +88,6 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
   const origBase = applyMinimum && cfgMinimumChargePerVisit > 0 ? Math.max(origRawCost, cfgMinimumChargePerVisit) : origRawCost;
   const originalContractTotal = calcTotals(origBase, freq, contractMonths).contractTotal;
 
-  // Check if any rates have been modified from defaults
   const hasRateChanges =
     standardDrainRate !== cfgStandardDrainRate ||
     greaseWeeklyRate !== cfgGreaseWeeklyRate ||

@@ -1,9 +1,4 @@
-/**
- * Step2ProductsDesktop.tsx
- * Desktop / Mac Catalyst products section — exact web app style.
- * Logic identical to Step2Products.tsx; only sizing and styles differ.
- * Mobile view is unchanged (still uses Step2Products.tsx).
- */
+
 import React, {useState, useMemo, useRef, useEffect} from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -13,7 +8,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SmallProduct, Dispenser} from '../../hooks/useFormFilling';
 import {formatCurrency} from '../../../../shared/utils/format.utils';
 
-// ── Web app palette ───────────────────────────────────────
 const C = {
   primary:     '#c00000',
   primaryBg:   '#fff0f0',
@@ -71,7 +65,6 @@ function displayNum(n: number): string {
   return n === 0 ? '' : String(n);
 }
 
-// ── Autocomplete name input ───────────────────────────────
 function NameInput({
   value, onChangeText, placeholder, catalogItems, onSelectItem, onOpenFullCatalog,
 }: {
@@ -158,7 +151,6 @@ const ai = StyleSheet.create({
   dropPrice: {fontSize: 14, fontWeight: '700', color: C.primary},
 });
 
-// ── Catalog picker modal ──────────────────────────────────
 type PickCb = (item: CatalogItemFlat) => void;
 
 function CatalogModal({visible, items, onSelect, onClose}: {
@@ -308,7 +300,6 @@ const cm = StyleSheet.create({
   prodPrice: {fontSize: 14, fontWeight: '700', color: C.primary},
 });
 
-// ── Section header ────────────────────────────────────────
 function SecHeader({icon, title, count, onAdd}: {
   icon: string; title: string; count: number; onAdd: () => void;
 }) {
@@ -331,7 +322,6 @@ function SecHeader({icon, title, count, onAdd}: {
   );
 }
 
-// ── Cost type toggle ──────────────────────────────────────
 function CostToggle({value, onChange}: {
   value: 'productCost' | 'warranty';
   onChange: (v: 'productCost' | 'warranty') => void;
@@ -356,7 +346,6 @@ function CostToggle({value, onChange}: {
   );
 }
 
-// ── Frequency chips ───────────────────────────────────────
 function FreqChips({value, onChange}: {value: string; onChange: (v: string) => void}) {
   return (
     <View style={s.freqRow}>
@@ -374,7 +363,6 @@ function FreqChips({value, onChange}: {value: string; onChange: (v: string) => v
   );
 }
 
-// ── Small product row ─────────────────────────────────────
 function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}: {
   product: SmallProduct;
   catalogItems: CatalogItemFlat[];
@@ -387,7 +375,7 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
 
   return (
     <View style={s.rowCard}>
-      {/* Name row */}
+      {}
       <View style={s.nameRow}>
         <NameInput
           value={product.displayName}
@@ -402,10 +390,10 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
         </TouchableOpacity>
       </View>
 
-      {/* Cost type */}
+      {}
       <CostToggle value={costType} onChange={v => onUpdate({costType: v})} />
 
-      {/* Qty × Price = Total */}
+      {}
       <View style={s.calcRow}>
         <View style={s.calcCell}>
           <Text style={s.calcLabel}>Qty</Text>
@@ -436,7 +424,7 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
         </View>
       </View>
 
-      {/* Frequency */}
+      {}
       {costType === 'warranty'
         ? <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
         : <Text style={s.noFreq}>One-time charge — no frequency</Text>
@@ -445,7 +433,6 @@ function SmallProductRow({product, catalogItems, onUpdate, onRemove, onOpenCatal
   );
 }
 
-// ── Dispenser row ─────────────────────────────────────────
 function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}: {
   product: Dispenser;
   catalogItems: CatalogItemFlat[];
@@ -460,7 +447,7 @@ function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}
 
   return (
     <View style={s.rowCard}>
-      {/* Name row */}
+      {}
       <View style={s.nameRow}>
         <NameInput
           value={product.displayName}
@@ -479,10 +466,10 @@ function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}
         </TouchableOpacity>
       </View>
 
-      {/* Cost type */}
+      {}
       <CostToggle value={costType} onChange={v => onUpdate({costType: v})} />
 
-      {/* Qty × Rate = Total */}
+      {}
       <View style={s.calcRow}>
         <View style={s.calcCell}>
           <Text style={s.calcLabel}>Qty</Text>
@@ -527,7 +514,7 @@ function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}
         </View>
       </View>
 
-      {/* Frequency */}
+      {}
       {costType === 'warranty'
         ? <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
         : <Text style={s.noFreq}>One-time charge — no frequency</Text>
@@ -536,7 +523,6 @@ function DispenserRow({product, catalogItems, onUpdate, onRemove, onOpenCatalog}
   );
 }
 
-// ── Main export ───────────────────────────────────────────
 export function Step2ProductsDesktop({
   smallProducts,
   dispensers,
@@ -588,7 +574,7 @@ export function Step2ProductsDesktop({
         onClose={() => setPickerCb(null)}
       />
 
-      {/* ── Small Products ── */}
+      {}
       <View style={s.section}>
         <SecHeader
           icon="document-outline"
@@ -614,7 +600,7 @@ export function Step2ProductsDesktop({
         )}
       </View>
 
-      {/* ── Dispensers ── */}
+      {}
       <View style={s.section}>
         <SecHeader
           icon="cube-outline"
@@ -644,7 +630,7 @@ export function Step2ProductsDesktop({
         )}
       </View>
 
-      {/* ── Include in PDF checkbox ── */}
+      {}
       <TouchableOpacity
         style={s.checkRow}
         onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
@@ -658,11 +644,9 @@ export function Step2ProductsDesktop({
   );
 }
 
-// ── Styles — web app values ───────────────────────────────
 const s = StyleSheet.create({
   root: {paddingBottom: 8},
 
-  // ── Section container — matches web app .contract-card ──
   section: {
     backgroundColor: C.surface,
     borderWidth: 1,
@@ -674,7 +658,6 @@ const s = StyleSheet.create({
     shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
 
-  // ── Section header — red left border, grey bg ──
   secHead: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 12,
@@ -704,7 +687,6 @@ const s = StyleSheet.create({
     paddingVertical: 24, paddingHorizontal: 16,
   },
 
-  // ── Product row card ──
   rowCard: {
     padding: 16,
     borderBottomWidth: 1, borderBottomColor: C.borderLight,
@@ -715,7 +697,6 @@ const s = StyleSheet.create({
   },
   removeBtn: {padding: 2, marginTop: 4},
 
-  // ── Cost type toggle — pill style ──
   toggleRow: {flexDirection: 'row', gap: 6},
   toggleBtn: {
     paddingHorizontal: 12, paddingVertical: 5,
@@ -726,7 +707,6 @@ const s = StyleSheet.create({
   toggleText: {fontSize: 12, color: C.textMuted, fontWeight: '500'},
   toggleTextActive: {color: '#fff', fontWeight: '700'},
 
-  // ── Qty × Price = Total row ──
   calcRow: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 12,
   },
@@ -750,7 +730,6 @@ const s = StyleSheet.create({
     fontSize: 15, fontWeight: '700', color: C.primary, paddingBottom: 8,
   },
 
-  // ── Frequency chips ──
   freqRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 6},
   chip: {
     paddingHorizontal: 12, paddingVertical: 5,
@@ -762,7 +741,6 @@ const s = StyleSheet.create({
 
   noFreq: {fontSize: 12, color: C.textMuted, fontStyle: 'italic'},
 
-  // ── Include checkbox ──
   checkRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     marginTop: 4, paddingHorizontal: 14, paddingVertical: 12,

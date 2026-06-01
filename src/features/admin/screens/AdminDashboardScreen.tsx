@@ -285,7 +285,7 @@ export function AdminDashboardScreen() {
           )}
         </View>
 
-        {/* Employee Commissions Quick Action */}
+        {}
         <TouchableOpacity
           style={styles.actionCard}
           onPress={() => navigation.navigate('AdminCommissions')}

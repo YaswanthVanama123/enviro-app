@@ -1,6 +1,5 @@
-// iOS — adaptive navigator
-// Mac Catalyst (width >= 768): horizontal top nav matching web app
-// iPhone (width < 768): bottom tab nav
+
+
 import React, {useState} from 'react';
 import {
   View,
@@ -24,7 +23,6 @@ import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsS
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
 import {TabNavigator as DesktopNav} from './TabNavigator.windows';
 
-// ── Shared color palette ──────────────────────────────────
 const C = {
   primary:       '#c00000',
   navBg:         '#ffffff',
@@ -44,7 +42,6 @@ interface NavItem {
   component: React.ComponentType<any>;
 }
 
-// Admin nav — only for users with role === 'admin'
 const ADMIN_NAV: NavItem[] = [
   {name: 'Dashboard', label: 'Dashboard', icon: 'grid-outline',              component: AdminDashboardScreen},
   {name: 'New',       label: 'New',       icon: 'add-circle-outline',        component: CreateAgreementScreen},
@@ -54,7 +51,6 @@ const ADMIN_NAV: NavItem[] = [
   {name: 'Admin',     label: 'Admin',     icon: 'shield-checkmark-outline',  component: AdminPanelScreen},
 ];
 
-// Employee nav — for users with role === 'employee'
 const EMPLOYEE_NAV: NavItem[] = [
   {name: 'Home',  label: 'Home',  icon: 'home-outline',                       component: HomeScreen},
   {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 component: CreateAgreementScreen},
@@ -63,11 +59,8 @@ const EMPLOYEE_NAV: NavItem[] = [
   {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', component: AdminPanelScreen},
 ];
 
-// Unauthenticated fallback — should be unreachable after AppNavigator's
-// auth gating (LoginScreen renders instead), kept as belt-and-braces.
 const PUBLIC_NAV: NavItem[] = EMPLOYEE_NAV;
 
-// ── Mobile bottom-tab navigator (iPhone) ─────────────────
 function MobileNav() {
   const {isAuthenticated, isAdmin, authReady} = useAdminAuth();
   const [activeTab, setActiveTab] = useState(0);
@@ -80,8 +73,7 @@ function MobileNav() {
     );
   }
 
-  // Pick nav based on role: admin → admin tabs; employee → employee tabs;
-  // unauthenticated → fallback (won't render in practice).
+  
   const navItems = !isAuthenticated
     ? PUBLIC_NAV
     : isAdmin
@@ -91,12 +83,12 @@ function MobileNav() {
 
   return (
     <View style={mob.shell}>
-      {/* ── Page content ── */}
+      {}
       <View style={mob.pageBody}>
         <ActiveScreen />
       </View>
 
-      {/* ── Bottom tab bar ── */}
+      {}
       <View style={mob.tabBar}>
         {navItems.map((item, idx) => {
           const isActive = idx === activeTab;
@@ -131,7 +123,6 @@ function MobileNav() {
   );
 }
 
-// ── Root adaptive navigator ───────────────────────────────
 export function TabNavigator() {
   const {width} = useWindowDimensions();
   if (width >= 768) {
@@ -140,7 +131,6 @@ export function TabNavigator() {
   return <MobileNav />;
 }
 
-// ── Styles ───────────────────────────────────────────────
 const mob = StyleSheet.create({
   loading: {
     flex: 1,

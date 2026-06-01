@@ -123,7 +123,7 @@ export function BiginUploadModal({
     }
 
     if (result.success) {
-      // If a task subject was provided, also create the task
+      
       if (taskSubject.trim()) {
         await zohoApi.createTask(agreementId, {
           subject: taskSubject.trim(),

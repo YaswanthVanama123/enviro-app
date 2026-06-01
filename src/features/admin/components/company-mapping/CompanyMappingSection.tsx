@@ -1,7 +1,4 @@
-/**
- * Company Mapping Section
- * Mobile component for mapping Bigin Companies to RouteStar Customers
- */
+
 
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -43,17 +40,14 @@ export function CompanyMappingSection() {
     hasMore: false,
   });
 
-  // Picker modal states
   const [showPicker, setShowPicker] = useState(false);
   const [selectedMapping, setSelectedMapping] = useState<CompanyMapping | null>(null);
   const [routeStarOptions, setRouteStarOptions] = useState<RouteStarCustomerOption[]>([]);
   const [pickerSearch, setPickerSearch] = useState('');
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  // Initialize state
   const [initializing, setInitializing] = useState(false);
 
-  // Load mappings
   const loadMappings = useCallback(
     async (reset = false) => {
       if (reset) {
@@ -87,7 +81,6 @@ export function CompanyMappingSection() {
     [searchTerm, activeTab, pagination.limit, pagination.skip],
   );
 
-  // Load stats
   const loadStats = useCallback(async () => {
     const result = await companyMappingApi.getStats();
     if (result) {
@@ -95,7 +88,6 @@ export function CompanyMappingSection() {
     }
   }, []);
 
-  // Load RouteStar options
   const loadRouteStarOptions = useCallback(async (search?: string) => {
     setLoadingOptions(true);
     const result = await companyMappingApi.getAvailableRouteStarCustomers(search, true);
@@ -105,35 +97,29 @@ export function CompanyMappingSection() {
     setLoadingOptions(false);
   }, []);
 
-  // Initial load
   useEffect(() => {
     loadMappings(true);
     loadStats();
   }, []);
 
-  // Reload when tab changes
   useEffect(() => {
     loadMappings(true);
   }, [activeTab]);
 
-  // Handle refresh
   const handleRefresh = () => {
     setRefreshing(true);
     loadMappings(true);
     loadStats();
   };
 
-  // Handle search
   const handleSearch = () => {
     loadMappings(true);
   };
 
-  // Handle tab change
   const handleTabChange = (tab: MappingFilterTab) => {
     setActiveTab(tab);
   };
 
-  // Handle initialize
   const handleInitialize = async () => {
     Alert.alert(
       'Initialize Mappings',
@@ -160,7 +146,6 @@ export function CompanyMappingSection() {
     );
   };
 
-  // Handle open picker
   const handleOpenPicker = (mapping: CompanyMapping) => {
     setSelectedMapping(mapping);
     setPickerSearch('');
@@ -168,13 +153,11 @@ export function CompanyMappingSection() {
     loadRouteStarOptions();
   };
 
-  // Handle picker search
   const handlePickerSearch = (value: string) => {
     setPickerSearch(value);
     loadRouteStarOptions(value);
   };
 
-  // Handle select customer
   const handleSelectCustomer = async (customer: RouteStarCustomerOption | null) => {
     if (!selectedMapping) return;
 
@@ -184,7 +167,7 @@ export function CompanyMappingSection() {
     );
 
     if (result) {
-      // Update local state
+      
       setMappings(prev =>
         prev.map(m =>
           m._id === selectedMapping._id
@@ -206,14 +189,12 @@ export function CompanyMappingSection() {
     setSelectedMapping(null);
   };
 
-  // Load more
   const handleLoadMore = () => {
     if (!loading && pagination.hasMore) {
       loadMappings(false);
     }
   };
 
-  // Render stat card
   const renderStatCard = (
     label: string,
     value: number,
@@ -230,7 +211,6 @@ export function CompanyMappingSection() {
     </View>
   );
 
-  // Render mapping card
   const renderMappingCard = ({item}: {item: CompanyMapping}) => (
     <TouchableOpacity
       style={styles.mappingCard}
@@ -293,7 +273,6 @@ export function CompanyMappingSection() {
     </TouchableOpacity>
   );
 
-  // Render footer
   const renderFooter = () => {
     if (!loading) return null;
     return (
@@ -303,7 +282,6 @@ export function CompanyMappingSection() {
     );
   };
 
-  // Render empty
   const renderEmpty = () => {
     if (loading) return null;
     return (
@@ -319,7 +297,7 @@ export function CompanyMappingSection() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Company Mapping</Text>
@@ -341,14 +319,14 @@ export function CompanyMappingSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Stats */}
+      {}
       <View style={styles.statsRow}>
         {renderStatCard('Total', stats?.total || 0, 'link', '#6366f1', '#eef2ff')}
         {renderStatCard('Mapped', stats?.mapped || 0, 'checkmark-circle', '#059669', '#ecfdf5')}
         {renderStatCard('Unmapped', stats?.unmapped || 0, 'alert-circle', '#dc2626', '#fee2e2')}
       </View>
 
-      {/* Filter Tabs */}
+      {}
       <View style={styles.tabsRow}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'all' && styles.tabActive]}
@@ -373,7 +351,7 @@ export function CompanyMappingSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchRow}>
         <View style={styles.searchInputWrap}>
           <Ionicons
@@ -400,10 +378,10 @@ export function CompanyMappingSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Results count */}
+      {}
       <Text style={styles.resultsCount}>{pagination.total} mappings found</Text>
 
-      {/* Mappings List */}
+      {}
       <FlatList
         data={mappings}
         renderItem={renderMappingCard}
@@ -419,7 +397,7 @@ export function CompanyMappingSection() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* RouteStar Picker Modal */}
+      {}
       <Modal
         visible={showPicker}
         animationType="slide"

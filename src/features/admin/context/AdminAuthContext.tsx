@@ -38,29 +38,25 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       const token = await storage.getToken();
       const storedUser = await storage.getUser();
 
-      // No persisted credentials → straight to login.
       if (!token || !storedUser) {
         setAuthReady(true);
         return;
       }
 
-      // We have a persisted token — but don't trust it blindly. Validate
-      // against the backend so an expired / revoked / wrong-environment token
-      // doesn't silently put the user past the login screen. If the backend
-      // rejects it, clear storage and force a fresh login.
+      
+
       apiClient.setToken(token);
       const profileEndpoint =
         storedUser.role === 'admin' ? '/api/admin/me' : '/api/employee/me';
       const verify = await apiClient.get<{user?: any; admin?: any; role?: string}>(profileEndpoint);
 
       if (verify.error || verify.status === 401 || verify.status === 403 || verify.status === 0) {
-        // Token rejected (or backend unreachable) — clear and require login.
+        
         apiClient.setToken(null);
         await storage.clearAuth();
         setUser(null);
       } else {
-        // Token valid — prefer the FRESH profile from the backend over the
-        // stored user (handles renames / role changes / etc).
+
         const freshAdmin = verify.data?.admin;
         const freshEmp = verify.data?.user;
         let merged: AuthUser = storedUser;
@@ -87,9 +83,8 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
           };
         }
 
-        // Defensive: if after merging we still don't have a usable identity,
-        // treat the session as invalid and force the user back to the login
-        // screen. Avoids the "logged in but home shows blank avatar" state.
+        
+        
         const hasIdentity =
           (merged.fullName?.trim() || '').length > 0 ||
           (merged.username?.trim() || '').length > 0 ||
@@ -204,7 +199,6 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Legacy export for backwards compatibility
 export {AuthProvider as AdminAuthProvider};
 export {useAuth as useAdminAuth};
 export type {AuthUser as AdminUser};

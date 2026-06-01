@@ -26,7 +26,6 @@ import type {RootStackParamList} from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Match web app colors exactly
 const WebTheme = {
   ...DefaultTheme,
   colors: {

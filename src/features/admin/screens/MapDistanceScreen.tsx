@@ -1,7 +1,4 @@
-/**
- * Map Distance Screen
- * Admin screen for fetching map distance from RouteStar
- */
+
 
 import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
@@ -35,7 +32,6 @@ export function MapDistanceScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('fetch');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Customer dropdown state
   const [customers, setCustomers] = useState<RouteStarCustomerOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] =
     useState<RouteStarCustomerOption | null>(null);
@@ -43,7 +39,6 @@ export function MapDistanceScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerSearch, setPickerSearch] = useState('');
 
-  // Results state
   const [results, setResults] = useState<MapDistanceResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedCustomer, setLastFetchedCustomer] = useState<string | null>(
@@ -51,7 +46,6 @@ export function MapDistanceScreen() {
   );
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
 
-  // Sync state
   const [syncStatus, setSyncStatus] = useState<SyncStatusResponse>({
     isRunning: false,
     isInterrupted: false,
@@ -60,17 +54,14 @@ export function MapDistanceScreen() {
   });
   const [stats, setStats] = useState<MapDistanceStats | null>(null);
 
-  // Polling
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load data on mount
   useEffect(() => {
     loadCustomers();
     loadStats();
     checkSyncStatus();
   }, []);
 
-  // Poll for sync status when running
   useEffect(() => {
     if (syncStatus.isRunning) {
       pollIntervalRef.current = setInterval(() => {
@@ -81,7 +72,6 @@ export function MapDistanceScreen() {
       pollIntervalRef.current = null;
       loadStats();
 
-      // If the completed job was a single fetch, show the results
       if (
         syncStatus.job?.jobType === 'single_fetch' &&
         syncStatus.job?.status === 'completed'
@@ -124,7 +114,6 @@ export function MapDistanceScreen() {
 
     setSyncStatus(status);
 
-    // If job just completed, handle the results
     if (wasRunning && !isNowRunning && status.job) {
       if (
         status.job.jobType === 'single_fetch' &&
@@ -210,7 +199,7 @@ export function MapDistanceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
@@ -225,7 +214,7 @@ export function MapDistanceScreen() {
         </View>
       </View>
 
-      {/* Tab Bar */}
+      {}
       <View style={styles.tabBar}>
         {(['fetch', 'stats'] as ViewMode[]).map(tab => (
           <TouchableOpacity
@@ -259,7 +248,7 @@ export function MapDistanceScreen() {
         }>
         {viewMode === 'fetch' && (
           <View style={styles.section}>
-            {/* Sync Status Banner */}
+            {}
             {syncStatus.isRunning && syncStatus.job && (
               <View style={styles.syncBanner}>
                 <ActivityIndicator size="small" color="#fff" />
@@ -294,7 +283,7 @@ export function MapDistanceScreen() {
               </View>
             )}
 
-            {/* Customer Picker */}
+            {}
             <View style={styles.card}>
               <Text style={styles.cardLabel}>Select RouteStar Customer</Text>
               <TouchableOpacity
@@ -347,7 +336,7 @@ export function MapDistanceScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Error */}
+            {}
             {error && (
               <View style={styles.errorCard}>
                 <Ionicons name="alert-circle" size={20} color="#dc2626" />
@@ -355,7 +344,7 @@ export function MapDistanceScreen() {
               </View>
             )}
 
-            {/* Results */}
+            {}
             {results.length > 0 && (
               <View style={styles.resultsCard}>
                 <View style={styles.resultsHeader}>
@@ -387,7 +376,7 @@ export function MapDistanceScreen() {
               </View>
             )}
 
-            {/* Full Sync Card */}
+            {}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Full Distance Sync</Text>
               <Text style={styles.cardDescription}>
@@ -465,7 +454,7 @@ export function MapDistanceScreen() {
         <View style={{height: 100}} />
       </ScrollView>
 
-      {/* Customer Picker Modal */}
+      {}
       <Modal visible={showPicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

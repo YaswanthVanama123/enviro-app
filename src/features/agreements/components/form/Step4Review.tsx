@@ -149,8 +149,7 @@ export function Step4Review({form}: Step4ReviewProps) {
 
   const CROSS_SERVICE_MIN_PER_VISIT = 50;
 
-  // Calculate total monthly recurring revenue (accounts for service frequencies)
-  // Weekly services: perVisit × 4.33, Monthly services: perVisit × 1, etc.
+  
   let totalPerVisit = 0;
   let totalMonthlyRecurring = 0;
   visibleServices.forEach(id => {
@@ -159,7 +158,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     const isOneTime = svc.frequency === 'oneTime';
     if (!isOneTime && typeof svc.perVisit === 'number' && svc.perVisit > 0) {
       totalPerVisit += svc.perVisit;
-      // Calculate monthly contribution based on frequency
+      
       const freqMult = getFreqMult(svc.frequency || 'monthly');
       totalMonthlyRecurring += svc.perVisit * freqMult;
     }
@@ -171,25 +170,20 @@ export function Step4Review({form}: Step4ReviewProps) {
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
 
-  // Get current user for inside sales check
   const {adminUser} = useAdminAuth();
 
-  // Commission Calculator State - simplified (form filling is always new business)
   const [quotaLevel, setQuotaLevel] = useState<QuotaLevel>('above');
   const [accountType, setAccountType] = useState<AccountType>('Anchor');
   const [isInsideSales, setIsInsideSales] = useState<boolean>(false);
-  // True if this agreement is a brand-new location (no prior contract).
-  // Drives the tiered Anchor calc and per-visit penalties per Solange Draft.
+
   const [isNewLocation, setIsNewLocation] = useState<boolean>(true);
-  // Rep's existing QuotaPeriod.actualSales before this agreement, fetched
-  // from the quota API alongside quotaLevel below. Drives the piecewise
-  // commission-rate split (3 / 6 / 9% across cutoffs).
+
+  
   const [repActualSalesBefore, setRepActualSalesBefore] = useState<number>(0);
   const [isCommissionExpanded, setIsCommissionExpanded] = useState<boolean>(true);
 
-  // Live commission rules from MongoDB (admin-editable). Defaults to bundled
-  // values until the fetch resolves; resolveCommissionRules() merges any
-  // partial document with bundled fallbacks so the calc never reads undefined.
+  
+  
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
     resolveCommissionRules(null),
   );
@@ -210,7 +204,6 @@ export function Step4Review({form}: Step4ReviewProps) {
     };
   }, []);
 
-  // Auto-check Inside Sales based on Lisa Rothwell's audit history
   useEffect(() => {
     const checkInsideSales = async () => {
       const salespersonName = adminUser?.fullName || adminUser?.username;
@@ -229,9 +222,8 @@ export function Step4Review({form}: Step4ReviewProps) {
     checkInsideSales();
   }, [adminUser?.fullName, adminUser?.username]);
 
-  // Auto-fetch the rep's QuotaPeriod actualSales so the piecewise commission
-  // tier-split (3 / 6 / 9% across cutoffs, per Solange Draft) sees the rep's
-  // existing position. Falls back to 0 on error or missing user.
+  
+  
   useEffect(() => {
     const fetchActualSales = async () => {
       const salespersonId = adminUser?.username;
@@ -248,19 +240,16 @@ export function Step4Review({form}: Step4ReviewProps) {
     fetchActualSales();
   }, [adminUser?.username]);
 
-  // Calculate commission based on form values
   const commissionCalc = useMemo(() => {
-    const rules = DEFAULT_COMMISSION_RULES;       // V1 (legacy, drives existing mobile display)
-    const rulesV2 = activeRules;                  // V2 (live admin-editable rules)
+    const rules = DEFAULT_COMMISSION_RULES;       
+    const rulesV2 = activeRules;                  
 
-    // Use monthly recurring revenue (accounts for different service frequencies)
-    // This properly calculates: Weekly services × 4.33, Monthly × 1, etc.
+    
     const monthlyValue = totalMonthlyRecurring > 0
       ? totalMonthlyRecurring
       : (contractMonths > 0 ? totalCurrentContract / contractMonths : totalCurrentContract);
 
-    // 12-MONTH-EQUIVALENT CONTRACT TOTALS — anchor for both pricing ratio
-    // and quota credit. Mirrors web FormFilling.tsx Step 0.
+    
     const monthlyContractValue = contractMonths > 0
       ? totalCurrentContract / contractMonths
       : totalCurrentContract;
@@ -270,23 +259,20 @@ export function Step4Review({form}: Step4ReviewProps) {
     const currentContract12Months = monthlyContractValue * 12;
     const originalContract12Months = monthlyOriginalContractValue * 12;
 
-    // Derive agreement term from contract months (auto from form)
     const getAgreementTerm = (): AgreementTerm => {
       if (contractMonths >= 36) return '3-year';
       if (contractMonths >= 12) return '1-year';
       return 'MTM-with-install';
     };
 
-    // Pricing line from indicator (auto from form)
     const derivedPricingLine: PricingLine = pricingLine === 'green' ? 'Greenline' : 'Redline';
     const agreementTerm = getAgreementTerm();
 
-    // === V1 LEGACY DOLLAR COMMISSION (drives existing mobile UI) ===
     const baseRate = rules.quotaRates[quotaLevel];
     const agreementMultiplier = rules.agreementMultipliers[agreementTerm];
     const accountTypeAdjustment = rules.accountTypeAdjustments[accountType];
     const greenlineBonus = derivedPricingLine === 'Greenline' ? rules.greenlineBonus : 0;
-    const renewalBonus = 0; // form filling is always new business
+    const renewalBonus = 0; 
     const insideSalesDeduction = isInsideSales ? rules.insideSalesDeduction : 0;
     const effectiveBaseRate = baseRate + accountTypeAdjustment + greenlineBonus + renewalBonus + insideSalesDeduction;
     const finalCommissionRate = effectiveBaseRate * (agreementMultiplier / 100);
@@ -294,8 +280,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     const annualCommissionV1 = weeklyCommission * activeRules.weeksPerAnnualCommission;
     const contractCommission = annualCommissionV1;
 
-    // === V2 SPEC-FAITHFUL PIPELINE (Solange Commission Draft, June 2026) ===
-    // Step 1: Pricing tier — uses admin-editable tier list from rulesV2.pricingTiers
+    
     const pricingTierV2 = getPricingTierFromList(
       currentContract12Months,
       originalContract12Months,
@@ -304,32 +289,26 @@ export function Step4Review({form}: Step4ReviewProps) {
     const pricingMultiplier = pricingTierV2.quotaMultiplier;
     const isGreenline = pricingTierV2.label === 'Greenline (130%+)';
 
-    // Step 2: visits per year — admin-editable (rulesV2.frequencyVisitsPerYear.weekly)
     const visitsPerYear = rulesV2.frequencyVisitsPerYear.weekly;
 
-    // Anchor classification threshold relaxes for Greenline.
-    // Spec: "Anchor — $200 or more per visit ($100 or more if Greenline)."
+    
     const effectiveAnchorThreshold = isGreenline
       ? rulesV2.anchorMinGreenline
       : rulesV2.anchorPerVisitThreshold;
     const effectivePitThreshold = rulesV2.pitPerVisitThreshold;
 
-    // Per-visit penalty (Bread5 / Bread15 / Pit) — admin-editable.
     const perVisitPenalty = rulesV2.perVisitPenalties[accountType];
 
-    // Step 3: pricing × agreement multipliers on year-1 value.
-    // Example from spec: $13,333 × 2.0 × 1.35 ≈ $35,999.
+    
     const v2AgreementMultiplier = rulesV2.agreementMultipliers[agreementTerm];
     const adjustedAnnual = currentContract12Months * pricingMultiplier * (v2AgreementMultiplier / 100);
     const adjustedPerVisit = visitsPerYear > 0 ? adjustedAnnual / visitsPerYear : 0;
     const commissionBaseRaw = adjustedAnnual;
 
-    // Step 4: account-type adjustment (per-visit, then re-annualized).
-    // NEW Anchor: First $100 = 0, $100-$200 = 1×, above $200 = 1.5×.
-    // EXISTING Anchor: First $200 = 1×, above $200 = 1.5× (no Pit zone).
-    // NEW Bread5/Bread15/Pit: subtract per-visit penalty.
-    // EXISTING Bread5/Bread15: no penalty. EXISTING Pit: no penalty if revenue
-    // already > $100/visit; otherwise apply Pit penalty.
+    
+
+    
+    
     let commissionablePerVisit = 0;
     let v2RevenueDeduction = 0;
     let v2AnchorBonus = 0;
@@ -345,18 +324,16 @@ export function Step4Review({form}: Step4ReviewProps) {
     } else if (accountType === 'Bread5' || accountType === 'Bread15') {
       v2RevenueDeduction = isNewLocation ? perVisitPenalty : 0;
       commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
-    } else { // Pit
+    } else { 
       const isExistingAlreadyOverThreshold = !isNewLocation && adjustedPerVisit > perVisitPenalty;
       v2RevenueDeduction = isExistingAlreadyOverThreshold ? 0 : perVisitPenalty;
       commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
     }
     const commissionableAnnual = commissionablePerVisit * visitsPerYear;
 
-    // Step 5: quota credit — 12-month contract × pricing multiplier (per spec).
     const annualContractTotal = currentContract12Months;
     const annualQuotaCredit = annualContractTotal * pricingMultiplier;
 
-    // Step 6: tiered commission rate — 3% / 6% / 9% piecewise across cutoffs.
     const tierCutoffs = rulesV2.quotaTierCutoffs;
     const positionBefore = repActualSalesBefore;
     const positionAfter = positionBefore + annualQuotaCredit;
@@ -380,7 +357,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     const annualCommissionV2 = belowQuotaCommission + aboveQuotaCommission + doubleQuotaCommission;
 
     return {
-      // V1 legacy (drives existing mobile UI)
+      
       monthlyValue,
       agreementTerm,
       derivedPricingLine,
@@ -396,7 +373,6 @@ export function Step4Review({form}: Step4ReviewProps) {
       annualCommission: annualCommissionV1,
       contractCommission,
 
-      // V2 spec-faithful breakdown
       currentContract12Months,
       pricingTier: pricingTierV2.label,
       pricingMultiplier,
@@ -414,7 +390,6 @@ export function Step4Review({form}: Step4ReviewProps) {
       doubleQuotaCommission,
       annualCommissionV2,
 
-      // Quota credit (12-month contract × pricing multiplier)
       annualContractTotal,
       annualQuotaCredit,
     };
@@ -624,7 +599,7 @@ export function Step4Review({form}: Step4ReviewProps) {
         </View>
       )}
 
-      {/* Commission Calculator Section */}
+      {}
       <View style={styles.commissionCard}>
         <TouchableOpacity
           style={styles.commissionHeader}
@@ -644,9 +619,9 @@ export function Step4Review({form}: Step4ReviewProps) {
 
         {isCommissionExpanded && (
           <View style={styles.commissionBody}>
-            {/* Commission Inputs - only what's needed (form provides the rest) */}
+            {}
             <View style={styles.commissionInputs}>
-              {/* Quota Level */}
+              {}
               <View style={styles.commissionInputGroup}>
                 <Text style={styles.commissionInputLabel}>Quota Level</Text>
                 <View style={styles.commissionPickerRow}>
@@ -664,7 +639,7 @@ export function Step4Review({form}: Step4ReviewProps) {
                 </View>
               </View>
 
-              {/* Account Type */}
+              {}
               <View style={styles.commissionInputGroup}>
                 <Text style={styles.commissionInputLabel}>Account Type</Text>
                 <View style={styles.commissionPickerRow}>
@@ -682,7 +657,7 @@ export function Step4Review({form}: Step4ReviewProps) {
                 </View>
               </View>
 
-              {/* Inside Sales - Auto-detected (read-only) */}
+              {}
               <View style={[
                 styles.insideSalesStatus,
                 isInsideSales ? styles.insideSalesStatusWarning : styles.insideSalesStatusGood
@@ -714,7 +689,7 @@ export function Step4Review({form}: Step4ReviewProps) {
               </View>
             </View>
 
-            {/* Commission Breakdown */}
+            {}
             <View style={styles.commissionBreakdown}>
               <View style={styles.commissionRow}>
                 <Text style={styles.commissionRowLabel}>Monthly Value</Text>
@@ -1082,7 +1057,7 @@ const styles = StyleSheet.create({
   crossMinStatusWarnText: {
     color: '#991b1b',
   },
-  // Commission Calculator Styles
+  
   commissionCard: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
@@ -1230,7 +1205,7 @@ const styles = StyleSheet.create({
     color: '#166534',
     fontWeight: '800',
   },
-  // Inside Sales Auto-detected Styles
+  
   insideSalesStatus: {
     flexDirection: 'row',
     alignItems: 'center',

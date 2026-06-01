@@ -48,15 +48,12 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
   const [activeTab, setActiveTab] = useState<TabKey>('production');
   const [saving, setSaving] = useState(false);
 
-  // Production rates — loaded from backend only
   const [productionRates, setProductionRates] = useState<Record<string, string>>({});
 
-  // Labor defaults
   const [costPerHour, setCostPerHour] = useState('20');
   const [laborTaxPct, setLaborTaxPct] = useState('15');
   const [grossProfitPct, setGrossProfitPct] = useState('33');
 
-  // Default supply amounts
   const [supplies, setSupplies] = useState<Record<string, string>>(() =>
     Object.fromEntries(SUPPLY_ITEMS.map(s => [s.key, String(s.defaultAmount)])),
   );
@@ -65,18 +62,15 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
     if (!config || !visible) {return;}
     const cfg = config.config ?? {};
 
-    // Production rates — from backend only
     const pr = cfg.productionRates ?? {};
     setProductionRates(
       Object.fromEntries(Object.entries(pr).map(([k, v]) => [k, String(v)])),
     );
 
-    // Labor
     setCostPerHour(String(cfg.costPerHour    ?? 20));
     setLaborTaxPct(String(cfg.laborTaxPct    ?? 15));
     setGrossProfitPct(String(cfg.grossProfitPct ?? 33));
 
-    // Supplies
     const adminSupplies = cfg.defaultSupplies ?? {};
     setSupplies(
       Object.fromEntries(
@@ -134,7 +128,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={[styles.screen, {paddingTop: insets.top}]}>
 
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Ionicons name="briefcase-outline" size={20} color="#059669" />
@@ -148,7 +142,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
             </TouchableOpacity>
           </View>
 
-          {/* Tab bar */}
+          {}
           <View style={styles.tabBar}>
             {tabs.map(tab => (
               <TouchableOpacity
@@ -174,7 +168,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
 
-            {/* Production Rates Tab */}
+            {}
             {activeTab === 'production' && (
               <View style={styles.tabContent}>
                 <Text style={styles.sectionTitle}>Production Rates</Text>
@@ -203,7 +197,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
               </View>
             )}
 
-            {/* Labor Defaults Tab */}
+            {}
             {activeTab === 'labor' && (
               <View style={styles.tabContent}>
                 <Text style={styles.sectionTitle}>Labor Defaults</Text>
@@ -274,7 +268,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
               </View>
             )}
 
-            {/* Supplies Tab */}
+            {}
             {activeTab === 'supplies' && (
               <View style={styles.tabContent}>
                 <Text style={styles.sectionTitle}>Default Supply Line Items</Text>
@@ -308,7 +302,7 @@ export function EditJanitorialConfigModal({visible, config, onClose, onSaved}: P
 
           </ScrollView>
 
-          {/* Footer */}
+          {}
           <View style={[styles.footer, {paddingBottom: Math.max(insets.bottom, Spacing.lg)}]}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={saving}>
               <Text style={styles.cancelBtnText}>Cancel</Text>

@@ -1,7 +1,4 @@
-/**
- * Commission Calculator Tests
- * Tests for commission calculation logic used in the EnviroApp
- */
+
 
 import type {
   CommissionCalculationInput,
@@ -14,7 +11,6 @@ import type {
   BusinessType,
 } from '../../src/features/admin/types/commission.types';
 
-// Default commission rules (mirroring backend defaults)
 const DEFAULT_RULES: CommissionRules = {
   quotaRates: {
     below: 3,
@@ -40,7 +36,6 @@ const DEFAULT_RULES: CommissionRules = {
   anchorMinMonthlyValue: 200,
 };
 
-// Commission calculation function (mirroring backend/component logic)
 function calculateCommission(
   input: CommissionCalculationInput,
   rules: CommissionRules = DEFAULT_RULES,
@@ -89,7 +84,6 @@ function calculateCommission(
   };
 }
 
-// Helper to create input with defaults
 function createInput(
   overrides: Partial<CommissionCalculationInput> = {},
 ): CommissionCalculationInput {
@@ -275,8 +269,7 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 9% base + 0% account + 1% greenline + 4% renewal + 0% inside = 14% effective
-      // 14% * 135% = 18.9% final
+      
       expect(result.effectiveBaseRate).toBe(14);
       expect(result.finalCommissionRate).toBeCloseTo(18.9, 2);
       expect(result.monthlyCommission).toBeCloseTo(189, 2);
@@ -295,8 +288,7 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 3% base - 1% account + 0% greenline + 0% renewal - 3% inside = -1% effective
-      // -1% * 50% = -0.5% final
+      
       expect(result.effectiveBaseRate).toBe(-1);
       expect(result.finalCommissionRate).toBe(-0.5);
       expect(result.monthlyCommission).toBe(-1);
@@ -333,8 +325,7 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 6% base - 0.5% account + 1% greenline + 4% renewal = 10.5% effective
-      // 10.5% * 135% = 14.175% final
+      
       expect(result.effectiveBaseRate).toBe(10.5);
       expect(result.finalCommissionRate).toBeCloseTo(14.175);
       expect(result.monthlyCommission).toBeCloseTo(42.525);
@@ -352,8 +343,7 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 6% base + 0% account + 0% greenline + 0% renewal - 3% inside = 3% effective
-      // 3% * 135% = 4.05% final
+      
       expect(result.effectiveBaseRate).toBe(3);
       expect(result.finalCommissionRate).toBeCloseTo(4.05, 2);
       expect(result.monthlyCommission).toBeCloseTo(16.2, 2);
@@ -375,7 +365,7 @@ describe('Commission Calculator', () => {
         agreementTerm: '3-year',
       });
       const result = calculateCommission(input);
-      // 9% * 135% = 12.15%
+      
       expect(result.monthlyCommission).toBe(12150);
       expect(result.annualCommission).toBe(145800);
     });
@@ -386,7 +376,7 @@ describe('Commission Calculator', () => {
         quotaLevel: 'above',
       });
       const result = calculateCommission(input);
-      // 6% * 100% = 6%
+      
       expect(result.monthlyCommission).toBeCloseTo(19.9998);
     });
 
@@ -450,7 +440,6 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 6% - 1% + 1% + 4% - 3% = 7%
       const expectedEffectiveRate =
         result.breakdown.baseRate +
         result.breakdown.accountTypeAdjustment +
@@ -471,7 +460,6 @@ describe('Commission Calculator', () => {
       });
       const result = calculateCommission(input);
 
-      // 6% * $1000 = $60/month
       expect(result.monthlyCommission).toBe(60);
       expect(result.annualCommission).toBe(720);
     });
@@ -651,7 +639,6 @@ describe('Real-World Commission Scenarios', () => {
       });
       const result = calculateCommission(input);
 
-      // 6% * 135% = 8.1%
       expect(result.finalCommissionRate).toBeCloseTo(8.1, 2);
       expect(result.monthlyCommission).toBeCloseTo(36.45, 2);
       expect(result.annualCommission).toBeCloseTo(437.4, 2);
@@ -669,7 +656,6 @@ describe('Real-World Commission Scenarios', () => {
       });
       const result = calculateCommission(input);
 
-      // (6% - 1% - 3%) * 50% = 1%
       expect(result.effectiveBaseRate).toBe(2);
       expect(result.finalCommissionRate).toBe(1);
       expect(result.monthlyCommission).toBe(2.5);
@@ -688,8 +674,7 @@ describe('Real-World Commission Scenarios', () => {
       });
       const result = calculateCommission(input);
 
-      // 9% + 1% + 4% = 14% effective
-      // 14% * 135% = 18.9% final
+      
       expect(result.effectiveBaseRate).toBe(14);
       expect(result.finalCommissionRate).toBeCloseTo(18.9, 2);
       expect(result.monthlyCommission).toBeCloseTo(151.2, 2);
@@ -708,7 +693,6 @@ describe('Real-World Commission Scenarios', () => {
       });
       const result = calculateCommission(input);
 
-      // 3% * 100% = 3%
       expect(result.finalCommissionRate).toBe(3);
       expect(result.monthlyCommission).toBe(10.5);
     });
@@ -739,10 +723,10 @@ describe('Real-World Commission Scenarios', () => {
       });
       const pitResult = calculateCommission({...baseInput, accountType: 'Pit'});
 
-      expect(anchorResult.monthlyCommission).toBe(30); // 6%
-      expect(bread5Result.monthlyCommission).toBe(25); // 5%
-      expect(bread15Result.monthlyCommission).toBe(27.5); // 5.5%
-      expect(pitResult.monthlyCommission).toBe(30); // 6%
+      expect(anchorResult.monthlyCommission).toBe(30); 
+      expect(bread5Result.monthlyCommission).toBe(25); 
+      expect(bread15Result.monthlyCommission).toBe(27.5); 
+      expect(pitResult.monthlyCommission).toBe(30); 
     });
   });
 
@@ -774,10 +758,10 @@ describe('Real-World Commission Scenarios', () => {
         agreementTerm: 'MTM-no-install',
       });
 
-      expect(threeYearResult.finalCommissionRate).toBeCloseTo(8.1, 2); // 6% * 135%
-      expect(oneYearResult.finalCommissionRate).toBe(6); // 6% * 100%
-      expect(mtmWithInstallResult.finalCommissionRate).toBe(6); // 6% * 100%
-      expect(mtmNoInstallResult.finalCommissionRate).toBe(3); // 6% * 50%
+      expect(threeYearResult.finalCommissionRate).toBeCloseTo(8.1, 2); 
+      expect(oneYearResult.finalCommissionRate).toBe(6); 
+      expect(mtmWithInstallResult.finalCommissionRate).toBe(6); 
+      expect(mtmNoInstallResult.finalCommissionRate).toBe(3); 
     });
   });
 
@@ -800,7 +784,6 @@ describe('Real-World Commission Scenarios', () => {
       expect(aboveResult.finalCommissionRate).toBe(6);
       expect(doubleResult.finalCommissionRate).toBe(9);
 
-      // Each level should be 3% higher
       expect(aboveResult.finalCommissionRate - belowResult.finalCommissionRate).toBe(
         3,
       );

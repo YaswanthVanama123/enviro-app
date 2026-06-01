@@ -82,10 +82,6 @@ export const pdfApi = {
     await import('react-native').then(({Linking}) => Linking.openURL(url));
   },
 
-  /**
-   * Save account type cache to an agreement
-   * Used after auto-detection to persist cache for future loads
-   */
   async saveAccountTypeCache(
     agreementId: string,
     accountTypeCache: Record<number, any>,

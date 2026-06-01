@@ -13,11 +13,6 @@ interface Props {
   pricingConfig?: any;
 }
 
-/**
- * Compute sanipod contract total with proper first-visit install logic.
- * When there are install pods, first visit only charges service for (pods - installQty),
- * while ongoing visits charge for all pods.
- */
 function calcSanipodTotals(
   pods: number,
   weeklyRate: number,
@@ -37,24 +32,21 @@ function calcSanipodTotals(
   const isOneTime = frequency === 'oneTime';
   const isEveryFourWeeks = frequency === 'everyFourWeeks';
 
-  // Ongoing per-visit: all pods + standalone + bags (if recurring)
   const weeklyBags = extraBagsRecurring ? bagsPerWeek * bagPrice : 0;
   const optA = pods * altRate + weeklyBags;
   const optB = pods * weeklyRate + (isStandalone ? standaloneExtra : 0) + weeklyBags;
   const weeklyService = Math.min(optA, optB);
   const perVisit = weeklyService;
 
-  // Install cost
   const effectiveInstallQty = isNewInstall ? installQty : 0;
   const installCost = effectiveInstallQty > 0 ? effectiveInstallQty * installRate : 0;
 
-  // First visit: deduct install pods from service pods (mirrors web logic)
   let firstVisit: number;
   if (effectiveInstallQty > 0) {
     const servicePods = Math.max(0, pods - effectiveInstallQty);
     let firstVisitServiceCost = 0;
     if (servicePods > 0) {
-      // Use same option (A/B) as determined by per-visit comparison (all pods)
+      
       const usingOptA = optA <= optB;
       if (usingOptA) {
         firstVisitServiceCost = servicePods * altRate;
@@ -70,10 +62,8 @@ function calcSanipodTotals(
     firstVisit = perVisit + oneTimeBags;
   }
 
-  // Monthly ongoing
   const monthlyRecurring = isOneTime ? 0 : perVisit * mult;
 
-  // First month
   let firstMonth: number;
   if (isOneTime || frequency === 'monthly') {
     firstMonth = firstVisit;
@@ -81,7 +71,6 @@ function calcSanipodTotals(
     firstMonth = firstVisit + Math.max(mult - 1, 0) * perVisit;
   }
 
-  // Contract total
   let contractTotal: number;
   if (isOneTime) {
     contractTotal = firstVisit;
@@ -141,7 +130,6 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
 
     const newTotals = calcSanipodTotals(nq, wr, ar, sa, se, eb, ebp, ebr, ni, iq, ir, nf, contractMonths);
 
-    // Baseline: same calc with admin rates
     const origWr  = cfg.weeklyRatePerUnit            ?? 3;
     const origAr  = cfg.altWeeklyRatePerUnit         ?? 8;
     const origSe  = cfg.standaloneExtraWeeklyCharge  ?? 40;
@@ -164,7 +152,6 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
     });
   }, [data, freq, podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit, isStandalone, standaloneExtraWeekly, extraBagsPerWeek, extraBagPrice, extraBagsRecurring, isNewInstall, installQuantity, installRatePerPod, contractMonths, onChange, cfg]);
 
-  // Greenline badge: baseline with admin rates
   const origWr  = cfg.weeklyRatePerUnit            ?? 3;
   const origAr  = cfg.altWeeklyRatePerUnit         ?? 8;
   const origSe  = cfg.standaloneExtraWeeklyCharge  ?? 40;
@@ -183,10 +170,7 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
       <NumberRow label="Extra Bags / Week" value={extraBagsPerWeek} onChange={v => update({extraBagsPerWeek: v})} decimals={0} />
       <NumberRow label="Extra Bag Price" value={extraBagPrice} onChange={v => update({extraBagPrice: v})} prefix="$" decimals={2} />
       <ToggleRow label="Bags Recurring" value={extraBagsRecurring} onChange={v => update({extraBagsRecurring: v})} subtitle="Charge bags every visit" />
-      {/* <ToggleRow label="Standalone Service" value={isStandalone} onChange={v => update({isStandalone: v})} subtitle="Charge standalone extra fee" />
-      {isStandalone && (
-        <NumberRow label="Standalone Extra / Week" value={standaloneExtraWeekly} onChange={v => update({standaloneExtraWeeklyCharge: v})} prefix="$" decimals={2} />
-      )} */}
+      {}
       <FormDivider />
       <ToggleRow label="New Install" value={isNewInstall} onChange={v => update({isNewInstall: v})} subtitle="Include installation charge" />
       {isNewInstall && (

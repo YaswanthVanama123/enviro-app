@@ -1,7 +1,4 @@
-/**
- * Map Distance API for Mobile
- * API endpoints for map distance operations
- */
+
 
 import {apiClient} from '../client';
 
@@ -51,9 +48,7 @@ export interface SyncStatusResponse {
 const BASE_PATH = '/api/map-distance';
 
 export const mapDistanceApi = {
-  /**
-   * Get all RouteStar customers for dropdown selection
-   */
+  
   async getCustomers(): Promise<RouteStarCustomerOption[]> {
     try {
       const response = await apiClient.get<RouteStarCustomerOption[]>(
@@ -66,9 +61,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Fetch distance for a specific customer
-   */
   async fetchDistance(
     customerName: string,
   ): Promise<{success: boolean; error?: string; jobId?: string}> {
@@ -88,9 +80,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Get sync status
-   */
   async getSyncStatus(): Promise<SyncStatusResponse> {
     try {
       const response =
@@ -114,9 +103,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Get stats
-   */
   async getStats(): Promise<MapDistanceStats | null> {
     try {
       const response =
@@ -128,9 +114,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Start full sync
-   */
   async startSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
@@ -147,9 +130,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Cancel sync
-   */
   async cancelSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
@@ -166,9 +146,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Pause sync
-   */
   async pauseSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
@@ -185,9 +162,6 @@ export const mapDistanceApi = {
     }
   },
 
-  /**
-   * Get sync history
-   */
   async getSyncHistory(): Promise<MapDistanceSyncJob[]> {
     try {
       const response = await apiClient.get<MapDistanceSyncJob[]>(

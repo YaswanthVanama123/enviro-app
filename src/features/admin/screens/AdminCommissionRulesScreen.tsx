@@ -1,10 +1,4 @@
-/**
- * AdminCommissionRulesScreen
- *
- * Hosts the CommissionRulesManager so admins can edit the V2 commission
- * rules (per-visit penalties, Anchor / Pit thresholds, pricing tiers,
- * frequency visits-per-year, quota tier cutoffs) on mobile.
- */
+
 
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';

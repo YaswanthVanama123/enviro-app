@@ -162,7 +162,7 @@ function calcAreaContractTotal(a: AreaConfig, contractMonths: number): number {
   } else if (freq === 'everyFourWeeks') {
     visits = Math.round(contractMonths * 1.0833);
   } else {
-    // monthly (default)
+    
     visits = contractMonths;
   }
   return cost * visits;
@@ -171,10 +171,10 @@ function calcAreaContractTotal(a: AreaConfig, contractMonths: number): number {
 function calcBaselineAreaCost(a: AreaConfig, cfg: any): number {
   if (!a.enabled) return 0;
   if (a.pricingType === 'flat') {
-    // Use admin default flat rate — not user-modified
+    
     return cfg?.defaultFlatRate ?? a.flatRate;
   }
-  // sqft: use admin baseline rate per sqft
+  
   const baselineRate = cfg?.sqFtInsideRate ?? 0.10;
   return a.sqFt * baselineRate;
 }

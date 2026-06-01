@@ -26,25 +26,21 @@ const DEFAULT_INCLUDED_ITEMS = [
   'Soap service (free)',
 ];
 
-// ── Location options ──
 const LOCATION_OPTIONS = [
   {label: 'Inside Beltway', value: 'insideBeltway'},
   {label: 'Outside Beltway', value: 'outsideBeltway'},
 ];
 
-// ── Pricing mode options ──
 const PRICING_MODE_OPTIONS = [
   {label: 'Per Item Charge', value: 'per_item_charge'},
   {label: 'All Inclusive', value: 'all_inclusive'},
 ];
 
-// ── Soap type options ──
 const SOAP_OPTIONS = [
   {label: 'Standard', value: 'standard'},
   {label: 'Luxury', value: 'luxury'},
 ];
 
-// ── Safe number coercion (backend may return strings or "included") ──
 function num(value: any, fallback: number): number {
   if (typeof value === 'number' && isFinite(value)) {return value;}
   if (typeof value === 'string' && value !== 'included') {
@@ -54,7 +50,6 @@ function num(value: any, fallback: number): number {
   return fallback;
 }
 
-// ── Frequency multiplier (matches webapp exactly) ──
 function getFreqMult(frequency: string): number {
   const map: Record<string, number> = {
     weekly: 4.33, biweekly: 2.165, twicePerMonth: 2.0, monthly: 1.0,
@@ -64,7 +59,6 @@ function getFreqMult(frequency: string): number {
   return map[frequency] ?? 4.33;
 }
 
-// ── Visits in contract (for per-visit frequencies) ──
 function calculateVisitsInContract(frequency: string, months: number): number {
   if (frequency === 'oneTime') {return 1;}
   const visitsPerYearMap: Record<string, number> = {
@@ -75,7 +69,6 @@ function calculateVisitsInContract(frequency: string, months: number): number {
   return Math.round((visitsPerYear * months) / 12);
 }
 
-// ── Calculation mode (monthly vs per-visit) ──
 function getCalculationMode(frequency: string): 'monthly' | 'perVisit' {
   if (['weekly', 'biweekly', 'twicePerMonth', 'monthly', 'everyFourWeeks'].includes(frequency)) {
     return 'monthly';
@@ -83,7 +76,6 @@ function getCalculationMode(frequency: string): 'monthly' | 'perVisit' {
   return 'perVisit';
 }
 
-// ── Dual frequency calculation (matches webapp calculateDualFrequency) ──
 function calculateDualFrequency(
   mainFreq: string, facilityFreq: string,
   mainServiceBase: number, facilityComponentsBase: number, months: number,
@@ -127,7 +119,6 @@ function calculateDualFrequency(
   }
 }
 
-// ── Included Items Editor ──
 function IncludedItemsEditor({
   items, isCustomized, onChange, onReset,
 }: {
@@ -255,13 +246,9 @@ function IncludedItemsEditor({
   );
 }
 
-// ══════════════════════════════════════════════════════════════════
-// MAIN FORM
-// ══════════════════════════════════════════════════════════════════
 export function SanicleanForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const cfg = pricingConfig?.config ?? {};
 
-  // ── Core Fixture Fields ──
   const pricingMode           = data?.pricingMode             ?? 'per_item_charge';
   const isAllInclusive        = pricingMode === 'all_inclusive';
   const freq                  = data?.mainServiceFrequency ?? data?.frequency ?? 'weekly';
@@ -271,12 +258,10 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   const femaleToilets         = data?.femaleToilets         ?? 0;
   const fixtureCount          = sinks + urinals + maleToilets + femaleToilets;
 
-  // ── Location & Parking ──
   const location              = data?.location              ?? 'insideBeltway';
   const needsParking          = data?.needsParking          ?? false;
   const isInsideBeltway       = location === 'insideBeltway';
 
-  // ── Fixture Rates (from config or data override) ──
   const cfgInside  = cfg.standardALaCartePricing?.insideBeltway ?? cfg.geographicPricing?.insideBeltway ?? {};
   const cfgOutside = cfg.standardALaCartePricing?.outsideBeltway ?? cfg.geographicPricing?.outsideBeltway ?? {};
   const insideBeltwayRatePerFixture  = num(data?.insideBeltwayRatePerFixture ?? cfgInside.pricePerFixture ?? cfgInside.ratePerFixture, 7);
@@ -288,39 +273,31 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
 
   const fixtureRate = isInsideBeltway ? insideBeltwayRatePerFixture : outsideBeltwayRatePerFixture;
 
-  // ── All-Inclusive Rate ──
   const allInclusiveWeeklyRatePerFixture = num(data?.allInclusiveWeeklyRatePerFixture ?? cfg.allInclusivePricing?.pricePerFixture, 20);
 
-  // ── Small Facility / Minimum ──
   const smallFacilityThreshold = num(data?.smallFacilityThreshold ?? cfg.smallBathroomMinimums?.minimumFixturesThreshold, 5);
   const smallFacilityMinimum   = num(data?.smallFacilityMinimum ?? cfg.smallBathroomMinimums?.minimumPriceUnderThreshold, 50);
   const applyMinimum           = data?.applyMinimum !== false;
   const isSmallFacility        = fixtureCount <= smallFacilityThreshold;
 
-  // ── Trip Charge ──
   const addTripCharge = data?.addTripCharge ?? false;
 
-  // ── Soap ──
   const soapType                    = data?.soapType                    ?? 'standard';
   const luxuryUpgradePerDispenser   = num(data?.luxuryUpgradePerDispenser ?? cfg.soapUpgrades?.standardToLuxuryPerDispenserPerWeek, 5);
   const excessSoapGallonsPerWeek    = num(data?.excessSoapGallonsPerWeek, 0);
   const excessStandardSoapRate      = num(data?.excessStandardSoapRate ?? cfg.soapUpgrades?.excessUsageCharges?.standardSoapPerGallon, 13);
   const excessLuxurySoapRate        = num(data?.excessLuxurySoapRate ?? cfg.soapUpgrades?.excessUsageCharges?.luxurySoapPerGallon, 30);
 
-  // ── Microfiber Mopping ──
   const addMicrofiberMopping        = data?.addMicrofiberMopping        ?? false;
   const microfiberBathrooms         = num(data?.microfiberBathrooms, 0);
   const microfiberMoppingPerBathroom = num(data?.microfiberMoppingPerBathroom ?? cfg.microfiberMoppingIncludedWithSaniClean?.pricePerBathroom, 10);
 
-  // ── Warranty ──
   const warrantyDispensers          = num(data?.warrantyDispensers, 0);
   const warrantyFeePerDispenserPerWeek = num(data?.warrantyFeePerDispenserPerWeek ?? cfg.warrantyFees?.soapDispenserWarrantyFeePerWeek, 1);
 
-  // ── Paper Overage ──
   const estimatedPaperSpendPerWeek  = num(data?.estimatedPaperSpendPerWeek, 0);
   const paperCreditPerFixture       = num(data?.paperCreditPerFixture ?? cfg.paperCredit?.creditPerFixturePerWeek, 5);
 
-  // ── Facility Components ──
   const facilityComponentsFrequency = data?.facilityComponentsFrequency ?? freq;
   const addUrinalComponents         = data?.addUrinalComponents         ?? false;
   const addMaleToiletComponents     = data?.addMaleToiletComponents     ?? false;
@@ -328,11 +305,9 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
 
   const cfgMonthly = cfg.monthlyAddOnSupplyPricing ?? {};
 
-  // Resolve urinalMat and toiletClip first (they are plain numbers)
   const urinalMatMonthly          = num(data?.urinalMatMonthly ?? cfgMonthly.urinalMatMonthlyPrice, 4);
   const toiletClipsMonthly        = num(data?.toiletClipsMonthly ?? cfgMonthly.toiletClipMonthlyPrice, 1);
 
-  // "included" resolution: when config says "included", use the sibling rate (matches webapp logic)
   const resolveScreenPrice = (): number => {
     if (data?.urinalScreenMonthly != null) return num(data.urinalScreenMonthly, urinalMatMonthly);
     const raw = cfgMonthly.urinalScreenMonthlyPrice;
@@ -357,24 +332,19 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   const sanipodsQty               = addFemaleToiletComponents ? (data?.sanipodsQty ?? 0) : 0;
   const sanipodServiceMonthly     = num(data?.sanipodServiceMonthly ?? cfgMonthly.sanipodMonthlyPricePerPod, 4);
 
-  // ── Included Items ──
   const includedItems: string[] = data?.includedItems ?? DEFAULT_INCLUDED_ITEMS;
   const isCustomized: boolean   = Array.isArray(data?.includedItems);
 
-  // ══════════════════════════════════════════════════════════════
-  // CALCULATION (supports both per_item_charge and all_inclusive)
-  // ══════════════════════════════════════════════════════════════
+  
 
-  // 4. Soap upgrade (shared between modes)
-  const luxuryUpgradeQty = sinks; // soap dispensers = sinks
+  
+  const luxuryUpgradeQty = sinks; 
   const soapUpgrade = soapType === 'luxury' ? luxuryUpgradeQty * luxuryUpgradePerDispenser : 0;
 
-  // 5. Excess soap (shared)
   const excessSoap = excessSoapGallonsPerWeek > 0
     ? excessSoapGallonsPerWeek * (soapType === 'luxury' ? excessLuxurySoapRate : excessStandardSoapRate)
     : 0;
 
-  // 8. Paper overage (shared)
   const paperCredit = fixtureCount * paperCreditPerFixture;
   const paperOverage = Math.max(0, estimatedPaperSpendPerWeek - paperCredit);
 
@@ -386,7 +356,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   let mainServiceTotal: number;
 
   if (isAllInclusive) {
-    // All-inclusive: single rate per fixture, no trip/warranty/facility/microfiber
+    
     baseService = fixtureCount * allInclusiveWeeklyRatePerFixture;
     tripCharge = 0;
     facilityComponentsCalc = 0;
@@ -394,8 +364,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     warrantyFees = 0;
     mainServiceTotal = baseService + soapUpgrade + excessSoap + paperOverage;
   } else {
-    // Per-item charge
-    // 1. Base service
+
     let baseServiceCalc = fixtureCount * fixtureRate;
     const regionMinimum = isInsideBeltway ? insideBeltwayMinimum : 0;
 
@@ -406,7 +375,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     }
     baseService = baseServiceCalc;
 
-    // 2. Trip charge
     let tripChargeCalc = 0;
     if (!isSmallFacility && addTripCharge) {
       tripChargeCalc = isInsideBeltway ? insideBeltwayTripCharge : outsideBeltwayTripCharge;
@@ -416,7 +384,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     }
     tripCharge = tripChargeCalc;
 
-    // 3. Facility components (base — before frequency multiplier)
     facilityComponentsCalc = 0;
     if (addUrinalComponents) {
       facilityComponentsCalc += urinalScreensQty * urinalScreenMonthly + urinalMatsQty * urinalMatMonthly;
@@ -428,17 +395,13 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       facilityComponentsCalc += sanipodsQty * sanipodServiceMonthly;
     }
 
-    // 6. Microfiber mopping
     microfiberMopping = addMicrofiberMopping ? microfiberBathrooms * microfiberMoppingPerBathroom : 0;
 
-    // 7. Warranty fees
     warrantyFees = warrantyDispensers > 0 ? warrantyDispensers * warrantyFeePerDispenserPerWeek : 0;
 
-    // 9. Main service total (per-visit base before frequency)
     mainServiceTotal = baseService + tripCharge + soapUpgrade + excessSoap + microfiberMopping + warrantyFees + paperOverage;
   }
 
-  // 10. Dual frequency calculation
   const dualResult = calculateDualFrequency(
     freq, facilityComponentsFrequency,
     mainServiceTotal, facilityComponentsCalc,
@@ -451,7 +414,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   const contractTotal = dualResult.contractTotal;
   const facilityComponentsMonthly = dualResult.facilityComponentsMonthly;
 
-  // ── Greenline: baseline with admin config rates ──
   let originalContractTotal: number;
   if (isAllInclusive) {
     const origAllIncRate = num(cfg.allInclusivePricing?.pricePerFixture, 20);
@@ -476,12 +438,10 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   }
   const isGreenline = contractTotal > originalContractTotal * 1.30;
 
-  // ── Minimum charge display ──
   const minimumChargePerWeek = isSmallFacility ? smallFacilityMinimum : (isInsideBeltway ? insideBeltwayMinimum : 0);
 
-  // ── Update callback ──
   const update = useCallback((fields: Record<string, any>) => {
-    // Recompute everything with new field values
+    
     const next = {...data, ...fields};
     const nPricingMode = next.pricingMode ?? pricingMode;
     const nIsAllInclusive = nPricingMode === 'all_inclusive';
@@ -543,7 +503,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         }
       }
 
-      // Facility
       const nAddUrinal = next.addUrinalComponents ?? addUrinalComponents;
       const nAddMaleC = next.addMaleToiletComponents ?? addMaleToiletComponents;
       const nAddFemaleC = next.addFemaleToiletComponents ?? addFemaleToiletComponents;
@@ -571,7 +530,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     const nFacFreq = next.facilityComponentsFrequency ?? facilityComponentsFrequency;
     const nDual = calculateDualFrequency(nFreq, nFacFreq, nMainService, nFacility, contractMonths);
 
-    // Baseline for originalContractTotal
     let origContractTotal: number;
     if (nIsAllInclusive) {
       const origAIRate = num(cfg.allInclusivePricing?.pricePerFixture, 20);
@@ -633,15 +591,15 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       notes={data?.notes ?? ''}
       onNotesChange={v => update({notes: v})}>
 
-      {/* ── Pricing Mode ── */}
+      {}
       <DropdownRow label="Pricing Mode" value={pricingMode} options={PRICING_MODE_OPTIONS} onChange={v => update({pricingMode: v})} />
       <FormDivider />
 
-      {/* ── Frequency ── */}
+      {}
       <DropdownRow label="Service Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({mainServiceFrequency: v, frequency: v})} />
       <FormDivider />
 
-      {/* ── Location (per-item only) ── */}
+      {}
       {!isAllInclusive && (
         <>
           <DropdownRow label="Location" value={location} options={LOCATION_OPTIONS} onChange={v => update({location: v})} />
@@ -652,13 +610,13 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         </>
       )}
 
-      {/* ── Fixtures ── */}
+      {}
       <CalcRow label="Sinks" qty={sinks} onQtyChange={v => update({sinks: v})} rate={isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate} onRateChange={v => update(isAllInclusive ? {allInclusiveWeeklyRatePerFixture: v} : (isInsideBeltway ? {insideBeltwayRatePerFixture: v} : {outsideBeltwayRatePerFixture: v}))} total={sinks * (isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate)} />
       <CalcRow label="Urinals" qty={urinals} onQtyChange={v => update({urinals: v})} rate={isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate} onRateChange={v => update(isAllInclusive ? {allInclusiveWeeklyRatePerFixture: v} : (isInsideBeltway ? {insideBeltwayRatePerFixture: v} : {outsideBeltwayRatePerFixture: v}))} total={urinals * (isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate)} />
       <CalcRow label="Male Toilets" qty={maleToilets} onQtyChange={v => update({maleToilets: v})} rate={isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate} onRateChange={v => update(isAllInclusive ? {allInclusiveWeeklyRatePerFixture: v} : (isInsideBeltway ? {insideBeltwayRatePerFixture: v} : {outsideBeltwayRatePerFixture: v}))} total={maleToilets * (isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate)} />
       <CalcRow label="Female Toilets" qty={femaleToilets} onQtyChange={v => update({femaleToilets: v})} rate={isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate} onRateChange={v => update(isAllInclusive ? {allInclusiveWeeklyRatePerFixture: v} : (isInsideBeltway ? {insideBeltwayRatePerFixture: v} : {outsideBeltwayRatePerFixture: v}))} total={femaleToilets * (isAllInclusive ? allInclusiveWeeklyRatePerFixture : fixtureRate)} />
 
-      {/* ── Minimum & Trip (per-item only) ── */}
+      {}
       {!isAllInclusive && (
         <>
           <NumberRow label="Small Facility Minimum" value={smallFacilityMinimum} onChange={v => update({smallFacilityMinimum: v})} prefix="$" decimals={2} />
@@ -668,7 +626,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       )}
       <FormDivider />
 
-      {/* ── Soap ── */}
+      {}
       <DropdownRow label="Soap Type" value={soapType} options={SOAP_OPTIONS} onChange={v => update({soapType: v})} />
       {soapType === 'luxury' && (
         <NumberRow label="Luxury Upgrade / Dispenser / Week" value={luxuryUpgradePerDispenser} onChange={v => update({luxuryUpgradePerDispenser: v})} prefix="$" decimals={2} />
@@ -676,7 +634,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       <NumberRow label="Excess Soap Gallons / Week" value={excessSoapGallonsPerWeek} onChange={v => update({excessSoapGallonsPerWeek: v})} decimals={1} />
       <FormDivider />
 
-      {/* ── Microfiber Mopping (per-item only) ── */}
+      {}
       {!isAllInclusive && (
         <>
           <ToggleRow label="Add Microfiber Mopping" value={addMicrofiberMopping} onChange={v => update({addMicrofiberMopping: v})} subtitle={`$${microfiberMoppingPerBathroom}/bathroom/week`} />
@@ -690,7 +648,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         </>
       )}
 
-      {/* ── Warranty (per-item only) ── */}
+      {}
       {!isAllInclusive && (
         <>
           <NumberRow label="Warranty Dispensers" value={warrantyDispensers} onChange={v => update({warrantyDispensers: v})} decimals={0} />
@@ -700,14 +658,14 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         </>
       )}
 
-      {/* ── Paper Overage ── */}
+      {}
       <NumberRow label="Estimated Paper Spend / Week" value={estimatedPaperSpendPerWeek} onChange={v => update({estimatedPaperSpendPerWeek: v})} prefix="$" decimals={2} />
       {estimatedPaperSpendPerWeek > 0 && (
         <NumberRow label="Paper Credit / Fixture / Week" value={paperCreditPerFixture} onChange={v => update({paperCreditPerFixture: v})} prefix="$" decimals={2} />
       )}
       <FormDivider />
 
-      {/* ── Facility Components (per-item only) ── */}
+      {}
       {!isAllInclusive && (urinals > 0 || maleToilets > 0 || femaleToilets > 0) && (
         <>
           <View style={fc.header}>
@@ -755,7 +713,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       )}
       <FormDivider />
 
-      {/* ── Pricing Summary ── */}
+      {}
       <TotalsBlock
         frequency={freq}
         perVisit={weeklyTotal}
@@ -765,7 +723,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         contractTotal={contractTotal}
       />
 
-      {/* ── Greenline/Redline Badge ── */}
+      {}
       {fixtureCount > 0 && (
         <View style={s.badgeRow}>
           <View style={[s.badge, isGreenline ? s.greenBadge : s.redBadge]}>
@@ -776,7 +734,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         </View>
       )}
 
-      {/* ── Included Items ── */}
+      {}
       <IncludedItemsEditor
         items={includedItems}
         isCustomized={isCustomized}
@@ -789,8 +747,6 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
     </ServiceCard>
   );
 }
-
-// ── Styles ──
 
 const inc = StyleSheet.create({
   container: {

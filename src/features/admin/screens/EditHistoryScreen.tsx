@@ -82,16 +82,13 @@ function getActionLabel(action: EditHistoryItem['action']): string {
   }
 }
 
-// Build edit history from agreement files
 function buildEditHistory(agreement: SavedFileGroup): EditHistoryItem[] {
   const history: EditHistoryItem[] = [];
 
-  // Sort files by creation date to find the original creation
   const sortedByCreation = [...agreement.files].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
 
-  // First file creation is the agreement creation
   if (sortedByCreation.length > 0) {
     const firstFile = sortedByCreation[0];
     history.push({
@@ -103,9 +100,8 @@ function buildEditHistory(agreement: SavedFileGroup): EditHistoryItem[] {
     });
   }
 
-  // Collect all edits and additions
   agreement.files.forEach(file => {
-    // If file was updated after creation, add edit entry
+    
     if (file.updatedAt && file.updatedAt !== file.createdAt && file.updatedBy) {
       history.push({
         id: `${file.id}-edited-${file.updatedAt}`,
@@ -117,7 +113,6 @@ function buildEditHistory(agreement: SavedFileGroup): EditHistoryItem[] {
       });
     }
 
-    // Version PDFs added after initial file
     if (file.fileType === 'version_pdf' && file.createdBy) {
       const firstFileTime = sortedByCreation[0]?.createdAt;
       if (firstFileTime && file.createdAt !== firstFileTime) {
@@ -131,7 +126,6 @@ function buildEditHistory(agreement: SavedFileGroup): EditHistoryItem[] {
       }
     }
 
-    // Attachments
     if (file.fileType === 'attached_pdf' && file.createdBy) {
       history.push({
         id: `${file.id}-attached`,
@@ -143,7 +137,6 @@ function buildEditHistory(agreement: SavedFileGroup): EditHistoryItem[] {
     }
   });
 
-  // Sort by timestamp descending (most recent first), but keep creation at the bottom
   return history.sort((a, b) => {
     if (a.action === 'created') return 1;
     if (b.action === 'created') return -1;
@@ -159,14 +152,13 @@ function AgreementHistoryCard({agreement}: AgreementHistoryCardProps) {
   const [expanded, setExpanded] = useState(false);
   const history = buildEditHistory(agreement);
 
-  // Get creator info
   const creationEntry = history.find(h => h.action === 'created');
   const createdBy = creationEntry?.changedBy || 'Unknown';
   const editCount = history.filter(h => h.action !== 'created').length;
 
   return (
     <View style={styles.card}>
-      {/* Root - Agreement Header */}
+      {}
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setExpanded(p => !p)}
@@ -202,7 +194,7 @@ function AgreementHistoryCard({agreement}: AgreementHistoryCardProps) {
         />
       </TouchableOpacity>
 
-      {/* Expanded - Edit History */}
+      {}
       {expanded && (
         <View style={styles.historyList}>
           <View style={styles.historyHeader}>
@@ -217,14 +209,14 @@ function AgreementHistoryCard({agreement}: AgreementHistoryCardProps) {
               const isLast = idx === history.length - 1;
               return (
                 <View key={item.id} style={styles.historyItem}>
-                  {/* Timeline connector */}
+                  {}
                   <View style={styles.timelineConnector}>
                     <View style={[styles.timelineDot, {backgroundColor: iconCfg.bg}]}>
                       <Ionicons name={iconCfg.name} size={12} color={iconCfg.color} />
                     </View>
                     {!isLast && <View style={styles.timelineLine} />}
                   </View>
-                  {/* Content */}
+                  {}
                   <View style={styles.historyContent}>
                     <Text style={styles.historyAction}>{getActionLabel(item.action)}</Text>
                     {item.fileName && item.action !== 'created' && (
@@ -295,13 +287,13 @@ export function EditHistoryScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Edit History</Text>
         <Text style={styles.headerSubtitle}>Track all agreement changes</Text>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
           <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
@@ -322,7 +314,7 @@ export function EditHistoryScreen() {
         </View>
       </View>
 
-      {/* List */}
+      {}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -455,7 +447,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Card styles
   card: {
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.lg,
@@ -529,7 +520,6 @@ const styles = StyleSheet.create({
     color: '#2563eb',
   },
 
-  // History list styles
   historyList: {
     backgroundColor: '#f8fafc',
     borderTopWidth: 1,

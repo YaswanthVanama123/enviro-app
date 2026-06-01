@@ -41,15 +41,12 @@ export function PayrollSettingsScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Settings state
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [cycleType, setCycleType] = useState<'weekly' | 'biweekly' | 'monthly'>('biweekly');
   const [cycleDayOfWeek, setCycleDayOfWeek] = useState<number>(1);
 
-  // Original values for change detection
   const [originalSettings, setOriginalSettings] = useState<PayrollSettings | null>(null);
 
-  // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const loadSettings = useCallback(async () => {
@@ -75,7 +72,6 @@ export function PayrollSettingsScreen() {
     loadSettings();
   }, [loadSettings]);
 
-  // Check for changes
   useEffect(() => {
     if (!originalSettings) {
       setHasChanges(false);
@@ -178,7 +174,7 @@ export function PayrollSettingsScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {/* Info Banner */}
+        {}
         <View style={styles.infoBanner}>
           <Ionicons name="information-circle-outline" size={20} color="#0369a1" />
           <Text style={styles.infoBannerText}>
@@ -187,7 +183,7 @@ export function PayrollSettingsScreen() {
           </Text>
         </View>
 
-        {/* Error Banner */}
+        {}
         {error && (
           <View style={styles.errorBanner}>
             <Ionicons name="alert-circle-outline" size={20} color="#dc2626" />
@@ -195,7 +191,7 @@ export function PayrollSettingsScreen() {
           </View>
         )}
 
-        {/* Success Banner */}
+        {}
         {showSuccess && (
           <View style={styles.successBanner}>
             <Ionicons name="checkmark-circle-outline" size={20} color="#16a34a" />
@@ -203,7 +199,7 @@ export function PayrollSettingsScreen() {
           </View>
         )}
 
-        {/* Start Date Section */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIcon, {backgroundColor: '#fef3c7'}]}>
@@ -245,7 +241,7 @@ export function PayrollSettingsScreen() {
           )}
         </View>
 
-        {/* Cycle Type Section */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionIcon, {backgroundColor: '#dbeafe'}]}>
@@ -280,7 +276,7 @@ export function PayrollSettingsScreen() {
           </View>
         </View>
 
-        {/* Day of Week Section (only for weekly/biweekly) */}
+        {}
         {(cycleType === 'weekly' || cycleType === 'biweekly') && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -321,7 +317,7 @@ export function PayrollSettingsScreen() {
           </View>
         )}
 
-        {/* Save Button */}
+        {}
         <TouchableOpacity
           style={[
             styles.saveBtn,
@@ -346,7 +342,7 @@ export function PayrollSettingsScreen() {
         <View style={{height: 40}} />
       </ScrollView>
 
-      {/* Date Picker Modal */}
+      {}
       {showDatePicker && (
         <DateTimePicker
           value={startDate || new Date()}

@@ -33,7 +33,6 @@ const TAB_ICON: Record<string, [string, string]> = {
   Employees: ['people-outline',                     'people'],
 };
 
-// Profile/More Screen Component
 function ProfileScreen() {
   const {user, isAdmin, logout} = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -72,7 +71,7 @@ function ProfileScreen() {
         </View>
       </View>
 
-      {/* Quick Actions */}
+      {}
       <View style={profileStyles.actionsSection}>
         <Text style={profileStyles.sectionTitle}>Quick Actions</Text>
 
@@ -116,7 +115,7 @@ function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Info Section */}
+      {}
       <View style={profileStyles.infoSection}>
         <Text style={profileStyles.sectionTitle}>Account Info</Text>
         <View style={profileStyles.infoRow}>
@@ -173,7 +172,7 @@ export function TabNavigator() {
       })}>
 
       {isAdmin ? (
-        // Admin tabs
+        
         <>
           <Tab.Screen
             name="Dashboard"
@@ -233,7 +232,7 @@ export function TabNavigator() {
           />
         </>
       ) : (
-        // Employee tabs
+        
         <>
           <Tab.Screen
             name="Home"

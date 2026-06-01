@@ -91,7 +91,6 @@ export function PayrollScreen() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Settings state
   const [settings, setSettings] = useState<PayrollSettings>({
     startDate: null,
     cycleType: 'biweekly',
@@ -99,19 +98,15 @@ export function PayrollScreen() {
   });
   const [originalSettings, setOriginalSettings] = useState<PayrollSettings | null>(null);
 
-  // Period state
   const [currentPeriod, setCurrentPeriod] = useState<PayrollPeriod | null>(null);
   const [previousPeriod, setPreviousPeriod] = useState<PayrollPeriod | null>(null);
 
-  // Employees data
   const [employees, setEmployees] = useState<EmployeePayroll[]>([]);
   const [totals, setTotals] = useState<PayrollTotals | null>(null);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
 
-  // History state
   const [history, setHistory] = useState<PayrollHistoryItem[]>([]);
 
-  // Payroll slip modal state
   const [viewingPayrollSlip, setViewingPayrollSlip] = useState<EmployeePayroll | null>(null);
 
   const loadPayrollData = useCallback(async (isRefresh = false) => {
@@ -123,7 +118,6 @@ export function PayrollScreen() {
       }
       setError(null);
 
-      // Fetch periods and employees data
       const [periodsRes, employeesRes] = await Promise.all([
         adminApi.getPayrollPeriods(),
         adminApi.getPayrollEmployees(),
@@ -264,7 +258,7 @@ export function PayrollScreen() {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Error Banner */}
+      {}
       {error && (
         <View style={styles.errorBanner}>
           <Ionicons name="alert-circle" size={20} color="#dc2626" />
@@ -275,7 +269,7 @@ export function PayrollScreen() {
         </View>
       )}
 
-      {/* Success Banner */}
+      {}
       {successMessage && (
         <View style={styles.successBanner}>
           <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
@@ -283,7 +277,7 @@ export function PayrollScreen() {
         </View>
       )}
 
-      {/* Sub Tab Bar */}
+      {}
       <View style={styles.subTabBar}>
         <TouchableOpacity
           style={[styles.subTabBtn, activeSubTab === 'overview' && styles.subTabBtnActive]}
@@ -334,10 +328,10 @@ export function PayrollScreen() {
             tintColor={Colors.primary}
           />
         }>
-        {/* Overview Tab */}
+        {}
         {activeSubTab === 'overview' && (
           <View>
-            {/* Period Info */}
+            {}
             <View style={styles.periodCard}>
               <View style={styles.periodHeader}>
                 <Text style={styles.periodTitle}>Current Payroll Period</Text>
@@ -365,7 +359,7 @@ export function PayrollScreen() {
               )}
             </View>
 
-            {/* Summary Cards */}
+            {}
             {totals && (
               <View style={styles.summaryGrid}>
                 <View style={[styles.summaryCard, styles.summaryCardPrimary]}>
@@ -399,7 +393,7 @@ export function PayrollScreen() {
               </View>
             )}
 
-            {/* Employee List */}
+            {}
             <View style={styles.employeesSection}>
               <Text style={styles.sectionTitle}>Salesperson Commissions</Text>
 
@@ -450,7 +444,7 @@ export function PayrollScreen() {
 
                     {expandedEmployee === emp.username && (
                       <View style={styles.employeeDetails}>
-                        {/* View Payroll Button */}
+                        {}
                         <TouchableOpacity
                           style={styles.viewPayrollBtn}
                           onPress={() => setViewingPayrollSlip(emp)}>
@@ -458,7 +452,7 @@ export function PayrollScreen() {
                           <Text style={styles.viewPayrollBtnText}>View Payroll Slip</Text>
                         </TouchableOpacity>
 
-                        {/* Status Breakdown */}
+                        {}
                         <View style={styles.statusBreakdown}>
                           <View style={[styles.statusChip, {backgroundColor: '#f3f4f6'}]}>
                             <Text style={[styles.statusChipText, {color: '#6b7280'}]}>
@@ -487,7 +481,7 @@ export function PayrollScreen() {
                           </View>
                         </View>
 
-                        {/* Agreements List */}
+                        {}
                         <Text style={styles.agreementsTitle}>Agreements</Text>
                         {emp.agreements.map(agreement => (
                           <View key={agreement.id} style={styles.agreementItem}>
@@ -518,10 +512,10 @@ export function PayrollScreen() {
           </View>
         )}
 
-        {/* Settings Tab */}
+        {}
         {activeSubTab === 'settings' && (
           <View>
-            {/* Start Date Section */}
+            {}
             <View style={styles.settingsSection}>
               <View style={styles.settingsSectionHeader}>
                 <View style={[styles.settingsSectionIcon, {backgroundColor: '#fef3c7'}]}>
@@ -541,7 +535,7 @@ export function PayrollScreen() {
               </View>
             </View>
 
-            {/* Cycle Type Section */}
+            {}
             <View style={styles.settingsSection}>
               <View style={styles.settingsSectionHeader}>
                 <View style={[styles.settingsSectionIcon, {backgroundColor: '#dbeafe'}]}>
@@ -575,7 +569,7 @@ export function PayrollScreen() {
               </View>
             </View>
 
-            {/* Day of Week Section */}
+            {}
             {(settings.cycleType === 'weekly' || settings.cycleType === 'biweekly') && (
               <View style={styles.settingsSection}>
                 <View style={styles.settingsSectionHeader}>
@@ -611,7 +605,7 @@ export function PayrollScreen() {
               </View>
             )}
 
-            {/* Save Button */}
+            {}
             <TouchableOpacity
               style={[
                 styles.saveSettingsBtn,
@@ -635,7 +629,7 @@ export function PayrollScreen() {
           </View>
         )}
 
-        {/* History Tab */}
+        {}
         {activeSubTab === 'history' && (
           <View>
             <Text style={styles.sectionTitle}>Payroll History</Text>
@@ -690,7 +684,7 @@ export function PayrollScreen() {
         <View style={{height: 40}} />
       </ScrollView>
 
-      {/* Payroll Slip Modal */}
+      {}
       <Modal
         visible={viewingPayrollSlip !== null}
         animationType="slide"
@@ -736,13 +730,13 @@ export function PayrollScreen() {
             </View>
 
             <ScrollView style={styles.modalContent}>
-              {/* Company Header */}
+              {}
               <View style={styles.payslipHeader}>
                 <Text style={styles.payslipCompanyName}>ENVIRO-MASTER</Text>
                 <Text style={styles.payslipTagline}>Services International</Text>
               </View>
 
-              {/* Employee & Period Info */}
+              {}
               <View style={styles.payslipInfoGrid}>
                 <View style={styles.payslipInfoBox}>
                   <Text style={styles.payslipInfoBoxHeader}>Employee Information</Text>
@@ -771,7 +765,7 @@ export function PayrollScreen() {
                 </View>
               </View>
 
-              {/* Earnings Table */}
+              {}
               <View style={styles.payslipEarningsSection}>
                 <Text style={styles.payslipSectionTitle}>Commission Earnings</Text>
                 <View style={styles.payslipTableHeader}>
@@ -808,7 +802,7 @@ export function PayrollScreen() {
                 ))}
               </View>
 
-              {/* Summary */}
+              {}
               <View style={styles.payslipSummary}>
                 <View style={styles.payslipSummaryRow}>
                   <Text style={styles.payslipSummaryLabel}>Total Agreements</Text>
@@ -1192,7 +1186,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#7c3aed',
   },
-  // Settings styles
+  
   settingsSection: {
     backgroundColor: '#fff',
     borderRadius: Radius.lg,
@@ -1315,7 +1309,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
-  // History styles
+  
   historySubtitle: {
     fontSize: FontSize.sm,
     color: '#64748b',
@@ -1387,7 +1381,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
   },
-  // Modal styles
+  
   modalContainer: {
     flex: 1,
     backgroundColor: '#f8fafc',

@@ -1,7 +1,4 @@
-/**
- * Bigin Audit Section
- * Mobile component for viewing audit logs from Zoho Bigin
- */
+
 
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -55,7 +52,6 @@ export function BiginAuditSection() {
     hasMore: false,
   });
 
-  // Load audit logs
   const loadLogs = useCallback(
     async (reset = false) => {
       if (reset) {
@@ -88,7 +84,6 @@ export function BiginAuditSection() {
     [searchTerm, pagination.limit, pagination.skip],
   );
 
-  // Load stats
   const loadStats = useCallback(async () => {
     const result = await biginAuditApi.getStats();
     if (result) {
@@ -96,7 +91,6 @@ export function BiginAuditSection() {
     }
   }, []);
 
-  // Load scrape status
   const loadScrapeStatus = useCallback(async () => {
     const result = await biginAuditApi.getScrapeStatus();
     if (result) {
@@ -104,14 +98,12 @@ export function BiginAuditSection() {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     loadLogs(true);
     loadStats();
     loadScrapeStatus();
   }, []);
 
-  // Poll scrape status when scraping
   useEffect(() => {
     if (scrapeStatus?.isRunning) {
       const interval = setInterval(() => {
@@ -124,7 +116,6 @@ export function BiginAuditSection() {
     }
   }, [scrapeStatus?.isRunning, scrapeStatus?.lastScrapeResult]);
 
-  // Handle scrape
   const handleScrape = async () => {
     const result = await biginAuditApi.startScrape();
     if (result) {
@@ -132,12 +123,10 @@ export function BiginAuditSection() {
     }
   };
 
-  // Handle search
   const handleSearch = () => {
     loadLogs(true);
   };
 
-  // Handle refresh
   const handleRefresh = () => {
     setRefreshing(true);
     loadLogs(true);
@@ -145,7 +134,6 @@ export function BiginAuditSection() {
     loadScrapeStatus();
   };
 
-  // Handle CSV upload
   const handleUploadCsv = async () => {
     try {
       const result = await DocumentPicker.pick({
@@ -185,20 +173,17 @@ export function BiginAuditSection() {
     }
   };
 
-  // Close upload modal
   const closeUploadModal = () => {
     setShowUploadModal(false);
     setUploadResult(null);
   };
 
-  // Load more
   const handleLoadMore = () => {
     if (!loading && pagination.hasMore) {
       loadLogs(false);
     }
   };
 
-  // Render stat card
   const renderStatCard = (
     label: string,
     value: number,
@@ -215,7 +200,6 @@ export function BiginAuditSection() {
     </View>
   );
 
-  // Render log item
   const renderLogItem = ({item}: {item: BiginAuditLog}) => (
     <TouchableOpacity
       style={styles.logItem}
@@ -253,7 +237,6 @@ export function BiginAuditSection() {
     </TouchableOpacity>
   );
 
-  // Render footer
   const renderFooter = () => {
     if (!loading) return null;
     return (
@@ -263,7 +246,6 @@ export function BiginAuditSection() {
     );
   };
 
-  // Render empty
   const renderEmpty = () => {
     if (loading) return null;
     return (
@@ -279,7 +261,7 @@ export function BiginAuditSection() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Bigin Audit History</Text>
@@ -317,7 +299,7 @@ export function BiginAuditSection() {
         </View>
       </View>
 
-      {/* Stats */}
+      {}
       <View style={styles.statsGrid}>
         {renderStatCard(
           'Total',
@@ -349,7 +331,7 @@ export function BiginAuditSection() {
         )}
       </View>
 
-      {/* Scrape Status */}
+      {}
       {scrapeStatus?.isRunning && (
         <View style={styles.scrapeStatusBanner}>
           <View style={styles.progressBar}>
@@ -364,7 +346,7 @@ export function BiginAuditSection() {
         </View>
       )}
 
-      {/* Search */}
+      {}
       <View style={styles.searchRow}>
         <View style={styles.searchInputWrap}>
           <Ionicons
@@ -391,10 +373,10 @@ export function BiginAuditSection() {
         </TouchableOpacity>
       </View>
 
-      {/* Results count */}
+      {}
       <Text style={styles.resultsCount}>{pagination.total} logs found</Text>
 
-      {/* Logs List */}
+      {}
       <FlatList
         data={logs}
         renderItem={renderLogItem}
@@ -410,7 +392,7 @@ export function BiginAuditSection() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Log Detail Modal */}
+      {}
       <Modal
         visible={!!selectedLog}
         animationType="slide"
@@ -502,7 +484,7 @@ export function BiginAuditSection() {
         </View>
       </Modal>
 
-      {/* Upload Modal */}
+      {}
       <Modal
         visible={showUploadModal}
         animationType="slide"
