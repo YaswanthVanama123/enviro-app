@@ -233,14 +233,6 @@ export function ElectrostaticSprayForm({
         </>
       )}
 
-      <NumberRow
-        label="Service Charge"
-        value={data?.customServiceCharge !== undefined ? data.customServiceCharge : calc.serviceCharge}
-        onChange={v => update({customServiceCharge: v})}
-        prefix="$"
-        decimals={2}
-      />
-
       <ToggleRow
         label="Apply Minimum"
         value={applyMinimum}
@@ -248,78 +240,96 @@ export function ElectrostaticSprayForm({
         subtitle={`Minimum $${calc.minimumChargePerVisit.toFixed(2)} per visit`}
       />
 
-      <FormDivider />
-
-      <NumberRow
-        label="Per Visit Total"
-        value={data?.customPerVisitPrice !== undefined ? data.customPerVisitPrice : calc.perVisit}
-        onChange={v => update({customPerVisitPrice: v})}
-        prefix="$"
-        decimals={2}
-      />
-
       {hasService && (
-        <View style={styles.tierRow}>
-          <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
-            {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
-          </Text>
-        </View>
-      )}
+        <>
+          <NumberRow
+            label="Service Charge"
+            value={
+              data?.customServiceCharge !== undefined
+                ? data.customServiceCharge
+                : calc.serviceCharge
+            }
+            onChange={v => update({customServiceCharge: v})}
+            prefix="$"
+            decimals={2}
+          />
 
-      {!isVisitBased && (
-        <NumberRow
-          label="Monthly Recurring"
-          value={
-            data?.customMonthlyRecurring !== undefined
-              ? data.customMonthlyRecurring
-              : calc.monthlyRecurring
-          }
-          onChange={v => update({customMonthlyRecurring: v})}
-          prefix="$"
-          decimals={2}
-        />
-      )}
+          <FormDivider />
 
-      {isVisitBased && !isOneTime && (
-        <NumberRow
-          label="Recurring Visit Total"
-          value={
-            data?.customFirstMonthTotal !== undefined
-              ? data.customFirstMonthTotal
-              : calc.perVisit
-          }
-          onChange={v => update({customFirstMonthTotal: v})}
-          prefix="$"
-          decimals={2}
-        />
-      )}
+          <NumberRow
+            label="Per Visit Total"
+            value={
+              data?.customPerVisitPrice !== undefined
+                ? data.customPerVisitPrice
+                : calc.perVisit
+            }
+            onChange={v => update({customPerVisitPrice: v})}
+            prefix="$"
+            decimals={2}
+          />
 
-      {isOneTime && (
-        <NumberRow
-          label="Total Price"
-          value={
-            data?.customFirstMonthTotal !== undefined
-              ? data.customFirstMonthTotal
-              : calc.contractTotal
-          }
-          onChange={v => update({customFirstMonthTotal: v})}
-          prefix="$"
-          decimals={2}
-        />
-      )}
+          <View style={styles.tierRow}>
+            <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
+              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+            </Text>
+          </View>
 
-      {!isOneTime && (
-        <NumberRow
-          label={`Contract Total (${contractMonths} mo)`}
-          value={
-            data?.customContractTotal !== undefined
-              ? data.customContractTotal
-              : calc.contractTotal
-          }
-          onChange={v => update({customContractTotal: v})}
-          prefix="$"
-          decimals={2}
-        />
+          {!isVisitBased && (
+            <NumberRow
+              label="Monthly Recurring"
+              value={
+                data?.customMonthlyRecurring !== undefined
+                  ? data.customMonthlyRecurring
+                  : calc.monthlyRecurring
+              }
+              onChange={v => update({customMonthlyRecurring: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+
+          {isVisitBased && !isOneTime && (
+            <NumberRow
+              label="Recurring Visit Total"
+              value={
+                data?.customFirstMonthTotal !== undefined
+                  ? data.customFirstMonthTotal
+                  : calc.perVisit
+              }
+              onChange={v => update({customFirstMonthTotal: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+
+          {isOneTime && (
+            <NumberRow
+              label="Total Price"
+              value={
+                data?.customFirstMonthTotal !== undefined
+                  ? data.customFirstMonthTotal
+                  : calc.contractTotal
+              }
+              onChange={v => update({customFirstMonthTotal: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+
+          {!isOneTime && (
+            <NumberRow
+              label={`Contract Total (${contractMonths} mo)`}
+              value={
+                data?.customContractTotal !== undefined
+                  ? data.customContractTotal
+                  : calc.contractTotal
+              }
+              onChange={v => update({customContractTotal: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+        </>
       )}
     </ServiceCard>
   );
