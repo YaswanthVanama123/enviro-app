@@ -5,8 +5,9 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   ServiceCard, TotalsBlock,
-  FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
+  DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -596,7 +597,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       <FormDivider />
 
       {}
-      <DropdownRow label="Service Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({mainServiceFrequency: v, frequency: v})} />
+      <DropdownRow label="Service Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({mainServiceFrequency: v, frequency: v})} />
       <FormDivider />
 
       {}
@@ -672,7 +673,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
             <Ionicons name="construct-outline" size={14} color={Colors.textMuted} />
             <Text style={fc.headerText}>FACILITY COMPONENTS</Text>
           </View>
-          <DropdownRow label="Facility Frequency" value={facilityComponentsFrequency} options={FREQ_OPTIONS} onChange={v => update({facilityComponentsFrequency: v})} />
+          <DropdownRow label="Facility Frequency" value={facilityComponentsFrequency} options={FREQUENCY_OPTIONS} onChange={v => update({facilityComponentsFrequency: v})} />
         </>
       )}
       {!isAllInclusive && urinals > 0 && (

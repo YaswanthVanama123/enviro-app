@@ -14,11 +14,10 @@ import {
   buildCarpetBaseConfig,
   computeCarpetCalc,
   clampCarpetFrequency,
-  carpetFrequencyLabels,
-  carpetFrequencyList,
   type BackendCarpetConfig,
   type CarpetFormState,
 } from './carpetCalc';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -28,10 +27,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const CARPET_FREQ_OPTIONS = carpetFrequencyList.map(value => ({
-  value,
-  label: carpetFrequencyLabels[value],
-}));
+const CARPET_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
 // Editing any of these base inputs clears the manual total overrides (matches web).
 const RESET_OVERRIDE_FIELDS = [

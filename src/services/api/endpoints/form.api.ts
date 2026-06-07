@@ -1,4 +1,9 @@
 import {apiClient} from '../client';
+import {
+  FREQUENCY_LABELS,
+  FREQUENCY_OPTIONS,
+  FREQUENCY_MONTHLY_MULTIPLIER,
+} from '../../../shared/constants/frequency';
 
 export interface HeaderRow {
   labelLeft: string;
@@ -63,33 +68,11 @@ export const DEFAULT_HEADER_ROWS: HeaderRow[] = [
   {labelLeft: 'POC NAME:', valueLeft: '', labelRight: 'POC PHONE:', valueRight: ''},
 ];
 
-export const FREQ_MULTIPLIER: Record<string, number> = {
-  oneTime:       1,
-  weekly:        4.33,
-  biweekly:      2.165,
-  twicePerMonth: 2.0,
-  monthly:       1.0,
-  everyFourWeeks:1.0833,
-  bimonthly:     0.5,
-  quarterly:     0.33,
-  biannual:      0.17,
-  annual:        1 / 12,
-};
+export const FREQ_MULTIPLIER: Record<string, number> = FREQUENCY_MONTHLY_MULTIPLIER;
 
-export const FREQ_LABELS: Record<string, string> = {
-  oneTime:       'One Time',
-  weekly:        'Weekly',
-  biweekly:      'Bi-Weekly',
-  twicePerMonth: '2× / Month',
-  monthly:       'Monthly',
-  everyFourWeeks:'Every 4 Weeks',
-  bimonthly:     'Bi-Monthly',
-  quarterly:     'Quarterly',
-  biannual:      'Bi-Annual',
-  annual:        'Annual',
-};
+export const FREQ_LABELS: Record<string, string> = FREQUENCY_LABELS;
 
-export const FREQ_OPTIONS = Object.entries(FREQ_LABELS).map(([value, label]) => ({value, label}));
+export const FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
 export const formApi = {
   async createAgreement(payload: FormPayload): Promise<{id: string} | null> {

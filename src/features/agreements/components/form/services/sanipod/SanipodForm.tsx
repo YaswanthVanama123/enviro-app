@@ -2,8 +2,9 @@ import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {
   ServiceCard, TotalsBlock, getFreqMultiplier,
-  FREQ_OPTIONS, DropdownRow, FormDivider, NumberRow, ToggleRow,
+  DropdownRow, FormDivider, NumberRow, ToggleRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -162,7 +163,7 @@ export function SanipodForm({data, onChange, contractMonths, onRemove, pricingCo
 
   return (
     <ServiceCard serviceId="sanipod" displayName="SaniPod" icon="cube-outline" iconColor="#7c3aed" iconBg="#ede9fe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
-      <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
+      <DropdownRow label="Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Pod Quantity" value={podQuantity} onChange={v => update({podQuantity: v})} decimals={0} />
       <NumberRow label="Weekly Rate / Unit" value={weeklyRatePerUnit} onChange={v => update({weeklyRatePerUnit: v})} prefix="$" decimals={2} />

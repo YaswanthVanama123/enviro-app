@@ -3,6 +3,7 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {
   ServiceCard, DollarRow, FormDivider, NumberRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -15,12 +16,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const FREQ_OPTS = [
-  {value: 'weekly',         label: 'Weekly'},
-  {value: 'biweekly',       label: 'Bi-weekly'},
-  {value: 'monthly',        label: 'Monthly'},
-  {value: 'everyFourWeeks', label: 'Every 4 Weeks'},
-];
+const FREQ_OPTS = FREQUENCY_OPTIONS.filter(o => ['weekly', 'biweekly', 'monthly', 'everyFourWeeks'].includes(o.value));
 
 const PRICING_TYPES = [
   {value: 'flat',   label: 'Flat Rate'},

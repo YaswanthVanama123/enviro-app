@@ -15,13 +15,12 @@ import {
   computeMicrofiberMopping,
   convertFrequencyMetadataToBillingConversions,
   mapMicrofiberFrequency,
-  microfiberFrequencyLabels,
-  microfiberFrequencyList,
   microfiberMoppingPricingConfig as cfg,
   type BackendMicrofiberConfig,
   type MicrofiberMoppingFormState,
   type MicrofiberFrequencyKey,
 } from './microfiberMoppingCalc';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -31,10 +30,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const MF_FREQ_OPTIONS = microfiberFrequencyList.map(value => ({
-  value,
-  label: microfiberFrequencyLabels[value],
-}));
+const MF_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
 // Editing any of these clears the manual total overrides (matches web).
 const RESET_OVERRIDE_FIELDS = [

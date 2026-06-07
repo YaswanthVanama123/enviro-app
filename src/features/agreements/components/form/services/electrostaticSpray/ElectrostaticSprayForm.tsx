@@ -13,12 +13,11 @@ import {FontSize} from '../../../../../../theme/typography';
 import {
   buildElectrostaticActiveConfig,
   computeElectrostaticSprayCalc,
-  electrostaticFrequencyLabels,
-  electrostaticFrequencyList,
   type BackendElectrostaticSprayConfig,
   type ElectrostaticSprayFormState,
   type ElectrostaticSprayFrequency,
 } from './electrostaticSprayCalc';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -28,10 +27,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const ES_FREQ_OPTIONS = electrostaticFrequencyList.map(value => ({
-  value,
-  label: electrostaticFrequencyLabels[value],
-}));
+const ES_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
 const PRICING_METHOD_OPTIONS = [
   {value: 'byRoom', label: 'By Room'},

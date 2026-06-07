@@ -1,8 +1,9 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet, TextInput} from 'react-native';
 import {
-  ServiceCard, DollarRow, FormDivider, NumberRow, DropdownRow, FREQ_OPTIONS,
+  ServiceCard, DollarRow, FormDivider, NumberRow, DropdownRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS, FREQUENCY_LABELS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -74,18 +75,6 @@ const BILLING_CONVERSIONS: Record<string, {annualMultiplier: number; monthlyMult
 
 const VISIT_BASED_FREQUENCIES = ['everyFourWeeks', 'bimonthly', 'quarterly', 'biannual', 'annual'];
 
-const FREQUENCY_LABELS: Record<string, string> = {
-  oneTime:       'One-Time',
-  weekly:        'Weekly',
-  biweekly:      'Bi-Weekly',
-  twicePerMonth: 'Twice Per Month',
-  monthly:       'Monthly',
-  everyFourWeeks:'Every 4 Weeks',
-  bimonthly:     'Bi-Monthly',
-  quarterly:     'Quarterly',
-  biannual:      'Bi-Annual',
-  annual:        'Annual',
-};
 
 function calcJanitorial(
   sqFt: number,
@@ -363,7 +352,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
       onNotesChange={v => update({notes: v})}>
 
       {}
-      <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
+      <DropdownRow label="Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
 
       {}

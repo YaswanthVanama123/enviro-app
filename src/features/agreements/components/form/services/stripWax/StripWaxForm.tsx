@@ -2,8 +2,9 @@ import React, {useCallback} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {
   ServiceCard, TotalsBlock, calcTotals,
-  FREQ_OPTIONS, DropdownRow, FormDivider, NumberRow, ToggleRow,
+  DropdownRow, FormDivider, NumberRow, ToggleRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -75,7 +76,7 @@ export function StripWaxForm({data, onChange, contractMonths, onRemove, pricingC
           ))}
         </View>
       </View>
-      <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
+      <DropdownRow label="Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <NumberRow label="Floor Area (sq ft)" value={floorAreaSqFt} onChange={v => update({floorAreaSqFt: v})} suffix="sq ft" decimals={0} />
       <NumberRow label="Rate per Sq Ft" value={ratePerSqFt} onChange={v => update({ratePerSqFt: v})} prefix="$" decimals={4} />

@@ -17,13 +17,12 @@ import {
   getEffectiveFrequencyKey,
   getFrequencyMultiplier,
   mapFrequency,
-  rpmFrequencyLabels,
-  rpmFrequencyList,
   type BackendRpmConfig,
   type RpmFrequencyKey,
   type RpmRateCategory,
   type RpmWindowsFormState,
 } from './rpmWindowsCalc';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -33,7 +32,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const RPM_FREQ_OPTIONS = rpmFrequencyList.map(value => ({value, label: rpmFrequencyLabels[value]}));
+const RPM_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 const RATE_CATEGORY_OPTIONS = [
   {value: 'redRate', label: 'Red Rate'},
   {value: 'greenRate', label: 'Green Rate'},

@@ -2,8 +2,9 @@ import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {
   ServiceCard, TotalsBlock, getFreqMultiplier,
-  FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
+  DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
 } from '../base/ServiceBase';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -232,7 +233,7 @@ export function SaniscrubForm({data, onChange, contractMonths, onRemove, pricing
       onRemove={onRemove}
       notes={data?.notes ?? ''}
       onNotesChange={v => update({notes: v})}>
-      <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
+      <DropdownRow label="Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
       <CalcRow label="Fixtures" qty={qty} onQtyChange={v => update({qty: v})} rate={rate} onRateChange={v => update({rate: v})} total={rawCost} />
       <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />

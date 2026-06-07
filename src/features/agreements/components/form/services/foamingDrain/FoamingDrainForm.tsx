@@ -15,12 +15,11 @@ import {Colors} from '../../../../../../theme/colors';
 import {
   buildFoamingDrainActiveConfig,
   computeFoamingDrainQuote,
-  foamingDrainFrequencyLabels,
-  foamingDrainFrequencyList,
   type BackendFoamingDrainConfig,
   type FoamingDrainFormState,
   type FoamingDrainFrequency,
 } from './foamingDrainCalc';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
   data: any;
@@ -30,10 +29,7 @@ interface Props {
   pricingConfig?: any;
 }
 
-const FD_FREQ_OPTIONS = foamingDrainFrequencyList.map(value => ({
-  value,
-  label: foamingDrainFrequencyLabels[value],
-}));
+const FD_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 const CONDITION_OPTIONS = [
   {value: 'normal', label: 'Normal'},
   {value: 'filthy', label: 'Filthy (3× install)'},
