@@ -1,12 +1,34 @@
 import React, {useCallback} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {
-  ServiceCard, DollarRow, FormDivider, NumberRow,
+  ServiceCard,
+  DropdownRow,
+  FormDivider,
+  NumberRow,
+  ToggleRow,
+  DollarRow,
+  CalcRow,
 } from '../base/ServiceBase';
-import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
+import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
+import {
+  computeRefreshPowerScrub,
+  createDefaultArea,
+  AREA_KEYS,
+  FALLBACK_DEFAULT_MIN,
+  FALLBACK_FOH_RATE,
+  FALLBACK_KITCHEN_LARGE,
+  FALLBACK_KITCHEN_SMALL_MED,
+  FALLBACK_PATIO_STANDALONE,
+  FALLBACK_PATIO_UPSELL,
+  type BackendRefreshPowerScrubConfig,
+  type RefreshAreaCalcState,
+  type RefreshAreaKey,
+  type RefreshPowerScrubFormState,
+  type RefreshPricingType,
+} from './refreshPowerScrubCalc';
 
 interface Props {
   data: any;
@@ -16,33 +38,104 @@ interface Props {
   pricingConfig?: any;
 }
 
-const FREQ_OPTS = FREQUENCY_OPTIONS.filter(o => ['weekly', 'biweekly', 'monthly', 'everyFourWeeks'].includes(o.value));
+const RPS_FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
-const PRICING_TYPES = [
-  {value: 'flat',   label: 'Flat Rate'},
-  {value: 'sqft',   label: 'Per Sq Ft'},
+const PRICING_TYPE_OPTIONS = [
+  {value: 'preset', label: 'Preset Package'},
+  {value: 'perWorker', label: 'Per Worker'},
+  {value: 'perHour', label: 'Per Hour'},
+  {value: 'squareFeet', label: 'Square Feet'},
+  {value: 'custom', label: 'Custom Amount'},
 ];
 
-interface AreaConfig {
-  enabled: boolean;
-  pricingType: 'flat' | 'sqft';
-  flatRate: number;
-  sqFt: number;
-  ratePerSqFt: number;
-  frequencyLabel: string;
+const VISIBLE_AREAS: {key: RefreshAreaKey; label: string}[] = [
+  {key: 'dumpster', label: 'Dumpster Area'},
+  {key: 'patio', label: 'Patio'},
+  {key: 'foh', label: 'Front of House (FOH)'},
+  {key: 'boh', label: 'Back of House (BOH)'},
+];
+
+function presetDefaultRate(area: RefreshAreaKey, cfg?: BackendRefreshPowerScrubConfig | null): number {
+  switch (area) {
+    case 'dumpster':
+      return cfg?.coreRates?.minimumVisit ?? FALLBACK_DEFAULT_MIN;
+    case 'patio':
+      return cfg?.areaSpecificPricing?.patio?.standalone ?? FALLBACK_PATIO_STANDALONE;
+    case 'foh':
+      return cfg?.areaSpecificPricing?.frontOfHouse ?? FALLBACK_FOH_RATE;
+    default:
+      return 0;
+  }
+}
+
+function readArea(data: any, key: RefreshAreaKey, cfg?: BackendRefreshPowerScrubConfig | null): RefreshAreaCalcState {
+  const base = createDefaultArea(cfg);
+  const stored = data?.[key];
+  return stored ? {...base, ...stored} : base;
+}
+
+function buildFormState(
+  data: any,
+  contractMonths: number,
+  cfg: BackendRefreshPowerScrubConfig | null,
+): RefreshPowerScrubFormState {
+  return {
+    hourlyRate: data?.hourlyRate ?? 0,
+    minimumVisit: data?.minimumVisit ?? (cfg?.coreRates?.minimumVisit ?? FALLBACK_DEFAULT_MIN),
+    applyMinimum: data?.applyMinimum !== false,
+    frequency: data?.frequency ?? 'monthly',
+    contractMonths,
+    dumpster: readArea(data, 'dumpster', cfg),
+    patio: readArea(data, 'patio', cfg),
+    walkway: readArea(data, 'walkway', cfg),
+    foh: readArea(data, 'foh', cfg),
+    boh: readArea(data, 'boh', cfg),
+    other: readArea(data, 'other', cfg),
+  };
+}
+
+function isOneTime(label?: string): boolean {
+  return (label ?? '').toLowerCase() === 'onetime';
 }
 
 interface AreaSectionProps {
+  area: RefreshAreaKey;
   label: string;
-  config: AreaConfig;
-  onChange: (c: AreaConfig) => void;
+  state: RefreshAreaCalcState;
+  cfg: BackendRefreshPowerScrubConfig | null;
+  globalFreq: string;
+  areaTotal: number;
+  areaMonthly: number;
+  areaContract: number;
   contractMonths: number;
-  contractTotal: number;
+  onPatch: (patch: Partial<RefreshAreaCalcState>) => void;
 }
 
-function AreaSection({label, config, onChange, contractMonths, contractTotal}: AreaSectionProps) {
-  const {enabled, pricingType, flatRate, sqFt, ratePerSqFt, frequencyLabel} = config;
-  const cost = pricingType === 'flat' ? flatRate : sqFt * ratePerSqFt;
+function AreaSection({
+  area,
+  label,
+  state,
+  cfg,
+  globalFreq,
+  areaTotal,
+  areaMonthly,
+  areaContract,
+  contractMonths,
+  onPatch,
+}: AreaSectionProps) {
+  const {enabled, pricingType} = state;
+  const effFreq = state.frequencyLabel || globalFreq;
+  const presetRate = state.presetRate ?? presetDefaultRate(area, cfg);
+  const smRate = state.smallMediumRate ?? (cfg?.areaSpecificPricing?.kitchen?.smallMedium ?? FALLBACK_KITCHEN_SMALL_MED);
+  const lgRate = state.largeRate ?? (cfg?.areaSpecificPricing?.kitchen?.large ?? FALLBACK_KITCHEN_LARGE);
+  const addonRate = state.patioAddonRate ?? (cfg?.areaSpecificPricing?.patio?.upsell ?? FALLBACK_PATIO_UPSELL);
+  const visitBased =
+    effFreq === 'oneTime' ||
+    effFreq === 'quarterly' ||
+    effFreq === 'biannual' ||
+    effFreq === 'annual' ||
+    effFreq === 'bimonthly' ||
+    effFreq === 'everyFourWeeks';
 
   return (
     <View style={styles.areaBlock}>
@@ -50,189 +143,247 @@ function AreaSection({label, config, onChange, contractMonths, contractTotal}: A
         <Text style={styles.areaTitle}>{label}</Text>
         <TouchableOpacity
           style={[styles.toggle, enabled && styles.toggleOn]}
-          onPress={() => onChange({...config, enabled: !enabled})}>
-          <Text style={[styles.toggleText, enabled && styles.toggleTextOn]}>
-            {enabled ? 'ON' : 'OFF'}
-          </Text>
+          onPress={() => onPatch({enabled: !enabled})}>
+          <Text style={[styles.toggleText, enabled && styles.toggleTextOn]}>{enabled ? 'ON' : 'OFF'}</Text>
         </TouchableOpacity>
       </View>
+
       {enabled && (
         <View style={styles.areaBody}>
-          <View style={styles.chips}>
-            {PRICING_TYPES.map(p => (
-              <TouchableOpacity
-                key={p.value}
-                style={[styles.chip, pricingType === p.value && styles.chipActive]}
-                onPress={() => onChange({...config, pricingType: p.value as any})}>
-                <Text style={[styles.chipText, pricingType === p.value && styles.chipTextActive]}>
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          {pricingType === 'flat' ? (
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Flat Rate</Text>
+          <DropdownRow
+            label="Pricing Type"
+            value={pricingType}
+            options={PRICING_TYPE_OPTIONS}
+            onChange={v => onPatch({pricingType: v as RefreshPricingType})}
+          />
+
+          {pricingType === 'preset' && area === 'boh' && (
+            <>
+              <CalcRow
+                label="Small/Medium Kitchen"
+                qty={state.smallMediumQuantity}
+                onQtyChange={v => onPatch({smallMediumQuantity: v})}
+                rate={smRate}
+                onRateChange={v => onPatch({smallMediumRate: v})}
+                total={
+                  state.smallMediumCustomAmount > 0
+                    ? state.smallMediumCustomAmount
+                    : (state.smallMediumQuantity || 0) * smRate
+                }
+              />
+              <CalcRow
+                label="Large Kitchen"
+                qty={state.largeQuantity}
+                onQtyChange={v => onPatch({largeQuantity: v})}
+                rate={lgRate}
+                onRateChange={v => onPatch({largeRate: v})}
+                total={
+                  state.largeCustomAmount > 0 ? state.largeCustomAmount : (state.largeQuantity || 0) * lgRate
+                }
+              />
+            </>
+          )}
+
+          {pricingType === 'preset' && area !== 'boh' && (
+            <>
+              <CalcRow
+                label="Package"
+                qty={state.presetQuantity || 1}
+                onQtyChange={v => onPatch({presetQuantity: v})}
+                rate={presetRate}
+                onRateChange={v => onPatch({presetRate: v})}
+                total={(state.presetQuantity && state.presetQuantity > 0 ? state.presetQuantity : 1) * presetRate}
+              />
+              {area === 'patio' && (
+                <>
+                  <ToggleRow
+                    label="Include Patio Add-on"
+                    value={state.includePatioAddon}
+                    onChange={v => onPatch({includePatioAddon: v})}
+                  />
+                  {state.includePatioAddon && (
+                    <NumberRow
+                      label="Patio Add-on Rate"
+                      value={addonRate}
+                      onChange={v => onPatch({patioAddonRate: v})}
+                      prefix="$"
+                      decimals={2}
+                    />
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {pricingType === 'perWorker' && (
+            <>
               <NumberRow
-                label=""
-                value={flatRate}
-                onChange={v => onChange({...config, flatRate: v})}
+                label="Workers"
+                value={state.workers}
+                onChange={v => onPatch({workers: v})}
+                suffix="workers"
+                decimals={0}
+              />
+              <NumberRow
+                label="Rate per Worker"
+                value={state.workerRate}
+                onChange={v => onPatch({workerRate: v})}
                 prefix="$"
                 decimals={2}
               />
-            </View>
-          ) : (
-            <>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Area (sq ft)</Text>
-                <NumberRow
-                  label=""
-                  value={sqFt}
-                  onChange={v => onChange({...config, sqFt: v})}
-                  suffix="sq ft"
-                  decimals={0}
-                />
-              </View>
-              <View style={styles.inputRow}>
-                <Text style={styles.inputLabel}>Rate / sq ft</Text>
-                <NumberRow
-                  label=""
-                  value={ratePerSqFt}
-                  onChange={v => onChange({...config, ratePerSqFt: v})}
-                  prefix="$"
-                  decimals={4}
-                />
-              </View>
             </>
           )}
-          <View style={styles.freqRow}>
-            {FREQ_OPTS.map(f => (
-              <TouchableOpacity
-                key={f.value}
-                style={[styles.chip, frequencyLabel === f.value && styles.chipActive]}
-                onPress={() => onChange({...config, frequencyLabel: f.value})}>
-                <Text style={[styles.chipText, frequencyLabel === f.value && styles.chipTextActive]}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <DollarRow label="Area Cost" value={cost} />
-          <View style={styles.contractRow}>
-            <Text style={styles.contractLabel}>Contract</Text>
-            <View style={styles.contractMonthsBadge}>
-              <Text style={styles.contractMonthsText}>{contractMonths} mo</Text>
-            </View>
-            <Text style={styles.contractTotal}>
-              ${contractTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-            </Text>
-          </View>
+
+          {pricingType === 'perHour' && (
+            <>
+              <NumberRow
+                label="Hours"
+                value={state.hours}
+                onChange={v => onPatch({hours: v})}
+                suffix="hrs"
+                decimals={2}
+              />
+              <NumberRow
+                label="Rate per Hour"
+                value={state.hourlyRate}
+                onChange={v => onPatch({hourlyRate: v})}
+                prefix="$"
+                decimals={2}
+              />
+            </>
+          )}
+
+          {pricingType === 'squareFeet' && (
+            <>
+              <NumberRow
+                label="Fixed Fee"
+                value={state.sqFtFixedFee}
+                onChange={v => onPatch({sqFtFixedFee: v})}
+                prefix="$"
+                decimals={2}
+              />
+              <CalcRow
+                label="Inside (sq ft)"
+                qty={state.insideSqFt}
+                onQtyChange={v => onPatch({insideSqFt: v})}
+                rate={state.insideRate}
+                onRateChange={v => onPatch({insideRate: v})}
+                total={(state.insideSqFt || 0) * state.insideRate}
+              />
+              <CalcRow
+                label="Outside (sq ft)"
+                qty={state.outsideSqFt}
+                onQtyChange={v => onPatch({outsideSqFt: v})}
+                rate={state.outsideRate}
+                onRateChange={v => onPatch({outsideRate: v})}
+                total={(state.outsideSqFt || 0) * state.outsideRate}
+              />
+            </>
+          )}
+
+          {pricingType === 'custom' && (
+            <NumberRow
+              label="Custom Amount"
+              value={state.customAmount}
+              onChange={v => onPatch({customAmount: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+
+          <DropdownRow
+            label="Frequency"
+            value={effFreq}
+            options={RPS_FREQ_OPTIONS}
+            onChange={v => onPatch({frequencyLabel: v})}
+          />
+
+          <DollarRow label="Area Total (per visit)" value={areaTotal} />
+          {!visitBased && <DollarRow label="Monthly Recurring" value={areaMonthly} />}
+          {!isOneTime(effFreq) && (
+            <DollarRow label={`Contract (${contractMonths} mo)`} value={areaContract} />
+          )}
         </View>
       )}
     </View>
   );
 }
 
-const DEFAULT_AREA: AreaConfig = {
-  enabled: false,
-  pricingType: 'flat',
-  flatRate: 0,
-  sqFt: 0,
-  ratePerSqFt: 0.10,
-  frequencyLabel: 'monthly',
-};
-
-function calcAreaCost(a: AreaConfig): number {
-  return a.enabled ? (a.pricingType === 'flat' ? a.flatRate : a.sqFt * a.ratePerSqFt) : 0;
-}
-
-function calcAreaContractTotal(a: AreaConfig, contractMonths: number): number {
-  if (!a.enabled) {return 0;}
-  const cost = calcAreaCost(a);
-  const freq = a.frequencyLabel;
-  let visits: number;
-  if (freq === 'weekly') {
-    visits = contractMonths * 4.33;
-  } else if (freq === 'biweekly') {
-    visits = contractMonths * 2.165;
-  } else if (freq === 'everyFourWeeks') {
-    visits = Math.round(contractMonths * 1.0833);
-  } else {
-    
-    visits = contractMonths;
-  }
-  return cost * visits;
-}
-
-function calcBaselineAreaCost(a: AreaConfig, cfg: any): number {
-  if (!a.enabled) return 0;
-  if (a.pricingType === 'flat') {
-    
-    return cfg?.defaultFlatRate ?? a.flatRate;
-  }
-  
-  const baselineRate = cfg?.sqFtInsideRate ?? 0.10;
-  return a.sqFt * baselineRate;
-}
-
-function calcBaselineAreaContractTotal(a: AreaConfig, contractMonths: number, cfg: any): number {
-  if (!a.enabled) return 0;
-  const cost = calcBaselineAreaCost(a, cfg);
-  const freq = a.frequencyLabel;
-  let visits: number;
-  if (freq === 'weekly') {
-    visits = contractMonths * 4.33;
-  } else if (freq === 'biweekly') {
-    visits = contractMonths * 2.165;
-  } else if (freq === 'everyFourWeeks') {
-    visits = Math.round(contractMonths * 1.0833);
-  } else {
-    visits = contractMonths;
-  }
-  return cost * visits;
-}
-
 export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
-  const dumpster = data?.dumpster ?? DEFAULT_AREA;
-  const patio    = data?.patio    ?? DEFAULT_AREA;
-  const foh      = data?.foh      ?? DEFAULT_AREA;
-  const boh      = data?.boh      ?? DEFAULT_AREA;
+  const cfg: BackendRefreshPowerScrubConfig | null =
+    (pricingConfig?.config as BackendRefreshPowerScrubConfig) ?? null;
 
-  const total = calcAreaCost(dumpster) + calcAreaCost(patio) + calcAreaCost(foh) + calcAreaCost(boh);
+  const form = buildFormState(data, contractMonths, cfg);
+  const calc = computeRefreshPowerScrub(form, cfg, 0);
 
-  const update = useCallback((fields: Record<string, any>) => {
-    const nd = fields.dumpster ?? dumpster;
-    const np = fields.patio    ?? patio;
-    const nf = fields.foh      ?? foh;
-    const nb = fields.boh      ?? boh;
-    const newTotal = calcAreaCost(nd) + calcAreaCost(np) + calcAreaCost(nf) + calcAreaCost(nb);
-    const newContractTotal =
-      calcAreaContractTotal(nd, contractMonths) +
-      calcAreaContractTotal(np, contractMonths) +
-      calcAreaContractTotal(nf, contractMonths) +
-      calcAreaContractTotal(nb, contractMonths);
-    const cfg = pricingConfig?.config ?? {};
-    const baselineContractTotal =
-      calcBaselineAreaContractTotal(nd, contractMonths, cfg) +
-      calcBaselineAreaContractTotal(np, contractMonths, cfg) +
-      calcBaselineAreaContractTotal(nf, contractMonths, cfg) +
-      calcBaselineAreaContractTotal(nb, contractMonths, cfg);
-    onChange({
-      serviceId: 'refreshPowerScrub',
-      displayName: 'Refresh Power Scrub',
-      isActive: true,
-      contractMonths,
-      ...data,
-      ...fields,
-      dumpster: nd,
-      patio:    np,
-      foh:      nf,
-      boh:      nb,
-      perVisit: newTotal,
-      contractTotal: newContractTotal,
-      originalContractTotal: baselineContractTotal,
-    });
-  }, [data, dumpster, patio, foh, boh, contractMonths, pricingConfig, onChange]);
+  const oneTimeForArea = (key: RefreshAreaKey) => isOneTime(form[key].frequencyLabel || form.frequency);
+
+  const perVisitTotal = AREA_KEYS.reduce((s, a) => s + calc.areaTotals[a], 0);
+  const contractTotal = AREA_KEYS.reduce(
+    (s, a) => s + (oneTimeForArea(a) ? calc.areaTotals[a] : calc.areaContractTotals[a]),
+    0,
+  );
+  const originalContractTotal = AREA_KEYS.reduce(
+    (s, a) => s + (oneTimeForArea(a) ? calc.baselineAreaTotals[a] : calc.baselineAreaContractTotals[a]),
+    0,
+  );
+
+  const applyMinimum = form.applyMinimum !== false;
+  const hasService = AREA_KEYS.some(a => form[a].enabled && calc.areaTotals[a] > 0);
+  const isGreenline = hasService && contractTotal > originalContractTotal * 1.3;
+
+  const pushChange = useCallback(
+    (nextForm: RefreshPowerScrubFormState, extra: Record<string, any>) => {
+      const c = computeRefreshPowerScrub(nextForm, cfg, 0);
+      const oneTimeArea = (key: RefreshAreaKey) => isOneTime(nextForm[key].frequencyLabel || nextForm.frequency);
+      const pv = AREA_KEYS.reduce((s, a) => s + c.areaTotals[a], 0);
+      const ct = AREA_KEYS.reduce(
+        (s, a) => s + (oneTimeArea(a) ? c.areaTotals[a] : c.areaContractTotals[a]),
+        0,
+      );
+      const oct = AREA_KEYS.reduce(
+        (s, a) => s + (oneTimeArea(a) ? c.baselineAreaTotals[a] : c.baselineAreaContractTotals[a]),
+        0,
+      );
+      onChange({
+        serviceId: 'refreshPowerScrub',
+        displayName: 'Refresh Power Scrub',
+        ...data,
+        ...extra,
+        hourlyRate: nextForm.hourlyRate,
+        minimumVisit: nextForm.minimumVisit,
+        applyMinimum: nextForm.applyMinimum,
+        frequency: nextForm.frequency,
+        contractMonths,
+        dumpster: nextForm.dumpster,
+        patio: nextForm.patio,
+        walkway: nextForm.walkway,
+        foh: nextForm.foh,
+        boh: nextForm.boh,
+        other: nextForm.other,
+        isActive: AREA_KEYS.some(a => nextForm[a].enabled && c.areaTotals[a] > 0),
+        perVisit: pv,
+        monthlyRecurring: c.monthlyRecurring,
+        contractTotal: ct,
+        originalContractTotal: oct,
+      });
+    },
+    [data, cfg, contractMonths, onChange],
+  );
+
+  const updateForm = useCallback(
+    (patch: Partial<RefreshPowerScrubFormState>) => {
+      pushChange({...form, ...patch}, {});
+    },
+    [form, pushChange],
+  );
+
+  const updateArea = useCallback(
+    (key: RefreshAreaKey, patch: Partial<RefreshAreaCalcState>) => {
+      pushChange({...form, [key]: {...form[key], ...patch}}, {});
+    },
+    [form, pushChange],
+  );
 
   return (
     <ServiceCard
@@ -243,40 +394,52 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove,
       iconBg="#cffafe"
       onRemove={onRemove}
       notes={data?.notes ?? ''}
-      onNotesChange={v => update({notes: v})}>
-      <AreaSection
-        label="Dumpster Area"
-        config={dumpster}
-        onChange={c => update({dumpster: c})}
-        contractMonths={contractMonths}
-        contractTotal={calcAreaContractTotal(dumpster, contractMonths)}
+      onNotesChange={v => pushChange(form, {notes: v})}>
+      <DropdownRow
+        label="Default Frequency"
+        value={form.frequency}
+        options={RPS_FREQ_OPTIONS}
+        onChange={v => updateForm({frequency: v})}
       />
-      <FormDivider />
-      <AreaSection
-        label="Patio"
-        config={patio}
-        onChange={c => update({patio: c})}
-        contractMonths={contractMonths}
-        contractTotal={calcAreaContractTotal(patio, contractMonths)}
+      <ToggleRow
+        label="Apply Minimum"
+        value={applyMinimum}
+        onChange={v => updateForm({applyMinimum: v})}
+        subtitle={`Minimum $${form.minimumVisit.toFixed(2)} per visit`}
       />
-      <FormDivider />
-      <AreaSection
-        label="Front of House (FOH)"
-        config={foh}
-        onChange={c => update({foh: c})}
-        contractMonths={contractMonths}
-        contractTotal={calcAreaContractTotal(foh, contractMonths)}
-      />
-      <FormDivider />
-      <AreaSection
-        label="Back of House (BOH)"
-        config={boh}
-        onChange={c => update({boh: c})}
-        contractMonths={contractMonths}
-        contractTotal={calcAreaContractTotal(boh, contractMonths)}
-      />
-      <FormDivider />
-      <DollarRow label="Total per Visit" value={total} highlight />
+
+      {VISIBLE_AREAS.map(({key, label}, idx) => (
+        <View key={key}>
+          {idx > 0 && <FormDivider />}
+          <AreaSection
+            area={key}
+            label={label}
+            state={form[key]}
+            cfg={cfg}
+            globalFreq={form.frequency}
+            areaTotal={calc.areaTotals[key]}
+            areaMonthly={calc.areaMonthlyTotals[key]}
+            areaContract={calc.areaContractTotals[key]}
+            contractMonths={contractMonths}
+            onPatch={patch => updateArea(key, patch)}
+          />
+        </View>
+      ))}
+
+      {hasService && (
+        <>
+          <FormDivider />
+          <DollarRow label="Total per Visit" value={perVisitTotal} />
+
+          <View style={styles.tierRow}>
+            <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
+              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+            </Text>
+          </View>
+
+          <DollarRow label={`Contract Total (${contractMonths} mo)`} value={contractTotal} highlight />
+        </>
+      )}
     </ServiceCard>
   );
 }
@@ -317,79 +480,17 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   areaBody: {
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  chipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  chipText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  chipTextActive: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  freqRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
     marginTop: Spacing.xs,
   },
-  inputRow: {
-    gap: 2,
+  tierRow: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    alignItems: 'flex-end',
   },
-  inputLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    paddingLeft: 2,
-  },
-  contractRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  contractLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    flex: 1,
-  },
-  contractMonthsBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  contractMonthsText: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  contractTotal: {
+  tierText: {
     fontSize: FontSize.sm,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
+  tierGreen: {color: '#16a34a'},
+  tierRed: {color: '#dc2626'},
 });
