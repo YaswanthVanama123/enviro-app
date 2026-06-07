@@ -232,7 +232,12 @@ export function CalcRow({label, qty, onQtyChange, rate, onRateChange, total, rat
 }
 
 function formatDollar(value: number): string {
-  return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const n = Number.isFinite(value) ? value : 0;
+  const sign = n < 0 ? '-' : '';
+  const fixed = Math.abs(n).toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${sign}$${grouped}.${decPart}`;
 }
 
 export function DollarRow({label, value, highlight}: {label: string; value: number; highlight?: boolean}) {

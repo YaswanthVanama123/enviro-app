@@ -99,7 +99,7 @@ const INITIAL_STATE: FormState = {
   smallProducts: [],
   bigProducts: [],
   dispensers: [],
-  contractMonths: 12,
+  contractMonths: 36,
   startDate: '',
   tripCharge: 0,
   tripChargeFrequency: 1,
