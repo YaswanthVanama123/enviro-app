@@ -6,7 +6,6 @@ import {
   FormDivider,
   NumberRow,
   ToggleRow,
-  DollarRow,
 } from './ServiceBase';
 import {Spacing} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
@@ -33,6 +32,15 @@ const CARPET_FREQ_OPTIONS = carpetFrequencyList.map(value => ({
   label: carpetFrequencyLabels[value],
 }));
 
+// Editing any of these base inputs clears the manual total overrides (matches web).
+const RESET_OVERRIDE_FIELDS = [
+  'areaSqFt',
+  'useExactSqft',
+  'frequency',
+  'includeInstall',
+  'isDirtyInstall',
+];
+
 export function CarpetForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
   const backendConfig: BackendCarpetConfig | null =
     (pricingConfig?.config as BackendCarpetConfig) ?? null;
@@ -44,13 +52,13 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
   const additionalUnitRate = data?.additionalUnitRate ?? baseConfig.additionalUnitRate;
   const perVisitMinimum = data?.perVisitMinimum ?? baseConfig.perVisitMinimum;
   const applyMinimum = data?.applyMinimum !== false;
-  const useExactSqft = data?.useExactSqft === true;
+  const useExactSqft = data?.useExactSqft !== false;
   const includeInstall = data?.includeInstall === true;
   const isDirtyInstall = data?.isDirtyInstall !== false;
   const installMultiplierDirty = data?.installMultiplierDirty ?? baseConfig.installMultipliers.dirty;
   const installMultiplierClean = data?.installMultiplierClean ?? baseConfig.installMultipliers.clean;
 
-  const buildFormState = (overrides: Record<string, any> = {}): CarpetFormState => ({
+  const formState: CarpetFormState = {
     frequency: freq,
     areaSqFt,
     useExactSqft,
@@ -63,33 +71,51 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
     perVisitMinimum,
     installMultiplierDirty,
     installMultiplierClean,
-    ...overrides,
-  });
+    customPerVisitPrice: data?.customPerVisitPrice,
+    customInstallationFee: data?.customInstallationFee,
+    customMonthlyRecurring: data?.customMonthlyRecurring,
+    customFirstMonthPrice: data?.customFirstMonthPrice,
+    customContractTotal: data?.customContractTotal,
+  };
 
-  const calc = computeCarpetCalc(buildFormState(), baseConfig, backendConfig, 0);
+  const calc = computeCarpetCalc(formState, baseConfig, backendConfig, 0);
 
   const update = useCallback(
     (fields: Record<string, any>) => {
+      const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
+      const merged = {...data, ...fields};
+      if (clearOverrides) {
+        merged.customPerVisitPrice = undefined;
+        merged.customInstallationFee = undefined;
+        merged.customMonthlyRecurring = undefined;
+        merged.customFirstMonthPrice = undefined;
+        merged.customContractTotal = undefined;
+      }
+
       const next: CarpetFormState = {
-        frequency: clampCarpetFrequency(fields.frequency ?? freq),
-        areaSqFt: fields.areaSqFt ?? areaSqFt,
-        useExactSqft: fields.useExactSqft ?? useExactSqft,
+        frequency: clampCarpetFrequency(merged.frequency ?? 'monthly'),
+        areaSqFt: merged.areaSqFt ?? 0,
+        useExactSqft: merged.useExactSqft !== false,
         contractMonths,
-        includeInstall: fields.includeInstall ?? includeInstall,
-        isDirtyInstall: fields.isDirtyInstall ?? isDirtyInstall,
-        applyMinimum:
-          fields.applyMinimum !== undefined ? fields.applyMinimum : applyMinimum,
-        firstUnitRate: fields.firstUnitRate ?? firstUnitRate,
-        additionalUnitRate: fields.additionalUnitRate ?? additionalUnitRate,
-        perVisitMinimum: fields.perVisitMinimum ?? perVisitMinimum,
-        installMultiplierDirty: fields.installMultiplierDirty ?? installMultiplierDirty,
-        installMultiplierClean: fields.installMultiplierClean ?? installMultiplierClean,
+        includeInstall: merged.includeInstall === true,
+        isDirtyInstall: merged.isDirtyInstall !== false,
+        applyMinimum: merged.applyMinimum !== false,
+        firstUnitRate: merged.firstUnitRate ?? baseConfig.firstUnitRate,
+        additionalUnitRate: merged.additionalUnitRate ?? baseConfig.additionalUnitRate,
+        perVisitMinimum: merged.perVisitMinimum ?? baseConfig.perVisitMinimum,
+        installMultiplierDirty: merged.installMultiplierDirty ?? baseConfig.installMultipliers.dirty,
+        installMultiplierClean: merged.installMultiplierClean ?? baseConfig.installMultipliers.clean,
+        customPerVisitPrice: merged.customPerVisitPrice,
+        customInstallationFee: merged.customInstallationFee,
+        customMonthlyRecurring: merged.customMonthlyRecurring,
+        customFirstMonthPrice: merged.customFirstMonthPrice,
+        customContractTotal: merged.customContractTotal,
       };
       const nextCalc = computeCarpetCalc(next, baseConfig, backendConfig, 0);
       onChange({
+        ...merged,
         serviceId: 'carpetclean',
         displayName: 'Carpet Cleaning',
-        ...data,
         ...next,
         isActive: next.areaSqFt > 0,
         perVisit: nextCalc.perVisitCharge,
@@ -101,32 +127,14 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         originalContractTotal: nextCalc.originalContractTotal,
       });
     },
-    [
-      data,
-      freq,
-      areaSqFt,
-      useExactSqft,
-      includeInstall,
-      isDirtyInstall,
-      applyMinimum,
-      firstUnitRate,
-      additionalUnitRate,
-      perVisitMinimum,
-      installMultiplierDirty,
-      installMultiplierClean,
-      contractMonths,
-      baseConfig,
-      backendConfig,
-      onChange,
-    ],
+    [data, contractMonths, baseConfig, backendConfig, onChange],
   );
 
   const isOneTime = freq === 'oneTime';
   const isVisitBased = calc.isVisitBasedFrequency;
   const showMonthlyRecurring =
     freq === 'weekly' || freq === 'biweekly' || freq === 'monthly' || freq === 'twicePerMonth';
-  const isGreenline =
-    areaSqFt > 0 && calc.contractTotal > calc.originalContractTotal * 1.3;
+  const isGreenline = areaSqFt > 0 && calc.contractTotal > calc.originalContractTotal * 1.3;
 
   return (
     <ServiceCard
@@ -144,7 +152,6 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         options={CARPET_FREQ_OPTIONS}
         onChange={v => update({frequency: v})}
       />
-      <FormDivider />
 
       <NumberRow
         label={`First ${baseConfig.unitSqFt} sq ft Rate`}
@@ -154,7 +161,7 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         decimals={2}
       />
       <NumberRow
-        label="Additional Rate (per block)"
+        label="Additional Rate"
         value={additionalUnitRate}
         onChange={v => update({additionalUnitRate: v})}
         prefix="$"
@@ -171,10 +178,8 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         label="Apply Minimum"
         value={applyMinimum}
         onChange={v => update({applyMinimum: v})}
-        subtitle="Use minimum charge when calculated cost is lower"
       />
 
-      <FormDivider />
       <NumberRow
         label="Carpet Area"
         value={areaSqFt}
@@ -182,6 +187,7 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         suffix="sq ft"
         decimals={0}
       />
+
       <ToggleRow
         label="Exact sq ft calculation"
         value={useExactSqft}
@@ -193,7 +199,6 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
         }
       />
 
-      <FormDivider />
       <ToggleRow
         label="Include Install"
         value={includeInstall}
@@ -202,10 +207,9 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
       {includeInstall && (
         <>
           <ToggleRow
-            label="Dirty Install"
+            label="Dirty"
             value={isDirtyInstall}
             onChange={v => update({isDirtyInstall: v})}
-            subtitle={isDirtyInstall ? 'Dirty multiplier' : 'Clean multiplier'}
           />
           <NumberRow
             label="Install Multiplier"
@@ -217,76 +221,108 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
                   : {installMultiplierClean: v},
               )
             }
-            suffix="× base"
+            suffix="× monthly base"
             decimals={2}
           />
         </>
       )}
 
-      <View style={styles.totals}>
-        <View style={styles.totalsHeader}>
-          <Text style={styles.totalsHeaderText}>Pricing Summary</Text>
-        </View>
-
-        <DollarRow
-          label={isVisitBased ? 'Recurring Visit Total' : 'Per Visit Total'}
-          value={calc.perVisitCharge}
+      {includeInstall && calc.installOneTime > 0 && (
+        <NumberRow
+          label="Installation Total"
+          value={
+            data?.customInstallationFee !== undefined
+              ? data.customInstallationFee
+              : calc.installOneTime
+          }
+          onChange={v => update({customInstallationFee: v})}
+          prefix="$"
+          decimals={2}
         />
+      )}
 
-        {includeInstall && calc.installOneTime > 0 && (
-          <DollarRow label="Installation Total" value={calc.installOneTime} />
-        )}
+      <FormDivider />
 
-        {isOneTime ? (
-          <DollarRow label="Total Price" value={calc.contractTotal} highlight />
-        ) : (
-          <>
-            <DollarRow
-              label={isVisitBased ? 'First Visit Total' : 'First Month Total'}
-              value={calc.firstMonthTotal}
-            />
-            {showMonthlyRecurring && (
-              <DollarRow label="Monthly Recurring" value={calc.monthlyTotal} />
-            )}
-            <FormDivider />
-            <DollarRow
-              label={`Contract Total (${contractMonths} mo)`}
-              value={calc.contractTotal}
-              highlight
-            />
-          </>
-        )}
+      <NumberRow
+        label={isVisitBased ? 'Recurring Visit Total' : 'Per Visit Total'}
+        value={
+          data?.customPerVisitPrice !== undefined
+            ? data.customPerVisitPrice
+            : calc.perVisitCharge
+        }
+        onChange={v => update({customPerVisitPrice: v})}
+        prefix="$"
+        decimals={2}
+      />
 
-        {areaSqFt > 0 && (
-          <View style={styles.tierRow}>
-            <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
-              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
-            </Text>
-          </View>
-        )}
-      </View>
+      {areaSqFt > 0 && (
+        <View style={styles.tierRow}>
+          <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
+            {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+          </Text>
+        </View>
+      )}
+
+      {isOneTime && (
+        <NumberRow
+          label="Total Price"
+          value={
+            data?.customFirstMonthPrice !== undefined
+              ? data.customFirstMonthPrice
+              : calc.contractTotal
+          }
+          onChange={v => update({customFirstMonthPrice: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
+
+      {!isOneTime && (
+        <NumberRow
+          label={isVisitBased ? 'First Visit Total' : 'First Month Total'}
+          value={
+            data?.customFirstMonthPrice !== undefined
+              ? data.customFirstMonthPrice
+              : calc.firstMonthTotal
+          }
+          onChange={v => update({customFirstMonthPrice: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
+
+      {showMonthlyRecurring && (
+        <NumberRow
+          label="Recurring Month Total"
+          value={
+            data?.customMonthlyRecurring !== undefined
+              ? data.customMonthlyRecurring
+              : calc.monthlyTotal
+          }
+          onChange={v => update({customMonthlyRecurring: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
+
+      {!isOneTime && (
+        <NumberRow
+          label={`Contract Total (${contractMonths} mo)`}
+          value={
+            data?.customContractTotal !== undefined
+              ? data.customContractTotal
+              : calc.contractTotal
+          }
+          onChange={v => update({customContractTotal: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
     </ServiceCard>
   );
 }
 
 const styles = StyleSheet.create({
-  totals: {
-    marginTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  totalsHeader: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: '#f8fafc',
-  },
-  totalsHeaderText: {
-    fontSize: FontSize.xs,
-    fontWeight: '700',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
   tierRow: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
