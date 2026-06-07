@@ -57,32 +57,6 @@ export const microfiberMoppingPricingConfig = {
   allowedFrequencies: ['weekly', 'biweekly', 'monthly', 'everyFourWeeks'] as MicrofiberFrequencyKey[],
 };
 
-export const microfiberFrequencyLabels: Record<MicrofiberFrequencyKey, string> = {
-  oneTime: 'One Time',
-  weekly: 'Weekly',
-  biweekly: 'Bi-weekly',
-  twicePerMonth: '2× / Month',
-  monthly: 'Monthly',
-  everyFourWeeks: 'Every 4 Weeks',
-  bimonthly: 'Every 2 Months',
-  quarterly: 'Quarterly',
-  biannual: 'Bi-Annual',
-  annual: 'Annual',
-};
-
-export const microfiberFrequencyList: MicrofiberFrequencyKey[] = [
-  'oneTime',
-  'weekly',
-  'biweekly',
-  'twicePerMonth',
-  'monthly',
-  'everyFourWeeks',
-  'bimonthly',
-  'quarterly',
-  'biannual',
-  'annual',
-];
-
 export interface BackendMicrofiberConfig {
   includedBathroomRate?: number;
   hugeBathroomPricing?: {enabled: boolean; ratePerSqFt: number; sqFtUnit: number; description: string};

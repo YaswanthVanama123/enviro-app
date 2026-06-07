@@ -58,21 +58,6 @@ export const FOAMING_DRAIN_CONFIG = {
   ] as FoamingDrainFrequency[],
 };
 
-export const foamingDrainFrequencyLabels: Record<FoamingDrainFrequency, string> = {
-  oneTime: 'One Time',
-  weekly: 'Weekly',
-  biweekly: 'Bi-weekly',
-  twicePerMonth: '2× / Month',
-  monthly: 'Monthly',
-  everyFourWeeks: 'Every 4 Weeks',
-  bimonthly: 'Bi-monthly',
-  quarterly: 'Quarterly',
-  biannual: 'Bi-annual',
-  annual: 'Annual',
-};
-
-export const foamingDrainFrequencyList: FoamingDrainFrequency[] = FOAMING_DRAIN_CONFIG.allowedFrequencies;
-
 export interface BackendFoamingDrainConfig {
   standardPricing?: {standardDrainRate: number; alternateBaseCharge: number; alternateExtraPerDrain: number};
   volumePricing?: {minimumDrains: number; weeklyRatePerDrain: number; bimonthlyRatePerDrain: number};

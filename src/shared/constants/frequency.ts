@@ -56,3 +56,38 @@ export const FREQUENCY_MONTHLY_MULTIPLIER: Record<FrequencyKey, number> = {
   biannual: 0.17,
   annual: 1 / 12,
 };
+
+// Visits per year for each frequency (universal across services).
+export const FREQUENCY_VISITS_PER_YEAR: Record<FrequencyKey, number> = {
+  oneTime: 1,
+  weekly: 52,
+  biweekly: 26,
+  twicePerMonth: 24,
+  monthly: 12,
+  everyFourWeeks: 13,
+  bimonthly: 6,
+  quarterly: 4,
+  biannual: 2,
+  annual: 1,
+};
+
+// Frequencies billed as a monthly recurring charge vs. per-visit.
+export const MONTHLY_AND_BELOW: FrequencyKey[] = [
+  'weekly',
+  'biweekly',
+  'twicePerMonth',
+  'monthly',
+  'everyFourWeeks',
+];
+export const ABOVE_MONTHLY: FrequencyKey[] = ['bimonthly', 'quarterly', 'biannual', 'annual'];
+
+export function isMonthlyModeFrequency(key: FrequencyKey): boolean {
+  return MONTHLY_AND_BELOW.includes(key);
+}
+
+export function visitsInContract(key: FrequencyKey, contractMonths: number): number {
+  if (key === 'oneTime') {
+    return 1;
+  }
+  return Math.round((FREQUENCY_VISITS_PER_YEAR[key] * contractMonths) / 12);
+}

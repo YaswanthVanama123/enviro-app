@@ -1,6 +1,12 @@
 // Refresh Power Scrub calculation — ported 1:1 from the web app
 // (enviromaster-webapp/src/features/services/kinds/refreshPowerScrub/compute.ts)
 
+import {
+  type FrequencyKey,
+  FREQUENCY_KEYS,
+  FREQUENCY_MONTHLY_MULTIPLIER,
+} from '../../../../../../shared/constants/frequency';
+
 export const FALLBACK_DEFAULT_HOURLY = 200;
 export const FALLBACK_DEFAULT_MIN = 475;
 export const FALLBACK_DEFAULT_TRIP = 75;
@@ -82,6 +88,20 @@ export interface BackendRefreshPowerScrubConfig {
 
 export const AREA_KEYS: RefreshAreaKey[] = ['dumpster', 'patio', 'walkway', 'foh', 'boh', 'other'];
 
+// Web refresh power scrub (compute.ts) deviates from the shared table for
+// one-time (0) and uses 3-decimal roundings for quarterly/bi-annual/annual.
+const REFRESH_MONTHLY_MULTIPLIER: Record<FrequencyKey, number> = {
+  ...FREQUENCY_MONTHLY_MULTIPLIER,
+  oneTime: 0,
+  quarterly: 0.333,
+  biannual: 0.167,
+  annual: 0.083,
+};
+// Keyed by the normalized (lowercased, separators stripped) frequency string.
+const REFRESH_MULTIPLIER_BY_NORMALIZED: Record<string, number> = Object.fromEntries(
+  FREQUENCY_KEYS.map(k => [k.toLowerCase(), REFRESH_MONTHLY_MULTIPLIER[k]]),
+);
+
 export function createDefaultArea(backendConfig?: BackendRefreshPowerScrubConfig | null): RefreshAreaCalcState {
   return {
     enabled: false,
@@ -127,18 +147,6 @@ export function getBillingMultiplier(
   if (normalizedFrequency === 'every4weeks') {
     normalizedFrequency = 'everyfourweeks';
   }
-  const defaultMultipliers: Record<string, number> = {
-    onetime: 0,
-    weekly: 4.33,
-    biweekly: 2.165,
-    twicepermonth: 2.0,
-    monthly: 1.0,
-    everyfourweeks: 1.0833,
-    bimonthly: 0.5,
-    quarterly: 0.333,
-    biannual: 0.167,
-    annual: 0.083,
-  };
   if (backendConfig?.billingConversions) {
     const conversions = backendConfig.billingConversions as any;
     const c = conversions[normalizedFrequency];
@@ -146,7 +154,7 @@ export function getBillingMultiplier(
       return c.monthlyMultiplier;
     }
   }
-  return defaultMultipliers[normalizedFrequency] ?? 1.0;
+  return REFRESH_MULTIPLIER_BY_NORMALIZED[normalizedFrequency] ?? 1.0;
 }
 
 function calcPerWorker(

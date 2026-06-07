@@ -37,32 +37,6 @@ export const electrostaticSprayPricingConfig = {
   defaultFrequency: 'weekly' as ElectrostaticSprayFrequency,
 };
 
-export const electrostaticFrequencyLabels: Record<ElectrostaticSprayFrequency, string> = {
-  oneTime: 'One Time',
-  weekly: 'Weekly',
-  biweekly: 'Bi-Weekly (every 2 weeks)',
-  twicePerMonth: '2× / Month',
-  monthly: 'Monthly',
-  everyFourWeeks: 'Every 4 Weeks',
-  bimonthly: 'Bi-Monthly (every 2 months)',
-  quarterly: 'Quarterly',
-  biannual: 'Bi-Annual',
-  annual: 'Annual',
-};
-
-export const electrostaticFrequencyList: ElectrostaticSprayFrequency[] = [
-  'oneTime',
-  'weekly',
-  'biweekly',
-  'twicePerMonth',
-  'monthly',
-  'everyFourWeeks',
-  'bimonthly',
-  'quarterly',
-  'biannual',
-  'annual',
-];
-
 export interface BackendElectrostaticSprayConfig {
   standardSprayPricing?: {
     sprayRatePerRoom: number;

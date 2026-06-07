@@ -23,19 +23,6 @@ export const carpetFrequencyList: CarpetFrequency[] = [
   'annual',
 ];
 
-export const carpetFrequencyLabels: Record<CarpetFrequency, string> = {
-  oneTime: 'One Time',
-  weekly: 'Weekly',
-  biweekly: 'Bi-Weekly',
-  twicePerMonth: '2× / Month',
-  monthly: 'Monthly',
-  everyFourWeeks: 'Every 4 Weeks',
-  bimonthly: 'Every 2 Months',
-  quarterly: 'Quarterly',
-  biannual: 'Bi-Annual',
-  annual: 'Annual',
-};
-
 export const carpetPricingConfig = {
   unitSqFt: 500,
   firstUnitRate: 250,

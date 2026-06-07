@@ -47,32 +47,6 @@ export const rpmWindowPricingConfig = {
   } as Record<RpmRateCategory, {multiplier: number; commissionRate: string}>,
 };
 
-export const rpmFrequencyLabels: Record<RpmFrequencyKey, string> = {
-  oneTime: 'One Time',
-  weekly: 'Weekly',
-  biweekly: 'Bi-Weekly',
-  twicePerMonth: '2× / Month',
-  monthly: 'Monthly',
-  everyFourWeeks: 'Every 4 Weeks',
-  bimonthly: 'Bi-monthly',
-  quarterly: 'Quarterly',
-  biannual: 'Bi-annual',
-  annual: 'Annual',
-};
-
-export const rpmFrequencyList: RpmFrequencyKey[] = [
-  'oneTime',
-  'weekly',
-  'biweekly',
-  'twicePerMonth',
-  'monthly',
-  'everyFourWeeks',
-  'bimonthly',
-  'quarterly',
-  'biannual',
-  'annual',
-];
-
 export interface BackendRpmConfig {
   windowPricingBothSidesIncluded?: {smallWindowPrice: number; mediumWindowPrice: number; largeWindowPrice: number};
   installPricing?: {installationMultiplier: number; cleanInstallationMultiplier: number};
