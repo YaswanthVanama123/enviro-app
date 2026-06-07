@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
-import {Step1Customer}  from '../components/form/Step1Customer';
-import {Step2Products}  from '../components/form/Step2Products';
-import {Step3Services}  from '../components/form/Step3Services';
-import {Step2Contract}  from '../components/form/Step2Contract';
-import {Step5Agreement} from '../components/form/Step5Agreement';
-import {Step4Review}    from '../components/form/Step4Review';
+import {Step1Customer}  from '../components/form/steps/Step1Customer';
+import {Step2Products}  from '../components/form/steps/Step2Products';
+import {Step3Services}  from '../components/form/steps/Step3Services';
+import {Step2Contract}  from '../components/form/steps/Step2Contract';
+import {Step5Agreement} from '../components/form/steps/Step5Agreement';
+import {Step4Review}    from '../components/form/steps/Step4Review';
 import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 

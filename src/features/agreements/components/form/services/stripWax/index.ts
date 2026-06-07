@@ -1,0 +1,1 @@
+export {StripWaxForm} from './StripWaxForm';

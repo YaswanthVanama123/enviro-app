@@ -8,10 +8,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
-import {Step2ProductsDesktop} from '../components/form/Step2ProductsDesktop';
-import {Step3Services}         from '../components/form/Step3Services';
-import {Step5Agreement}        from '../components/form/Step5Agreement';
-import {Step4Review}           from '../components/form/Step4Review';
+import {Step2ProductsDesktop} from '../components/form/steps/Step2ProductsDesktop';
+import {Step3Services}         from '../components/form/steps/Step3Services';
+import {Step5Agreement}        from '../components/form/steps/Step5Agreement';
+import {Step4Review}           from '../components/form/steps/Step4Review';
 import {formatCurrency} from '../../../shared/utils/format.utils';
 
 const C = {
