@@ -169,11 +169,12 @@ interface ToggleRowProps {
   value: boolean;
   onChange: (v: boolean) => void;
   subtitle?: string;
+  disabled?: boolean;
 }
 
-export function ToggleRow({label, value, onChange, subtitle}: ToggleRowProps) {
+export function ToggleRow({label, value, onChange, subtitle, disabled}: ToggleRowProps) {
   return (
-    <View style={ss.toggleRow}>
+    <View style={[ss.toggleRow, disabled && {opacity: 0.5}]}>
       <View style={ss.toggleInfo}>
         <Text style={ss.fieldLabel}>{label}</Text>
         {subtitle ? <Text style={ss.toggleSub}>{subtitle}</Text> : null}
@@ -181,6 +182,7 @@ export function ToggleRow({label, value, onChange, subtitle}: ToggleRowProps) {
       <Switch
         value={value}
         onValueChange={onChange}
+        disabled={disabled}
         trackColor={{false: Colors.border, true: Colors.primaryLight}}
         thumbColor={value ? Colors.primary : Colors.textMuted}
       />

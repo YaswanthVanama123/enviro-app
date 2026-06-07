@@ -1,9 +1,26 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {
-  ServiceCard, TotalsBlock, calcTotals,
-  FREQ_OPTIONS, DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
+  ServiceCard,
+  DropdownRow,
+  FormDivider,
+  NumberRow,
+  ToggleRow,
+  DollarRow,
+  CalcRow,
 } from './ServiceBase';
+import {Spacing} from '../../../../../theme/spacing';
+import {FontSize} from '../../../../../theme/typography';
+import {Colors} from '../../../../../theme/colors';
+import {
+  buildFoamingDrainActiveConfig,
+  computeFoamingDrainQuote,
+  foamingDrainFrequencyLabels,
+  foamingDrainFrequencyList,
+  type BackendFoamingDrainConfig,
+  type FoamingDrainFormState,
+  type FoamingDrainFrequency,
+} from './foamingDrainCalc';
 
 interface Props {
   data: any;
@@ -13,89 +30,181 @@ interface Props {
   pricingConfig?: any;
 }
 
+const FD_FREQ_OPTIONS = foamingDrainFrequencyList.map(value => ({
+  value,
+  label: foamingDrainFrequencyLabels[value],
+}));
+const CONDITION_OPTIONS = [
+  {value: 'normal', label: 'Normal'},
+  {value: 'filthy', label: 'Filthy (3× install)'},
+];
+const INSTALL_FREQ_OPTIONS = [
+  {value: 'weekly', label: 'Weekly'},
+  {value: 'bimonthly', label: 'Bimonthly'},
+];
+
+const RESET_OVERRIDE_FIELDS = [
+  'standardDrainCount',
+  'installDrainCount',
+  'filthyDrainCount',
+  'greaseTrapCount',
+  'greenDrainCount',
+  'plumbingDrainCount',
+  'frequency',
+  'installFrequency',
+  'facilityCondition',
+  'useSmallAltPricingWeekly',
+  'useBigAccountTenWeekly',
+  'isAllInclusive',
+  'chargeGreaseTrapInstall',
+  'needsPlumbing',
+];
+
 export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
-  const cfg = pricingConfig?.config ?? {};
+  const backendConfig: BackendFoamingDrainConfig | null =
+    (pricingConfig?.config as BackendFoamingDrainConfig) ?? null;
+  const activeConfig = buildFoamingDrainActiveConfig(backendConfig);
 
-  const cfgStandardDrainRate     = cfg.standardPricing?.standardDrainRate       ?? cfg.standardDrainRate      ?? 10;
-  const cfgGreaseWeeklyRate      = cfg.greaseTrapPricing?.weeklyRatePerTrap     ?? cfg.greaseTrapWeeklyRate   ?? 125;
-  const cfgGreenWeeklyRate       = cfg.greenDrainPricing?.weeklyRatePerDrain    ?? cfg.greenDrainWeeklyRate   ?? 5;
-  const cfgPlumbingAddonRate     = cfg.addOns?.plumbingWeeklyAddonPerDrain      ?? cfg.plumbingAddonRate      ?? 10;
-  const cfgMinimumChargePerVisit = cfg.minimumChargePerVisit                    ?? 0;
+  const num = (v: any, d: number) => (v === undefined || v === null ? d : v);
 
-  const freq                  = data?.frequency             ?? 'weekly';
-  const standardDrainCount    = data?.standardDrainCount    ?? 0;
-  const greaseTrapCount       = data?.greaseTrapCount       ?? 0;
-  const greenDrainCount       = data?.greenDrainCount       ?? 0;
-  const standardDrainRate     = data?.standardDrainRate     ?? cfgStandardDrainRate;
-  const greaseWeeklyRate      = data?.greaseWeeklyRate      ?? cfgGreaseWeeklyRate;
-  const greenWeeklyRate       = data?.greenWeeklyRate       ?? cfgGreenWeeklyRate;
-  const needsPlumbing         = data?.needsPlumbing         ?? false;
-  const plumbingDrainCount    = data?.plumbingDrainCount    ?? 0;
-  const plumbingAddonRate     = data?.plumbingAddonRate     ?? cfgPlumbingAddonRate;
-  const minimumChargePerVisit = data?.minimumChargePerVisit ?? cfgMinimumChargePerVisit;
-  const applyMinimum          = data?.applyMinimum !== false;
+  const freq: FoamingDrainFrequency = (data?.frequency ?? 'weekly') as FoamingDrainFrequency;
+  const standardDrainCount = data?.standardDrainCount ?? 0;
+  const installDrainCount = data?.installDrainCount ?? 0;
+  const greaseTrapCount = data?.greaseTrapCount ?? 0;
+  const greenDrainCount = data?.greenDrainCount ?? 0;
+  const plumbingDrainCount = data?.plumbingDrainCount ?? 0;
+  const needsPlumbing = data?.needsPlumbing === true;
+  const facilityCondition: 'normal' | 'filthy' =
+    data?.facilityCondition === 'filthy' ? 'filthy' : 'normal';
+  const installFrequency: 'weekly' | 'bimonthly' =
+    data?.installFrequency === 'bimonthly' ? 'bimonthly' : 'weekly';
+  const useSmallAltPricingWeekly = data?.useSmallAltPricingWeekly === true;
+  const useBigAccountTenWeekly = data?.useBigAccountTenWeekly === true;
+  const isAllInclusive = data?.isAllInclusive === true;
+  const chargeGreaseTrapInstall = data?.chargeGreaseTrapInstall !== false;
+  const applyMinimum = data?.applyMinimum !== false;
 
-  const rawCost =
-    standardDrainCount * standardDrainRate +
-    greaseTrapCount    * greaseWeeklyRate   +
-    greenDrainCount    * greenWeeklyRate    +
-    (needsPlumbing ? plumbingDrainCount * plumbingAddonRate : 0);
+  const standardDrainRate = num(data?.standardDrainRate, activeConfig.standardDrainRate);
+  const altBaseCharge = num(data?.altBaseCharge, activeConfig.altBaseCharge);
+  const altExtraPerDrain = num(data?.altExtraPerDrain, activeConfig.altExtraPerDrain);
+  const volumeWeeklyRate = num(data?.volumeWeeklyRate, activeConfig.volumePricing.weeklyRatePerDrain);
+  const volumeBimonthlyRate = num(data?.volumeBimonthlyRate, activeConfig.volumePricing.bimonthlyRatePerDrain);
+  const greaseWeeklyRate = num(data?.greaseWeeklyRate, activeConfig.grease.weeklyRatePerTrap);
+  const greaseInstallRate = num(data?.greaseInstallRate, activeConfig.grease.installPerTrap);
+  const greenWeeklyRate = num(data?.greenWeeklyRate, activeConfig.green.weeklyRatePerDrain);
+  const greenInstallRate = num(data?.greenInstallRate, activeConfig.green.installPerDrain);
+  const plumbingAddonRate = num(data?.plumbingAddonRate, activeConfig.plumbing.weeklyAddonPerDrain);
+  const filthyMultiplier = num(data?.filthyMultiplier, activeConfig.installationRules.filthyMultiplier);
 
-  const perVisitBase = applyMinimum && minimumChargePerVisit > 0 ? Math.max(rawCost, minimumChargePerVisit) : rawCost;
-  const totals = calcTotals(perVisitBase, freq, contractMonths);
+  const buildState = (over: Record<string, any> = {}): FoamingDrainFormState => ({
+    standardDrainCount,
+    installDrainCount,
+    filthyDrainCount: data?.filthyDrainCount ?? 0,
+    greaseTrapCount,
+    greenDrainCount,
+    plumbingDrainCount,
+    needsPlumbing,
+    frequency: freq,
+    installFrequency,
+    facilityCondition,
+    location: data?.location ?? 'standard',
+    useSmallAltPricingWeekly,
+    useBigAccountTenWeekly,
+    isAllInclusive,
+    chargeGreaseTrapInstall,
+    contractMonths,
+    applyMinimum,
+    standardDrainRate,
+    altBaseCharge,
+    altExtraPerDrain,
+    volumeWeeklyRate,
+    volumeBimonthlyRate,
+    greaseWeeklyRate,
+    greaseInstallRate,
+    greenWeeklyRate,
+    greenInstallRate,
+    plumbingAddonRate,
+    filthyMultiplier,
+    ...over,
+  });
 
-  const update = useCallback((fields: Record<string, any>) => {
-    const sd  = fields.standardDrainCount    ?? standardDrainCount;
-    const gt  = fields.greaseTrapCount       ?? greaseTrapCount;
-    const gn  = fields.greenDrainCount       ?? greenDrainCount;
-    const np  = fields.needsPlumbing         ?? needsPlumbing;
-    const pd  = fields.plumbingDrainCount    ?? plumbingDrainCount;
-    const sdr = fields.standardDrainRate     ?? standardDrainRate;
-    const gwr = fields.greaseWeeklyRate      ?? greaseWeeklyRate;
-    const gnr = fields.greenWeeklyRate       ?? greenWeeklyRate;
-    const par = fields.plumbingAddonRate     ?? plumbingAddonRate;
-    const mn  = fields.minimumChargePerVisit ?? minimumChargePerVisit;
-    const nf  = fields.frequency             ?? freq;
-    const applyMin = (fields.applyMinimum !== undefined ? fields.applyMinimum : data?.applyMinimum) !== false;
-    const raw      = sd * sdr + gt * gwr + gn * gnr + (np ? pd * par : 0);
-    const newBase  = applyMin && mn > 0 ? Math.max(raw, mn) : raw;
-    const newTotals = calcTotals(newBase, nf, contractMonths);
-    
-    const origRaw   = sd * cfgStandardDrainRate + gt * cfgGreaseWeeklyRate + gn * cfgGreenWeeklyRate + (np ? pd * cfgPlumbingAddonRate : 0);
-    const originalPerVisitBase = applyMin && cfgMinimumChargePerVisit > 0 ? Math.max(origRaw, cfgMinimumChargePerVisit) : origRaw;
-    const originalContractTotal = calcTotals(originalPerVisitBase, nf, contractMonths).contractTotal;
-    onChange({
-      serviceId: 'foamingDrain',
-      displayName: 'Foaming Drain',
-      isActive: sd > 0 || gt > 0 || gn > 0,
-      contractMonths,
-      ...data,
-      ...fields,
-      frequency: nf,
-      applyMinimum: applyMin,
-      perVisit: newTotals.perVisit,
-      monthlyRecurring: newTotals.monthlyRecurring,
-      contractTotal: newTotals.contractTotal,
-      originalContractTotal,
-    });
-  }, [data, freq, standardDrainCount, greaseTrapCount, greenDrainCount, standardDrainRate, greaseWeeklyRate, greenWeeklyRate, needsPlumbing, plumbingDrainCount, plumbingAddonRate, minimumChargePerVisit, applyMinimum, contractMonths, onChange, cfgStandardDrainRate, cfgGreaseWeeklyRate, cfgGreenWeeklyRate, cfgPlumbingAddonRate, cfgMinimumChargePerVisit]);
+  const quote = computeFoamingDrainQuote(buildState(), activeConfig, backendConfig, 0);
+  const breakdown = quote.breakdown;
 
-  const origRawCost =
-    standardDrainCount * cfgStandardDrainRate +
-    greaseTrapCount    * cfgGreaseWeeklyRate  +
-    greenDrainCount    * cfgGreenWeeklyRate   +
-    (needsPlumbing ? plumbingDrainCount * cfgPlumbingAddonRate : 0);
-  const origBase = applyMinimum && cfgMinimumChargePerVisit > 0 ? Math.max(origRawCost, cfgMinimumChargePerVisit) : origRawCost;
-  const originalContractTotal = calcTotals(origBase, freq, contractMonths).contractTotal;
+  const minimumDrains = activeConfig.volumePricing.minimumDrains;
+  const isWeekly = freq === 'weekly';
+  const isVolume = standardDrainCount >= minimumDrains;
+  const canUseSmallAlt = isWeekly && standardDrainCount > 0 && !isVolume;
+  const canUseBigAlt = isVolume;
+  const isInstallLevelUi = isVolume && !useBigAccountTenWeekly && !isAllInclusive;
 
-  const hasRateChanges =
-    standardDrainRate !== cfgStandardDrainRate ||
-    greaseWeeklyRate !== cfgGreaseWeeklyRate ||
-    greenWeeklyRate !== cfgGreenWeeklyRate ||
-    plumbingAddonRate !== cfgPlumbingAddonRate ||
-    minimumChargePerVisit !== cfgMinimumChargePerVisit;
+  const update = useCallback(
+    (fields: Record<string, any>) => {
+      const merged = {...data, ...fields};
 
-  const isGreenline = totals.contractTotal >= originalContractTotal;
+      // Switching off weekly / volume disables small-alt (matches web).
+      if ('frequency' in fields && fields.frequency !== 'weekly') {
+        merged.useSmallAltPricingWeekly = false;
+      }
+      if ('useSmallAltPricingWeekly' in fields && fields.useSmallAltPricingWeekly) {
+        merged.useBigAccountTenWeekly = false;
+      }
+      if ('useBigAccountTenWeekly' in fields && fields.useBigAccountTenWeekly) {
+        merged.useSmallAltPricingWeekly = false;
+      }
+      if ('needsPlumbing' in fields && !fields.needsPlumbing) {
+        merged.plumbingDrainCount = 0;
+      }
+
+      const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
+      if (clearOverrides) {
+        merged.customWeeklyService = undefined;
+        merged.customMonthlyRecurring = undefined;
+        merged.customFirstMonthPrice = undefined;
+        merged.customContractTotal = undefined;
+        merged.customInstallationTotal = undefined;
+      }
+
+      const next = buildStateFrom(merged, activeConfig, contractMonths);
+      const q = computeFoamingDrainQuote(next, activeConfig, backendConfig, 0);
+      onChange({
+        ...merged,
+        serviceId: 'foamingDrain',
+        displayName: 'Foaming Drain',
+        ...next,
+        isActive: next.standardDrainCount > 0 || next.greaseTrapCount > 0 || next.greenDrainCount > 0,
+        perVisitBase: q.weeklyService,
+        perVisit: q.weeklyTotal,
+        minimumChargePerVisit: q.minimumChargePerVisit,
+        monthlyRecurring: q.monthlyRecurring,
+        firstMonthPrice: q.firstMonthPrice,
+        firstVisitPrice: q.firstVisitPrice,
+        installation: q.installation,
+        contractTotal: q.annualRecurring,
+        originalContractTotal: q.originalContractTotal,
+      });
+    },
+    [data, contractMonths, activeConfig, backendConfig, onChange],
+  );
+
+  const isOneTime = freq === 'oneTime';
+  const monthlyGroup = freq === 'weekly' || freq === 'biweekly' || freq === 'twicePerMonth' || freq === 'monthly';
+  const recurringVisitLabel =
+    freq === 'bimonthly' ||
+    freq === 'quarterly' ||
+    freq === 'biannual' ||
+    freq === 'annual' ||
+    freq === 'everyFourWeeks';
+  const hasService = standardDrainCount > 0 || greaseTrapCount > 0 || greenDrainCount > 0;
+  const isGreenline = hasService && quote.annualRecurring > quote.originalContractTotal * 1.3;
+
+  const pricingLabel = breakdown.usedBigAccountAlt
+    ? `Volume – $${volumeWeeklyRate}/wk per drain, install waived`
+    : breakdown.volumePricingApplied
+    ? `Volume (${minimumDrains}+ drains, $${volumeWeeklyRate}/$${volumeBimonthlyRate} install-drain)`
+    : breakdown.usedSmallAlt
+    ? `Alternative ($${altBaseCharge} + $${altExtraPerDrain}/drain)`
+    : `Standard ($${standardDrainRate}/drain)`;
 
   return (
     <ServiceCard
@@ -107,37 +216,254 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
       onRemove={onRemove}
       notes={data?.notes ?? ''}
       onNotesChange={v => update({notes: v})}>
-      <DropdownRow label="Frequency" value={freq} options={FREQ_OPTIONS} onChange={v => update({frequency: v})} />
+      <DropdownRow
+        label="Service Frequency"
+        value={freq}
+        options={FD_FREQ_OPTIONS}
+        onChange={v => update({frequency: v})}
+      />
       <FormDivider />
-      <CalcRow label="Standard Drains" qty={standardDrainCount} onQtyChange={v => update({standardDrainCount: v})} rate={standardDrainRate} onRateChange={v => update({standardDrainRate: v})} total={standardDrainCount * standardDrainRate} />
-      <CalcRow label="Grease Drains"   qty={greaseTrapCount}    onQtyChange={v => update({greaseTrapCount: v})}    rate={greaseWeeklyRate}   onRateChange={v => update({greaseWeeklyRate: v})}   total={greaseTrapCount * greaseWeeklyRate} />
-      <CalcRow label="Green Drains"    qty={greenDrainCount}    onQtyChange={v => update({greenDrainCount: v})}    rate={greenWeeklyRate}    onRateChange={v => update({greenWeeklyRate: v})}    total={greenDrainCount * greenWeeklyRate} />
-      <ToggleRow label="Extra Plumbing" value={needsPlumbing} onChange={v => update({needsPlumbing: v})} subtitle="Add plumbing drain add-on" />
-      {needsPlumbing && (
-        <CalcRow label="Plumbing Drains" qty={plumbingDrainCount} onQtyChange={v => update({plumbingDrainCount: v})} rate={plumbingAddonRate} onRateChange={v => update({plumbingAddonRate: v})} total={plumbingDrainCount * plumbingAddonRate} />
+
+      <CalcRow
+        label="Standard Drains"
+        qty={standardDrainCount}
+        onQtyChange={v => update({standardDrainCount: v})}
+        rate={standardDrainRate}
+        onRateChange={v => update({standardDrainRate: v})}
+        rateReadOnly={breakdown.usedSmallAlt}
+        total={breakdown.weeklyStandardDrains}
+      />
+      <View style={styles.modelRow}>
+        <Text style={styles.modelText}>{pricingLabel}</Text>
+      </View>
+
+      {canUseSmallAlt ? (
+        <ToggleRow
+          label={`Small-job alt (< ${minimumDrains} drains)`}
+          value={useSmallAltPricingWeekly}
+          onChange={v => update({useSmallAltPricingWeekly: v})}
+        />
+      ) : (
+        <ToggleRow
+          label={`Small-job alt (< ${minimumDrains} drains)`}
+          value={false}
+          onChange={() => {}}
+          disabled
+          subtitle="Weekly, under volume minimum only"
+        />
       )}
-      <NumberRow label="Minimum Per Visit" value={minimumChargePerVisit} onChange={v => update({minimumChargePerVisit: v})} prefix="$" decimals={2} />
-      <ToggleRow label="Apply Minimum" value={applyMinimum} onChange={v => update({applyMinimum: v})} subtitle="Use per-visit minimum charge when cost is lower" />
-      <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
-      {(standardDrainCount > 0 || greaseTrapCount > 0 || greenDrainCount > 0) && hasRateChanges && (
-        <View style={styles.badgeRow}>
-          <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
-            <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
+      {useSmallAltPricingWeekly && canUseSmallAlt && (
+        <>
+          <NumberRow
+            label="Alt Base Charge"
+            value={altBaseCharge}
+            onChange={v => update({altBaseCharge: v})}
+            prefix="$"
+            decimals={2}
+          />
+          <NumberRow
+            label="Alt Extra Per Drain"
+            value={altExtraPerDrain}
+            onChange={v => update({altExtraPerDrain: v})}
+            prefix="$"
+            decimals={2}
+          />
+        </>
+      )}
+
+      <ToggleRow
+        label={`Big account (${minimumDrains}+ drains, install waived)`}
+        value={useBigAccountTenWeekly && canUseBigAlt}
+        onChange={v => update({useBigAccountTenWeekly: v})}
+        disabled={!canUseBigAlt}
+        subtitle={canUseBigAlt ? undefined : `${minimumDrains}+ standard drains only`}
+      />
+
+      <ToggleRow
+        label="Charge Grease Trap Install"
+        value={chargeGreaseTrapInstall}
+        onChange={v => update({chargeGreaseTrapInstall: v})}
+        subtitle="One-time install fee for grease traps"
+      />
+      {chargeGreaseTrapInstall && (
+        <NumberRow
+          label="Grease Install Rate (per trap)"
+          value={greaseInstallRate}
+          onChange={v => update({greaseInstallRate: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
+
+      {isInstallLevelUi && (
+        <>
+          <DropdownRow
+            label="Install Frequency"
+            value={installFrequency}
+            options={INSTALL_FREQ_OPTIONS}
+            onChange={v => update({installFrequency: v})}
+          />
+          <CalcRow
+            label="Install Drains (10+)"
+            qty={installDrainCount}
+            onQtyChange={v => update({installDrainCount: v})}
+            rate={installFrequency === 'bimonthly' ? volumeBimonthlyRate : volumeWeeklyRate}
+            onRateChange={v =>
+              update(installFrequency === 'bimonthly' ? {volumeBimonthlyRate: v} : {volumeWeeklyRate: v})
+            }
+            total={breakdown.weeklyInstallDrains}
+          />
+        </>
+      )}
+
+      <CalcRow
+        label="Grease Traps"
+        qty={greaseTrapCount}
+        onQtyChange={v => update({greaseTrapCount: v})}
+        rate={greaseWeeklyRate}
+        onRateChange={v => update({greaseWeeklyRate: v})}
+        total={breakdown.weeklyGreaseTraps}
+      />
+
+      <CalcRow
+        label="Green Drains"
+        qty={greenDrainCount}
+        onQtyChange={v => update({greenDrainCount: v})}
+        rate={greenWeeklyRate}
+        onRateChange={v => update({greenWeeklyRate: v})}
+        total={breakdown.weeklyGreenDrains}
+      />
+
+      <ToggleRow
+        label="Extra Plumbing"
+        value={needsPlumbing}
+        onChange={v => update({needsPlumbing: v})}
+      />
+      {needsPlumbing && (
+        <CalcRow
+          label="Plumbing Drains"
+          qty={plumbingDrainCount}
+          onQtyChange={v => update({plumbingDrainCount: v})}
+          rate={plumbingAddonRate}
+          onRateChange={v => update({plumbingAddonRate: v})}
+          total={breakdown.weeklyPlumbing}
+        />
+      )}
+
+      <FormDivider />
+      <DropdownRow
+        label="Facility Condition"
+        value={facilityCondition}
+        options={CONDITION_OPTIONS}
+        onChange={v => update({facilityCondition: v})}
+      />
+      {facilityCondition === 'filthy' && (
+        <NumberRow
+          label="Filthy Multiplier"
+          value={filthyMultiplier}
+          onChange={v => update({filthyMultiplier: v})}
+          suffix="× weekly"
+          decimals={2}
+        />
+      )}
+
+      <ToggleRow
+        label="Apply Minimum"
+        value={applyMinimum}
+        onChange={v => update({applyMinimum: v})}
+        subtitle={`Minimum $${quote.minimumChargePerVisit.toFixed(2)} per visit`}
+      />
+
+      {hasService && (
+        <>
+          <FormDivider />
+          {quote.installation > 0 && (
+            <DollarRow label="Installation Total" value={quote.installation} />
+          )}
+          {!isOneTime && <DollarRow label="First Visit Total" value={quote.firstVisitPrice} />}
+
+          <DollarRow
+            label={recurringVisitLabel ? 'Recurring Visit Total' : 'Per Visit Total'}
+            value={quote.weeklyTotal}
+          />
+
+          <View style={styles.tierRow}>
+            <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
               {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
             </Text>
           </View>
-        </View>
+
+          {isOneTime && <DollarRow label="Total Price" value={quote.annualRecurring} highlight />}
+
+          {monthlyGroup && (
+            <>
+              <DollarRow label="First Month Total" value={quote.firstMonthPrice} />
+              <DollarRow label="Monthly Recurring" value={quote.monthlyRecurring} />
+            </>
+          )}
+
+          {!isOneTime && (
+            <DollarRow
+              label={`Contract Total (${contractMonths} mo)`}
+              value={quote.annualRecurring}
+              highlight
+            />
+          )}
+        </>
       )}
     </ServiceCard>
   );
 }
 
+function buildStateFrom(
+  merged: any,
+  activeConfig: ReturnType<typeof buildFoamingDrainActiveConfig>,
+  contractMonths: number,
+): FoamingDrainFormState {
+  const num = (v: any, d: number) => (v === undefined || v === null ? d : v);
+  return {
+    standardDrainCount: merged.standardDrainCount ?? 0,
+    installDrainCount: merged.installDrainCount ?? 0,
+    filthyDrainCount: merged.filthyDrainCount ?? 0,
+    greaseTrapCount: merged.greaseTrapCount ?? 0,
+    greenDrainCount: merged.greenDrainCount ?? 0,
+    plumbingDrainCount: merged.plumbingDrainCount ?? 0,
+    needsPlumbing: merged.needsPlumbing === true,
+    frequency: (merged.frequency ?? 'weekly') as FoamingDrainFrequency,
+    installFrequency: merged.installFrequency === 'bimonthly' ? 'bimonthly' : 'weekly',
+    facilityCondition: merged.facilityCondition === 'filthy' ? 'filthy' : 'normal',
+    location: merged.location ?? 'standard',
+    useSmallAltPricingWeekly: merged.useSmallAltPricingWeekly === true,
+    useBigAccountTenWeekly: merged.useBigAccountTenWeekly === true,
+    isAllInclusive: merged.isAllInclusive === true,
+    chargeGreaseTrapInstall: merged.chargeGreaseTrapInstall !== false,
+    contractMonths,
+    applyMinimum: merged.applyMinimum !== false,
+    standardDrainRate: num(merged.standardDrainRate, activeConfig.standardDrainRate),
+    altBaseCharge: num(merged.altBaseCharge, activeConfig.altBaseCharge),
+    altExtraPerDrain: num(merged.altExtraPerDrain, activeConfig.altExtraPerDrain),
+    volumeWeeklyRate: num(merged.volumeWeeklyRate, activeConfig.volumePricing.weeklyRatePerDrain),
+    volumeBimonthlyRate: num(merged.volumeBimonthlyRate, activeConfig.volumePricing.bimonthlyRatePerDrain),
+    greaseWeeklyRate: num(merged.greaseWeeklyRate, activeConfig.grease.weeklyRatePerTrap),
+    greaseInstallRate: num(merged.greaseInstallRate, activeConfig.grease.installPerTrap),
+    greenWeeklyRate: num(merged.greenWeeklyRate, activeConfig.green.weeklyRatePerDrain),
+    greenInstallRate: num(merged.greenInstallRate, activeConfig.green.installPerDrain),
+    plumbingAddonRate: num(merged.plumbingAddonRate, activeConfig.plumbing.weeklyAddonPerDrain),
+    filthyMultiplier: num(merged.filthyMultiplier, activeConfig.installationRules.filthyMultiplier),
+    notes: merged.notes,
+    customWeeklyService: merged.customWeeklyService,
+    customMonthlyRecurring: merged.customMonthlyRecurring,
+    customFirstMonthPrice: merged.customFirstMonthPrice,
+    customContractTotal: merged.customContractTotal,
+    customInstallationTotal: merged.customInstallationTotal,
+  };
+}
+
 const styles = StyleSheet.create({
-  badgeRow: {paddingHorizontal: 16, paddingVertical: 8},
-  badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
-  greenBadge: {backgroundColor: '#e8f5e9'},
-  redBadge: {backgroundColor: '#ffebee'},
-  badgeText: {fontSize: 13, fontWeight: '600'},
-  greenText: {color: '#388e3c'},
-  redText: {color: '#d32f2f'},
+  modelRow: {paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm},
+  modelText: {fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600'},
+  tierRow: {paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, alignItems: 'flex-end'},
+  tierText: {fontSize: FontSize.sm, fontWeight: '700'},
+  tierGreen: {color: '#16a34a'},
+  tierRed: {color: '#dc2626'},
 });
