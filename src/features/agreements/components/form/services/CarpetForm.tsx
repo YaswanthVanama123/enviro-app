@@ -6,6 +6,7 @@ import {
   FormDivider,
   NumberRow,
   ToggleRow,
+  DollarRow,
 } from './ServiceBase';
 import {Spacing} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
@@ -228,31 +229,14 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
       )}
 
       {includeInstall && calc.installOneTime > 0 && (
-        <NumberRow
-          label="Installation Total"
-          value={
-            data?.customInstallationFee !== undefined
-              ? data.customInstallationFee
-              : calc.installOneTime
-          }
-          onChange={v => update({customInstallationFee: v})}
-          prefix="$"
-          decimals={2}
-        />
+        <DollarRow label="Installation Total" value={calc.installOneTime} />
       )}
 
       <FormDivider />
 
-      <NumberRow
+      <DollarRow
         label={isVisitBased ? 'Recurring Visit Total' : 'Per Visit Total'}
-        value={
-          data?.customPerVisitPrice !== undefined
-            ? data.customPerVisitPrice
-            : calc.perVisitCharge
-        }
-        onChange={v => update({customPerVisitPrice: v})}
-        prefix="$"
-        decimals={2}
+        value={calc.perVisitCharge}
       />
 
       {areaSqFt > 0 && (
@@ -264,58 +248,25 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
       )}
 
       {isOneTime && (
-        <NumberRow
-          label="Total Price"
-          value={
-            data?.customFirstMonthPrice !== undefined
-              ? data.customFirstMonthPrice
-              : calc.contractTotal
-          }
-          onChange={v => update({customFirstMonthPrice: v})}
-          prefix="$"
-          decimals={2}
-        />
+        <DollarRow label="Total Price" value={calc.contractTotal} highlight />
       )}
 
       {!isOneTime && (
-        <NumberRow
+        <DollarRow
           label={isVisitBased ? 'First Visit Total' : 'First Month Total'}
-          value={
-            data?.customFirstMonthPrice !== undefined
-              ? data.customFirstMonthPrice
-              : calc.firstMonthTotal
-          }
-          onChange={v => update({customFirstMonthPrice: v})}
-          prefix="$"
-          decimals={2}
+          value={calc.firstMonthTotal}
         />
       )}
 
       {showMonthlyRecurring && (
-        <NumberRow
-          label="Recurring Month Total"
-          value={
-            data?.customMonthlyRecurring !== undefined
-              ? data.customMonthlyRecurring
-              : calc.monthlyTotal
-          }
-          onChange={v => update({customMonthlyRecurring: v})}
-          prefix="$"
-          decimals={2}
-        />
+        <DollarRow label="Recurring Month Total" value={calc.monthlyTotal} />
       )}
 
       {!isOneTime && (
-        <NumberRow
+        <DollarRow
           label={`Contract Total (${contractMonths} mo)`}
-          value={
-            data?.customContractTotal !== undefined
-              ? data.customContractTotal
-              : calc.contractTotal
-          }
-          onChange={v => update({customContractTotal: v})}
-          prefix="$"
-          decimals={2}
+          value={calc.contractTotal}
+          highlight
         />
       )}
     </ServiceCard>
