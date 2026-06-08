@@ -138,8 +138,8 @@ const ai = StyleSheet.create({
     borderWidth: 1, borderTopWidth: 0, borderColor: C.primary,
     borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
     backgroundColor: C.surface,
-    shadowColor: '#000', shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1, shadowRadius: 8, elevation: 6,
+
+
   },
   dropItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -654,8 +654,8 @@ const s = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
     overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+
+
   },
 
   secHead: {

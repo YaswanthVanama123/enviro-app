@@ -1,10 +1,26 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {
-  ServiceCard, TotalsBlock, getFreqMultiplier,
-  DropdownRow, FormDivider, NumberRow, ToggleRow,
+  ServiceCard,
+  DropdownRow,
+  FormDivider,
+  NumberRow,
+  ToggleRow,
+  CalcRow,
+  DollarRow,
 } from '../base/ServiceBase';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
+import {Colors} from '../../../../../../theme/colors';
+import {Spacing} from '../../../../../../theme/spacing';
+import {FontSize} from '../../../../../../theme/typography';
+import {
+  buildSanipodActiveConfig,
+  buildSanipodState,
+  computeSanipodCalc,
+  sanipodBaselineRates,
+  type BackendSanipodConfig,
+} from './sanipodCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 
 interface Props {
   data: any;
@@ -14,188 +30,226 @@ interface Props {
   pricingConfig?: any;
 }
 
-function calcSanipodTotals(
-  pods: number,
-  weeklyRate: number,
-  altRate: number,
-  isStandalone: boolean,
-  standaloneExtra: number,
-  bagsPerWeek: number,
-  bagPrice: number,
-  extraBagsRecurring: boolean,
-  isNewInstall: boolean,
-  installQty: number,
-  installRate: number,
-  frequency: string,
-  contractMonths: number,
-) {
-  const mult = getFreqMultiplier(frequency);
-  const isOneTime = frequency === 'oneTime';
-  const isEveryFourWeeks = frequency === 'everyFourWeeks';
+// Editing any of these base inputs clears the manual total overrides (matches web).
+const RESET_OVERRIDE_FIELDS = [
+  'podQuantity',
+  'extraBagsPerWeek',
+  'extraBagsRecurring',
+  'frequency',
+  'weeklyRatePerUnit',
+  'altWeeklyRatePerUnit',
+  'extraBagPrice',
+  'standaloneExtraWeeklyCharge',
+  'isStandalone',
+  'isNewInstall',
+  'installQuantity',
+  'installRatePerPod',
+  'rateCategory',
+  'serviceRule',
+];
 
-  const weeklyBags = extraBagsRecurring ? bagsPerWeek * bagPrice : 0;
-  const optA = pods * altRate + weeklyBags;
-  const optB = pods * weeklyRate + (isStandalone ? standaloneExtra : 0) + weeklyBags;
-  const weeklyService = Math.min(optA, optB);
-  const perVisit = weeklyService;
-
-  const effectiveInstallQty = isNewInstall ? installQty : 0;
-  const installCost = effectiveInstallQty > 0 ? effectiveInstallQty * installRate : 0;
-
-  let firstVisit: number;
-  if (effectiveInstallQty > 0) {
-    const servicePods = Math.max(0, pods - effectiveInstallQty);
-    let firstVisitServiceCost = 0;
-    if (servicePods > 0) {
-      
-      const usingOptA = optA <= optB;
-      if (usingOptA) {
-        firstVisitServiceCost = servicePods * altRate;
-      } else {
-        firstVisitServiceCost = servicePods * weeklyRate + (isStandalone ? standaloneExtra : 0);
-      }
-    }
-    const firstVisitBagsCost = bagsPerWeek > 0 ? bagsPerWeek * bagPrice : 0;
-    const oneTimeBags = extraBagsRecurring ? 0 : bagsPerWeek * bagPrice;
-    firstVisit = installCost + firstVisitServiceCost + firstVisitBagsCost + oneTimeBags;
-  } else {
-    const oneTimeBags = extraBagsRecurring ? 0 : bagsPerWeek * bagPrice;
-    firstVisit = perVisit + oneTimeBags;
-  }
-
-  const monthlyRecurring = isOneTime ? 0 : perVisit * mult;
-
-  let firstMonth: number;
-  if (isOneTime || frequency === 'monthly') {
-    firstMonth = firstVisit;
-  } else {
-    firstMonth = firstVisit + Math.max(mult - 1, 0) * perVisit;
-  }
-
-  let contractTotal: number;
-  if (isOneTime) {
-    contractTotal = firstVisit;
-  } else if (isEveryFourWeeks) {
-    const totalVisits = Math.round(contractMonths * 1.0833);
-    if (effectiveInstallQty > 0) {
-      contractTotal = firstVisit + Math.max(totalVisits - 1, 0) * perVisit;
-    } else {
-      contractTotal = totalVisits * perVisit;
-    }
-  } else if (contractMonths <= 0) {
-    contractTotal = 0;
-  } else {
-    contractTotal = firstMonth + Math.max(contractMonths - 1, 0) * monthlyRecurring;
-  }
-
-  return {perVisit, firstMonth, monthlyRecurring, contractTotal, installCost, firstVisit};
-}
+const money = (n: number) => `$${(Number.isFinite(n) ? n : 0).toFixed(2)}`;
 
 export function SanipodForm({data, onChange, contractMonths, onRemove, pricingConfig}: Props) {
-  const cfg = pricingConfig?.config ?? {};
+  const backendConfig: BackendSanipodConfig | null = (pricingConfig?.config as BackendSanipodConfig) ?? null;
+  const activeConfig = buildSanipodActiveConfig(backendConfig);
+  const baseline = sanipodBaselineRates(activeConfig);
 
-  const freq                  = data?.frequency                   ?? cfg.defaultFrequency             ?? 'weekly';
-  const podQuantity           = data?.podQuantity                 ?? 0;
-  const weeklyRatePerUnit     = data?.weeklyRatePerUnit           ?? cfg.weeklyRatePerUnit             ?? 3;
-  const altWeeklyRatePerUnit  = data?.altWeeklyRatePerUnit        ?? cfg.altWeeklyRatePerUnit          ?? 8;
-  const isStandalone          = data?.isStandalone                ?? false;
-  const standaloneExtraWeekly = data?.standaloneExtraWeeklyCharge ?? cfg.standaloneExtraWeeklyCharge   ?? 40;
-  const extraBagsPerWeek      = data?.extraBagsPerWeek            ?? 0;
-  const extraBagPrice         = data?.extraBagPrice               ?? cfg.extraBagPrice                 ?? 2;
-  const extraBagsRecurring    = data?.extraBagsRecurring          ?? true;
-  const isNewInstall          = data?.isNewInstall                ?? false;
-  const installQuantity       = data?.installQuantity             ?? 0;
-  const installRatePerPod     = data?.installRatePerPod           ?? cfg.installChargePerUnit          ?? 25;
+  const state = buildSanipodState(data, contractMonths, activeConfig);
+  const calc = computeSanipodCalc(state, activeConfig, baseline, 0);
 
-  const totals = calcSanipodTotals(
-    podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit,
-    isStandalone, standaloneExtraWeekly,
-    extraBagsPerWeek, extraBagPrice, extraBagsRecurring,
-    isNewInstall, installQuantity, installRatePerPod,
-    freq, contractMonths,
+  const freq = state.frequency;
+  const pods = state.podQuantity;
+  const isOneTime = freq === 'oneTime';
+  const isVisitBased =
+    isOneTime ||
+    freq === 'quarterly' ||
+    freq === 'biannual' ||
+    freq === 'annual' ||
+    freq === 'bimonthly' ||
+    freq === 'everyFourWeeks';
+  const monthlyGroup = !isVisitBased;
+  const recurringLabel =
+    freq === 'bimonthly' || freq === 'quarterly' || freq === 'biannual' || freq === 'annual' || freq === 'everyFourWeeks'
+      ? 'Recurring Visit Total'
+      : 'Per Visit Service';
+
+  const hasService = pods > 0 || state.extraBagsPerWeek > 0 || (state.isNewInstall && state.installQuantity > 0);
+  const isGreenline = !isOneTime && pods > 0 && calc.contractTotal > calc.originalContractTotal * 1.3;
+
+  const effectiveRuleLabel =
+    calc.chosenServiceRule === 'perPod8'
+      ? money(state.altWeeklyRatePerUnit)
+      : `${money(state.weeklyRatePerUnit)} + ${money(state.standaloneExtraWeeklyCharge)}`;
+  const ruleLabel = state.isStandalone ? effectiveRuleLabel : `${money(state.altWeeklyRatePerUnit)} (always)`;
+  const bagUnitLabel = state.extraBagsRecurring ? '$/bag/wk' : '$/bag one-time';
+
+  const update = useCallback(
+    (fields: Record<string, any>) => {
+      trackServiceChanges('sanipod', fields, state, {quantity: state.podQuantity, frequency: state.frequency});
+      const merged = {...data, ...fields};
+      const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
+      if (clearOverrides) {
+        merged.customInstallationFee = undefined;
+        merged.customPerVisitPrice = undefined;
+        merged.customMonthlyPrice = undefined;
+        merged.customAnnualPrice = undefined;
+        merged.customWeeklyPodRate = undefined;
+        merged.customPodServiceTotal = undefined;
+        merged.customExtraBagsTotal = undefined;
+      }
+
+      const nextState = buildSanipodState(merged, contractMonths, activeConfig);
+      const nextCalc = computeSanipodCalc(nextState, activeConfig, baseline, 0);
+      onChange({
+        serviceId: 'sanipod',
+        displayName: 'SaniPod',
+        ...merged,
+        frequency: nextState.frequency,
+        contractMonths,
+        isActive: nextState.podQuantity > 0,
+        perVisit: nextCalc.perVisit,
+        monthlyRecurring: nextCalc.ongoingMonthly,
+        firstVisit: nextCalc.firstVisit,
+        firstMonthPrice: nextCalc.monthly,
+        installCost: nextCalc.installCost,
+        contractTotal: nextCalc.contractTotal,
+        originalContractTotal: nextCalc.originalContractTotal,
+      });
+    },
+    [data, contractMonths, activeConfig, baseline, onChange],
   );
 
-  const update = useCallback((fields: Record<string, any>) => {
-    const nf   = fields.frequency                   ?? freq;
-    const nq   = fields.podQuantity                 ?? podQuantity;
-    const wr   = fields.weeklyRatePerUnit           ?? weeklyRatePerUnit;
-    const ar   = fields.altWeeklyRatePerUnit        ?? altWeeklyRatePerUnit;
-    const sa   = fields.isStandalone                ?? isStandalone;
-    const se   = fields.standaloneExtraWeeklyCharge ?? standaloneExtraWeekly;
-    const eb   = fields.extraBagsPerWeek            ?? extraBagsPerWeek;
-    const ebp  = fields.extraBagPrice               ?? extraBagPrice;
-    const ebr  = fields.extraBagsRecurring          ?? extraBagsRecurring;
-    const ni   = fields.isNewInstall                ?? isNewInstall;
-    const iq   = fields.installQuantity             ?? installQuantity;
-    const ir   = fields.installRatePerPod           ?? installRatePerPod;
-
-    const newTotals = calcSanipodTotals(nq, wr, ar, sa, se, eb, ebp, ebr, ni, iq, ir, nf, contractMonths);
-
-    const origWr  = cfg.weeklyRatePerUnit            ?? 3;
-    const origAr  = cfg.altWeeklyRatePerUnit         ?? 8;
-    const origSe  = cfg.standaloneExtraWeeklyCharge  ?? 40;
-    const origEbp = cfg.extraBagPrice                ?? 2;
-    const origIr  = cfg.installChargePerUnit         ?? 25;
-    const origTotals = calcSanipodTotals(nq, origWr, origAr, sa, origSe, eb, origEbp, ebr, ni, iq, origIr, nf, contractMonths);
-
-    onChange({
-      serviceId: 'sanipod',
-      displayName: 'SaniPod',
-      isActive: nq > 0,
-      contractMonths,
-      ...data,
-      ...fields,
-      frequency: nf,
-      perVisit: newTotals.perVisit,
-      monthlyRecurring: newTotals.monthlyRecurring,
-      contractTotal: newTotals.contractTotal,
-      originalContractTotal: origTotals.contractTotal,
-    });
-  }, [data, freq, podQuantity, weeklyRatePerUnit, altWeeklyRatePerUnit, isStandalone, standaloneExtraWeekly, extraBagsPerWeek, extraBagPrice, extraBagsRecurring, isNewInstall, installQuantity, installRatePerPod, contractMonths, onChange, cfg]);
-
-  const origWr  = cfg.weeklyRatePerUnit            ?? 3;
-  const origAr  = cfg.altWeeklyRatePerUnit         ?? 8;
-  const origSe  = cfg.standaloneExtraWeeklyCharge  ?? 40;
-  const origEbp = cfg.extraBagPrice                ?? 2;
-  const origIr  = cfg.installChargePerUnit         ?? 25;
-  const origTotals = calcSanipodTotals(podQuantity, origWr, origAr, isStandalone, origSe, extraBagsPerWeek, origEbp, extraBagsRecurring, isNewInstall, installQuantity, origIr, freq, contractMonths);
-  const isGreenline = totals.contractTotal > origTotals.contractTotal * 1.30;
-
   return (
-    <ServiceCard serviceId="sanipod" displayName="SaniPod" icon="cube-outline" iconColor="#7c3aed" iconBg="#ede9fe" onRemove={onRemove} notes={data?.notes ?? ''} onNotesChange={v => update({notes: v})}>
+    <ServiceCard
+      serviceId="sanipod"
+      displayName="SaniPod (Standalone Only)"
+      icon="cube-outline"
+      iconColor="#7c3aed"
+      iconBg="#ede9fe"
+      onRemove={onRemove}
+      notes={data?.notes ?? ''}
+      onNotesChange={v => update({notes: v})}>
       <DropdownRow label="Frequency" value={freq} options={FREQUENCY_OPTIONS} onChange={v => update({frequency: v})} />
       <FormDivider />
-      <NumberRow label="Pod Quantity" value={podQuantity} onChange={v => update({podQuantity: v})} decimals={0} />
-      <NumberRow label="Weekly Rate / Unit" value={weeklyRatePerUnit} onChange={v => update({weeklyRatePerUnit: v})} prefix="$" decimals={2} />
-      <NumberRow label="Alt Weekly Rate / Unit" value={altWeeklyRatePerUnit} onChange={v => update({altWeeklyRatePerUnit: v})} prefix="$" decimals={2} />
-      <NumberRow label="Extra Bags / Week" value={extraBagsPerWeek} onChange={v => update({extraBagsPerWeek: v})} decimals={0} />
-      <NumberRow label="Extra Bag Price" value={extraBagPrice} onChange={v => update({extraBagPrice: v})} prefix="$" decimals={2} />
-      <ToggleRow label="Bags Recurring" value={extraBagsRecurring} onChange={v => update({extraBagsRecurring: v})} subtitle="Charge bags every visit" />
-      {}
+
+      <NumberRow
+        label="Package Base Rate ($/pod/wk)"
+        value={state.weeklyRatePerUnit}
+        onChange={v => update({weeklyRatePerUnit: v})}
+        prefix="$"
+        decimals={2}
+      />
+      <NumberRow
+        label="Alternative Flat Rate ($/pod/wk)"
+        value={state.altWeeklyRatePerUnit}
+        onChange={v => update({altWeeklyRatePerUnit: v})}
+        prefix="$"
+        decimals={2}
+      />
+      <NumberRow
+        label="Standalone Base Weekly Charge"
+        value={state.standaloneExtraWeeklyCharge}
+        onChange={v => update({standaloneExtraWeeklyCharge: v})}
+        prefix="$"
+        decimals={2}
+      />
+      <ToggleRow
+        label="Standalone (no SaniClean)"
+        value={state.isStandalone}
+        onChange={v => update({isStandalone: v})}
+        subtitle="Adds the standalone base weekly charge"
+      />
       <FormDivider />
-      <ToggleRow label="New Install" value={isNewInstall} onChange={v => update({isNewInstall: v})} subtitle="Include installation charge" />
-      {isNewInstall && (
+
+      <CalcRow
+        label="SaniPods"
+        qty={pods}
+        onQtyChange={v => update({podQuantity: v})}
+        rate={calc.effectiveRatePerPod}
+        onRateChange={() => {}}
+        rateReadOnly
+        total={calc.adjustedPodServiceTotal}
+      />
+      {pods > 0 && (
+        <View style={styles.ruleRow}>
+          <Text style={styles.ruleText}>using {ruleLabel}/wk</Text>
+        </View>
+      )}
+
+      <CalcRow
+        label="Extra Bags"
+        qty={state.extraBagsPerWeek}
+        onQtyChange={v => update({extraBagsPerWeek: v})}
+        rate={state.extraBagPrice}
+        onRateChange={v => update({extraBagPrice: v})}
+        total={calc.adjustedBagsTotal}
+      />
+      <ToggleRow
+        label="Bags Recurring"
+        value={state.extraBagsRecurring}
+        onChange={v => update({extraBagsRecurring: v})}
+        subtitle={bagUnitLabel}
+      />
+      <FormDivider />
+
+      <ToggleRow
+        label="New Install?"
+        value={state.isNewInstall}
+        onChange={v => update({isNewInstall: v})}
+        subtitle="One-time installation charge"
+      />
+      {state.isNewInstall && (
         <>
-          <NumberRow label="Install Pods" value={installQuantity} onChange={v => update({installQuantity: v})} decimals={0} />
-          <NumberRow label="Install Rate / Pod" value={installRatePerPod} onChange={v => update({installRatePerPod: v})} prefix="$" decimals={2} />
+          <CalcRow
+            label="Install Pods"
+            qty={state.installQuantity}
+            onQtyChange={v => update({installQuantity: v})}
+            rate={state.installRatePerPod}
+            onRateChange={v => update({installRatePerPod: v})}
+            total={state.installQuantity * state.installRatePerPod}
+          />
+          <DollarRow label="Installation Total" value={calc.installCost} />
         </>
       )}
-      <TotalsBlock frequency={freq} perVisit={totals.perVisit} firstMonth={totals.firstMonth} monthlyRecurring={totals.monthlyRecurring} contractMonths={contractMonths} contractTotal={totals.contractTotal} />
-      {podQuantity > 0 && (
-        <View style={styles.badgeRow}>
-          <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
-            <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
-              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
-            </Text>
-          </View>
-        </View>
+
+      {hasService && (
+        <>
+          <FormDivider />
+
+          {monthlyGroup && <DollarRow label="First Visit Total" value={calc.firstVisit} />}
+          {isVisitBased && !isOneTime && <DollarRow label="First Visit Total" value={calc.adjustedMonthly} />}
+
+          {!isOneTime && <DollarRow label={recurringLabel} value={calc.adjustedPerVisit} />}
+
+          {monthlyGroup && <DollarRow label="First Month Total" value={calc.adjustedMonthly} />}
+          {monthlyGroup && <DollarRow label="Monthly Recurring" value={calc.ongoingMonthly} />}
+
+          {isOneTime ? (
+            <DollarRow label="Total Price" value={calc.contractTotal} highlight />
+          ) : (
+            <DollarRow label={`Contract Total (${contractMonths} mo)`} value={calc.adjustedAnnual} highlight />
+          )}
+
+          {!isOneTime && pods > 0 && (
+            <View style={styles.badgeRow}>
+              <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
+                <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
+                  {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+                </Text>
+              </View>
+            </View>
+          )}
+        </>
       )}
     </ServiceCard>
   );
 }
 
 const styles = StyleSheet.create({
-  badgeRow: {paddingHorizontal: 16, paddingVertical: 8},
+  ruleRow: {paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm},
+  ruleText: {fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600'},
+  badgeRow: {paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm},
   badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
   greenBadge: {backgroundColor: '#e8f5e9'},
   redBadge: {backgroundColor: '#ffebee'},

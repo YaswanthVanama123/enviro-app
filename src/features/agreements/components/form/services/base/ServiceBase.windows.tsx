@@ -195,11 +195,11 @@ const sc = StyleSheet.create({
     borderRadius:    12,
     marginHorizontal: 0,
     marginBottom:    24,
-    shadowColor:     '#000',
-    shadowOffset:    {width: 0, height: 2},
-    shadowOpacity:   0.06,
-    shadowRadius:    8,
-    elevation:       2,
+
+
+
+
+
     overflow:        'hidden',
   },
   
@@ -356,11 +356,11 @@ const tb = StyleSheet.create({
     borderRadius:     12,
     padding:          24,
     alignItems:       'center',
-    shadowColor:      '#22c55e',
-    shadowOffset:     {width: 0, height: 4},
-    shadowOpacity:    0.15,
-    shadowRadius:     12,
-    elevation:         3,
+
+
+
+
+
   },
   
   totalLabel: {

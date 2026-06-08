@@ -30,7 +30,7 @@ import type {RootStackParamList} from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-  const {isAuthenticated, authReady} = useAuth();
+  const {isAuthenticated, authReady, isAdmin} = useAuth();
 
   if (!authReady) {
     return (
@@ -43,33 +43,42 @@ export default function AppNavigator() {
   return (
     <NavigationContainer theme={DefaultTheme}>
       <Stack.Navigator screenOptions={{headerShown: false}}>
-        {isAuthenticated ? (
-          
-          <>
-            <Stack.Screen name="Main" component={TabNavigator} />
-            <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
-            <Stack.Screen name="AdminPanel" component={AdminPanelScreen} />
-            <Stack.Screen name="Agreement" component={ServiceAgreementScreen} />
-            <Stack.Screen name="Trash" component={TrashScreen} />
-            <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
-            <Stack.Screen name="MyCommissions" component={MyCommissionsScreen} />
-            <Stack.Screen name="AdminCommissions" component={AdminCommissionsScreen} />
-            <Stack.Screen name="AdminCommissionRules" component={AdminCommissionRulesScreen} />
-            <Stack.Screen name="MyQuota" component={MyQuotaScreen} />
-            <Stack.Screen name="MyInsideSales" component={MyInsideSalesScreen} />
-            <Stack.Screen name="QuotaManagement" component={QuotaManagementScreen} />
-            <Stack.Screen name="RouteStarCustomers" component={RouteStarCustomersScreen} />
-            <Stack.Screen name="CompanyMapping" component={CompanyMappingScreen} />
-            <Stack.Screen name="BiginAudit" component={BiginAuditScreen} />
-            <Stack.Screen name="MapDistance" component={MapDistanceScreen} />
-            <Stack.Screen name="EmployeeAgreements" component={EmployeeAgreementsScreen} />
-            <Stack.Screen name="EditHistory" component={EditHistoryScreen} />
-            <Stack.Screen name="PayrollSettings" component={PayrollSettingsScreen} />
-            <Stack.Screen name="Payroll" component={PayrollScreen} />
-          </>
-        ) : (
-          
+        {!isAuthenticated ? (
           <Stack.Screen name="Login" component={LoginScreen} />
+        ) : (
+          <>
+            {/* Shared — available to every authenticated role */}
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen name="Agreement" component={ServiceAgreementScreen} />
+            <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
+            <Stack.Screen name="Trash" component={TrashScreen} />
+            <Stack.Screen name="MyInsideSales" component={MyInsideSalesScreen} />
+
+            {isAdmin ? (
+              /* Admin-only — mirrors the web app's `requireAdmin` route group */
+              <>
+                <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
+                <Stack.Screen name="AdminPanel" component={AdminPanelScreen} />
+                <Stack.Screen name="AdminCommissions" component={AdminCommissionsScreen} />
+                <Stack.Screen name="AdminCommissionRules" component={AdminCommissionRulesScreen} />
+                <Stack.Screen name="QuotaManagement" component={QuotaManagementScreen} />
+                <Stack.Screen name="RouteStarCustomers" component={RouteStarCustomersScreen} />
+                <Stack.Screen name="CompanyMapping" component={CompanyMappingScreen} />
+                <Stack.Screen name="BiginAudit" component={BiginAuditScreen} />
+                <Stack.Screen name="MapDistance" component={MapDistanceScreen} />
+                <Stack.Screen name="EmployeeAgreements" component={EmployeeAgreementsScreen} />
+                <Stack.Screen name="EditHistory" component={EditHistoryScreen} />
+                <Stack.Screen name="PayrollSettings" component={PayrollSettingsScreen} />
+                <Stack.Screen name="Payroll" component={PayrollScreen} />
+              </>
+            ) : (
+              /* Employee-only — personal commission & quota views */
+              <>
+                <Stack.Screen name="MyCommissions" component={MyCommissionsScreen} />
+                <Stack.Screen name="MyQuota" component={MyQuotaScreen} />
+              </>
+            )}
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

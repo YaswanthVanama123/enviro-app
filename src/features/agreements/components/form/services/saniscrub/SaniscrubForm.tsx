@@ -5,6 +5,7 @@ import {
   DropdownRow, FormDivider, CalcRow, NumberRow, ToggleRow,
 } from '../base/ServiceBase';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {Colors} from '../../../../../../theme/colors';
 import {Spacing} from '../../../../../../theme/spacing';
 import {FontSize} from '../../../../../../theme/typography';
@@ -168,6 +169,7 @@ export function SaniscrubForm({data, onChange, contractMonths, onRemove, pricing
   );
 
   const update = useCallback((fields: Record<string, any>) => {
+      trackServiceChanges('saniscrub', fields, {rate, minimumChargePerVisit, nonBathFirstRate, nonBathAdditionalRate}, {quantity: qty, frequency: freq});
     const nq   = fields.qty                   ?? qty;
     const nr   = fields.rate                  ?? rate;
     const mn   = fields.minimumChargePerVisit ?? minimumChargePerVisit;

@@ -1,4 +1,4 @@
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,7 @@ import {useFormFilling}  from '../hooks/useFormFilling';
 import {useAccountTypeDetection} from '../hooks/useAccountTypeDetection';
 import {GlobalCommissionSummary} from '../components/commission';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
+import {ConfirmModal} from '../../../shared/components/ui/AppModal';
 
 const STEP_LABELS = ['Customer', 'Products', 'Services', 'Agreement', 'Terms', 'Review'];
 
@@ -35,6 +36,7 @@ export function CreateAgreementScreen() {
   const editAgreementId = (route.params as any)?.agreementId as string | undefined;
   const isEditMode = !!editAgreementId;
   const scrollRef  = useRef<ScrollView>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const {
     form,
@@ -84,13 +86,13 @@ export function CreateAgreementScreen() {
     initialCacheLoadedFromSaved: form.accountTypeCacheLoadedFromSaved,
   });
 
+  const {step, saving, saveError, savedId} = form;
+
   useEffect(() => {
     if (step === 3 && form.biginCompanyId && Object.keys(form.services).length > 0) {
       detectAccountTypes();
     }
   }, [step, form.biginCompanyId, form.services, detectAccountTypes]);
-
-  const {step, saving, saveError, savedId} = form;
 
   const handleNext = () => {
     scrollRef.current?.scrollTo({y: 0, animated: true});
@@ -107,6 +109,7 @@ export function CreateAgreementScreen() {
   };
 
   const handleGenerate = async () => {
+    setShowSaveModal(false);
     const {ok, agreementId, status} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
@@ -235,21 +238,21 @@ export function CreateAgreementScreen() {
                 <Ionicons name="save-outline" size={16} color={Colors.primary} />
               )}
               <Text style={styles.draftBtnText}>
-                {savedId ? 'Save' : 'Save Draft'}
+                {saving ? 'Saving...' : 'Save as Draft'}
               </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
             style={[styles.nextBtn, isLast && styles.generateBtn, saving && styles.btnDisabled]}
-            onPress={isLast ? handleGenerate : handleNext}
+            onPress={isLast ? () => setShowSaveModal(true) : handleNext}
             disabled={saving}>
             {saving && isLast ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
                 <Text style={styles.nextBtnText}>
-                  {isLast ? (isEditMode ? 'Update' : 'Generate') : 'Next'}
+                  {isLast ? 'Save & Generate PDF' : 'Next'}
                 </Text>
                 <Ionicons
                   name={isLast ? 'checkmark-circle' : 'chevron-forward'}
@@ -307,6 +310,20 @@ export function CreateAgreementScreen() {
 
         {renderBottomBar()}
       </KeyboardAvoidingView>
+
+      <ConfirmModal
+        visible={showSaveModal}
+        icon="document-text-outline"
+        iconColor={Colors.primary}
+        iconBg={Colors.primaryLight}
+        title="Confirm Save"
+        subtitle="Are you sure you want to save this form and convert it to PDF? This will compile the document and store it in Bigin."
+        confirmLabel="Yes, Save & Generate"
+        cancelLabel="Cancel"
+        loading={saving}
+        onConfirm={handleGenerate}
+        onCancel={() => setShowSaveModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -390,7 +407,7 @@ const styles = StyleSheet.create({
   },
   saveError: {
     fontSize: FontSize.sm,
-    color: Colors.error ?? '#ef4444',
+    color: '#ef4444',
     textAlign: 'center',
     paddingBottom: Spacing.xs,
   },

@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
     borderTopWidth: 1,
     zIndex: 999,
-    elevation: 8,          
+          
     paddingTop: Spacing.sm,
     paddingHorizontal: Spacing.sm,
   },

@@ -5,9 +5,10 @@ import {
   ScrollView, StyleSheet, ActivityIndicator, Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
+import {ConfirmModal} from '../../../shared/components/ui/AppModal';
 import {Step2ProductsDesktop} from '../components/form/steps/Step2ProductsDesktop';
 import {Step3Services}         from '../components/form/steps/Step3Services';
 import {Step5Agreement}        from '../components/form/steps/Step5Agreement';
@@ -240,8 +241,8 @@ const dd = StyleSheet.create({
     position: 'absolute', top: 36, left: 0, right: 0,
     backgroundColor: C.surface, borderWidth: 1, borderColor: C.primary,
     borderRadius: 4, zIndex: 300,
-    shadowColor: '#000', shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.12, shadowRadius: 12, elevation: 8,
+
+
   },
   opt: {
     paddingHorizontal: 12, paddingVertical: 10,
@@ -433,7 +434,10 @@ const f = StyleSheet.create({
 
 export function CreateAgreementDesktop() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const editAgreementId = (route.params as any)?.agreementId as string | undefined;
   const [activeFormTab, setActiveFormTab] = useState<'form' | 'products-ref' | 'dispensers-ref'>('form');
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const {
     form,
@@ -448,7 +452,7 @@ export function CreateAgreementDesktop() {
     addService, removeService, updateService,
     setEnviroOf, updateServiceAgreement,
     saveDraft, generate, allServicesOneTime,
-  } = useFormFilling();
+  } = useFormFilling(editAgreementId);
 
   const {saving, saveError, savedId} = form;
   const rows = form.headerRows ?? [];
@@ -463,6 +467,7 @@ export function CreateAgreementDesktop() {
   };
 
   const handleGenerate = async () => {
+    setShowSaveModal(false);
     const {ok, agreementId, status} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
@@ -828,23 +833,37 @@ export function CreateAgreementDesktop() {
             {saving
               ? <ActivityIndicator size="small" color="#4a4a4a" />
               : <Ionicons name="save-outline" size={15} color="#4a4a4a" />}
-            <Text style={ss.draftBtnText}>{savedId ? 'Save' : 'Save Draft'}</Text>
+            <Text style={ss.draftBtnText}>{saving ? 'Saving...' : 'Save as Draft'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[ss.saveBtn, saving && ss.disabled]}
-            onPress={handleGenerate}
+            onPress={() => setShowSaveModal(true)}
             disabled={saving}>
             {saving
               ? <ActivityIndicator size="small" color="#fff" />
               : <>
                   <Ionicons name="document-text-outline" size={15} color="#fff" />
-                  <Text style={ss.saveBtnText}>Generate PDF</Text>
+                  <Text style={ss.saveBtnText}>Save & Generate PDF</Text>
                 </>}
           </TouchableOpacity>
         </View>
       </View>
 
+      <ConfirmModal
+        visible={showSaveModal}
+        icon="document-text-outline"
+        iconColor={C.orange}
+        iconBg="#fff7ed"
+        title="Confirm Save"
+        subtitle="Are you sure you want to save this form and convert it to PDF? This will compile the document and store it in Bigin."
+        confirmLabel="Yes, Save & Generate"
+        confirmColor={C.orange}
+        cancelLabel="Cancel"
+        loading={saving}
+        onConfirm={handleGenerate}
+        onCancel={() => setShowSaveModal(false)}
+      />
     </View>
   );
 }

@@ -128,9 +128,12 @@ function renderServiceForm(
     case 'microfiberMopping':  return <MicrofiberMoppingForm  key={serviceId} {...props} />;
     case 'rpmWindows':         return <RpmWindowsForm         key={serviceId} {...props} />;
     case 'carpetclean':        return <CarpetForm             key={serviceId} {...props} />;
+    case 'carpetCleaning':     return <CarpetForm             key={serviceId} {...props} />; // Web app id
+    case 'carpet':             return <CarpetForm             key={serviceId} {...props} />; // legacy id
     case 'pureJanitorial':     return <JanitorialForm         key={serviceId} {...props} />;
     case 'janitorial':         return <JanitorialForm         key={serviceId} {...props} />; // Web app saves as 'janitorial'
     case 'stripwax':           return <StripWaxForm           key={serviceId} {...props} />;
+    case 'stripWax':           return <StripWaxForm           key={serviceId} {...props} />; // Web app id
     case 'electrostaticSpray': return <ElectrostaticSprayForm key={serviceId} {...props} />;
     case 'refreshPowerScrub':  return <RefreshPowerScrubForm  key={serviceId} {...props} />;
     default:                   return null;

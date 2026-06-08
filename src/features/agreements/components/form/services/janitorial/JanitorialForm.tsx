@@ -244,7 +244,7 @@ export function JanitorialForm({data, onChange, contractMonths, onRemove, pricin
         orderNo: 1,
         label: 'Frequency',
         type: 'text',
-        value: FREQUENCY_LABELS[newFreq] ?? newFreq,
+        value: FREQUENCY_LABELS[newFreq as keyof typeof FREQUENCY_LABELS] ?? newFreq,
         frequencyKey: newFreq,
       },
       visitsPerWeek: {

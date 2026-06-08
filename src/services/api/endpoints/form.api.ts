@@ -43,6 +43,7 @@ export interface FormPayload {
   headerTitle: string;
   headerRows: HeaderRow[];
   products: {
+    products?: any[];
     smallProducts: any[];
     dispensers: any[];
     bigProducts: any[];
@@ -85,6 +86,62 @@ export const formApi = {
   async updateAgreement(id: string, payload: FormPayload): Promise<boolean> {
     const res = await apiClient.put(`/api/pdf/customer-headers/${id}`, payload);
     return !res.error;
+  },
+
+  // Save AND recompile the PDF (Save & Generate PDF on an existing agreement).
+  async updateAndRecompileAgreement(id: string, payload: FormPayload): Promise<boolean> {
+    console.log('[API] PUT /api/pdf/customer-headers/' + id + '?recompile=true (generate PDF)');
+    const res = await apiClient.putRaw(`/api/pdf/customer-headers/${id}?recompile=true`, payload);
+    if (res.error) {
+      console.warn('[API] recompile failed:', res.error);
+    } else {
+      console.log('[API] recompile OK, status:', res.status);
+    }
+    return !res.error;
+  },
+
+  // Whether this agreement has no versions yet (first-time → auto-create v1).
+  async checkVersionStatus(id: string): Promise<{isFirstTime: boolean} | null> {
+    const res = await apiClient.get<any>(`/api/versions/${id}/check-status`);
+    if (res.error || !res.data) {
+      return null;
+    }
+    return res.data;
+  },
+
+  // Create a version — this is what produces the PDF file shown in the folder.
+  async createVersion(
+    id: string,
+    options: {changeNotes?: string; replaceRecent?: boolean; isFirstTime?: boolean},
+  ): Promise<any | null> {
+    console.log('[API] POST /api/versions/' + id + '/create-version', options);
+    const res = await apiClient.post<any>(`/api/versions/${id}/create-version`, options);
+    if (res.error) {
+      console.warn('[API] createVersion failed:', res.error);
+      return null;
+    }
+    console.log('[API] createVersion OK, status:', res.status);
+    return res.data ?? {};
+  },
+
+  // Price-change version logs (same endpoints as the web app's fileLogger).
+  async getVersionLogs(agreementId: string): Promise<{success: boolean; logs: any[]} | null> {
+    const res = await apiClient.get<any>(`/api/pdf/logs/agreement/${agreementId}`);
+    if (res.error || !res.data) {
+      return null;
+    }
+    return res.data;
+  },
+
+  async createVersionLog(request: any): Promise<any> {
+    console.log('[API] POST /api/pdf/logs/create — changes:', request?.currentChanges?.length ?? 0);
+    const res = await apiClient.post<any>('/api/pdf/logs/create', request);
+    if (res.error) {
+      console.warn('[API] createVersionLog failed:', res.error);
+      throw new Error(res.error);
+    }
+    console.log('[API] createVersionLog OK, status:', res.status);
+    return res.data;
   },
 
   async getServiceConfig(serviceId: string): Promise<any | null> {

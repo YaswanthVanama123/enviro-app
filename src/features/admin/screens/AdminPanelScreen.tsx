@@ -588,11 +588,11 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     width: '100%',
     maxWidth: 520,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+
+
+
+
+
   },
 
   fieldLabel: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs},
@@ -648,11 +648,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     width: '100%',
     maxWidth: 520,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+
+
+
+
+
   },
   avatarCircle: {
     width: 72,
@@ -738,11 +738,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.xl,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 10,
+
+
+
+
+
   },
   modalHeader: {
     flexDirection: 'row',

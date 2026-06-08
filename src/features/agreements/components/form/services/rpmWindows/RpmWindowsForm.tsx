@@ -22,6 +22,7 @@ import {
   type RpmRateCategory,
   type RpmWindowsFormState,
 } from './rpmWindowsCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
@@ -106,6 +107,7 @@ export function RpmWindowsForm({data, onChange, contractMonths, onRemove, pricin
   const update = useCallback(
     (fields: Record<string, any>) => {
       const merged = {...data, ...fields};
+      trackServiceChanges('rpmWindows', fields, {baseSmall, baseMedium, baseLarge, baseTrip, installMultiplierFirstTime, installMultiplierClean, customInstallationFee: data?.customInstallationFee, customPerVisitPrice: data?.customPerVisitPrice, customMonthlyRecurring: data?.customMonthlyRecurring, customContractTotal: data?.customContractTotal}, {quantity: smallQty + mediumQty + largeQty, frequency: freq});
       const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
       if (clearOverrides) {
         merged.customInstallationFee = undefined;

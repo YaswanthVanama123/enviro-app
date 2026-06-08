@@ -21,6 +21,7 @@ import {AdminDashboardScreen} from '../../features/admin/screens/AdminDashboardS
 import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocumentsScreen';
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
+import {MoreScreen} from './MoreScreen';
 import {TabNavigator as DesktopNav} from './TabNavigator.windows';
 
 const C = {
@@ -56,7 +57,7 @@ const EMPLOYEE_NAV: NavItem[] = [
   {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 component: CreateAgreementScreen},
   {name: 'Saved', label: 'Saved', icon: 'document-text-outline',              component: SavedAgreementsScreen},
   {name: 'Trash', label: 'Trash', icon: 'trash-outline',                      component: TrashScreen},
-  {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', component: AdminPanelScreen},
+  {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', component: MoreScreen},
 ];
 
 const PUBLIC_NAV: NavItem[] = EMPLOYEE_NAV;

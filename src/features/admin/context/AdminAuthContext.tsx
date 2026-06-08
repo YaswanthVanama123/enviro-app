@@ -160,10 +160,17 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
         }
 
         apiClient.setToken(token);
+        // Clear any stale/legacy session first so the freshly-chosen role is the
+        // only identity on the device (prevents an old admin session from leaking).
+        await storage.clearAuth();
         await storage.setToken(token);
         await storage.setUser(authUser);
         await storage.setRole(authUser.role);
         setUser(authUser);
+
+        if (__DEV__) {
+          console.log('[Auth] logged in as', authUser.role, '-', authUser.username);
+        }
 
         return null;
       } finally {

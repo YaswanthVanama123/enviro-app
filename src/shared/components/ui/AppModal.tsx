@@ -213,11 +213,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xxl,
     paddingBottom: Spacing.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 10,
+
+
+
+
+
   },
   iconCircle: {
     width: 64,

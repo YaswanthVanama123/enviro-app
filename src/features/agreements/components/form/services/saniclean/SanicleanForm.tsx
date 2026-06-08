@@ -20,6 +20,7 @@ import {
   getCalculationMode,
   type BackendSanicleanConfig,
 } from './sanicleanCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 
 interface Props {
   data: any;
@@ -273,6 +274,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
 
   const update = useCallback(
     (fields: Record<string, any>) => {
+      trackServiceChanges('saniclean', fields, state, {quantity: state.fixtureCount, frequency: state.mainServiceFrequency});
       const merged = {...data, ...fields};
       if ('mainServiceFrequency' in fields) {
         merged.frequency = fields.mainServiceFrequency;

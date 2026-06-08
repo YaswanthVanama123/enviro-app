@@ -78,22 +78,9 @@ export const storage = {
   async getUser(): Promise<AuthUser | null> {
     const raw = await store.getItem(USER_KEY);
     if (!raw) {
-      
-      const legacyRaw = await store.getItem(LEGACY_USER_KEY);
-      if (legacyRaw) {
-        try {
-          const legacyUser = JSON.parse(legacyRaw);
-          
-          return {
-            id: legacyUser.id,
-            username: legacyUser.username,
-            fullName: legacyUser.username,
-            role: 'admin',
-          };
-        } catch {
-          return null;
-        }
-      }
+      // No current session. A leftover legacy ("admin_user") key must NOT be
+      // promoted to an admin identity — that let stale admin data masquerade as
+      // the logged-in user. Fall through to the login screen instead.
       return null;
     }
     try {

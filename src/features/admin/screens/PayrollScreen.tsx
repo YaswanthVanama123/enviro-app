@@ -934,11 +934,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+
+
+
+
+
   },
   periodHeader: {
     flexDirection: 'row',
@@ -987,11 +987,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+
+
+
+
+
   },
   summaryCardPrimary: {
     backgroundColor: '#6366f1',
@@ -1057,11 +1057,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     marginBottom: Spacing.sm,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+
+
+
+
+
   },
   employeeCardExpanded: {
     borderWidth: 1,
@@ -1192,11 +1192,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+
+
+
+
+
   },
   settingsSectionHeader: {
     flexDirection: 'row',
@@ -1321,11 +1321,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+
+
+
+
+
   },
   historyCardCurrent: {
     borderWidth: 2,

@@ -17,6 +17,7 @@ import {
   type BackendCarpetConfig,
   type CarpetFormState,
 } from './carpetCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
@@ -79,6 +80,7 @@ export function CarpetForm({data, onChange, contractMonths, onRemove, pricingCon
 
   const update = useCallback(
     (fields: Record<string, any>) => {
+      trackServiceChanges('carpetclean', fields, {firstUnitRate, additionalUnitRate, perVisitMinimum, customInstallationFee: data?.customInstallationFee, customContractTotal: data?.customContractTotal}, {quantity: areaSqFt, frequency: freq});
       const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
       const merged = {...data, ...fields};
       if (clearOverrides) {

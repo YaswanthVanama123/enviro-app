@@ -19,6 +19,7 @@ import {
   type FoamingDrainFormState,
   type FoamingDrainFrequency,
 } from './foamingDrainCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
@@ -137,6 +138,7 @@ export function FoamingDrainForm({data, onChange, contractMonths, onRemove, pric
   const update = useCallback(
     (fields: Record<string, any>) => {
       const merged = {...data, ...fields};
+      trackServiceChanges('foamingDrain', fields, buildState(), {quantity: standardDrainCount, frequency: freq});
 
       // Switching off weekly / volume disables small-alt (matches web).
       if ('frequency' in fields && fields.frequency !== 'weekly') {

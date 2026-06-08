@@ -1,23 +1,7 @@
+// Shadows are intentionally disabled app-wide — flat UI.
+// Keys are kept so existing `...Shadow.small|medium|large` spreads stay valid.
 export const Shadow = {
-  small: {
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  medium: {
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  large: {
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-  },
+  small: {},
+  medium: {},
+  large: {},
 };

@@ -327,11 +327,11 @@ const ss = StyleSheet.create({
     borderRadius:    12,
     marginHorizontal: 0,
     marginBottom:    24,
-    shadowColor:     '#000',
-    shadowOffset:    {width: 0, height: 2},
-    shadowOpacity:   0.06,
-    shadowRadius:    8,
-    elevation:       2,
+
+
+
+
+
     overflow:        'hidden',
   },
   
@@ -496,11 +496,11 @@ const ss = StyleSheet.create({
     borderColor:     C.dropdownBorder,
     borderRadius:    8,
     zIndex:          300,
-    shadowColor:     '#000',
-    shadowOffset:    {width: 0, height: 8},
-    shadowOpacity:   0.15,
-    shadowRadius:    24,
-    elevation:       10,
+
+
+
+
+
     maxHeight:       300,
   },
   dropdownScroll: {

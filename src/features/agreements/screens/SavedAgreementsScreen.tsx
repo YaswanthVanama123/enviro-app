@@ -345,11 +345,11 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
-    shadowColor: Colors.primary,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+
+
+
+
+
   },
   chipText: {
     fontSize: FontSize.sm,

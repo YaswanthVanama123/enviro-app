@@ -1,5 +1,5 @@
 
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {Step1Customer}  from '../components/form/steps/Step1Customer';
 import {Step2Products}  from '../components/form/steps/Step2Products';
 import {Step3Services}  from '../components/form/steps/Step3Services';
@@ -18,6 +18,7 @@ import {Step5Agreement} from '../components/form/steps/Step5Agreement';
 import {Step4Review}    from '../components/form/steps/Step4Review';
 import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
+import {ConfirmModal} from '../../../shared/components/ui/AppModal';
 
 const C = {
   primary:      '#c00000',
@@ -46,7 +47,10 @@ const SECTIONS = [
 
 export function CreateAgreementSinglePage() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const editAgreementId = (route.params as any)?.agreementId as string | undefined;
   const scrollRef  = useRef<ScrollView>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const {
     form,
@@ -75,11 +79,12 @@ export function CreateAgreementSinglePage() {
     saveDraft,
     generate,
     allServicesOneTime,
-  } = useFormFilling();
+  } = useFormFilling(editAgreementId);
 
   const {saving, saveError, savedId} = form;
 
   const handleGenerate = async () => {
+    setShowSaveModal(false);
     const {ok, agreementId, status} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
@@ -192,7 +197,7 @@ export function CreateAgreementSinglePage() {
           onEnviroOfChange={setEnviroOf}
           serviceAgreement={form.serviceAgreement}
           onUpdate={updateServiceAgreement}
-          loading={form.serviceAgreementLoading}
+          loading={form.initialLoading}
         />
 
         <SectionDivider />
@@ -221,24 +226,39 @@ export function CreateAgreementSinglePage() {
               ? <ActivityIndicator size="small" color={C.draftText} />
               : <Ionicons name="save-outline" size={16} color={C.draftText} />
             }
-            <Text style={ss.draftBtnText}>{savedId ? 'Save' : 'Save Draft'}</Text>
+            <Text style={ss.draftBtnText}>{saving ? 'Saving...' : 'Save as Draft'}</Text>
           </TouchableOpacity>
 
           {}
           <TouchableOpacity
             style={[ss.saveBtn, saving && ss.btnDisabled]}
-            onPress={handleGenerate}
+            onPress={() => setShowSaveModal(true)}
             disabled={saving}>
             {saving
               ? <ActivityIndicator size="small" color="#fff" />
               : <>
                   <Ionicons name="document-text-outline" size={16} color="#fff" />
-                  <Text style={ss.saveBtnText}>Generate PDF</Text>
+                  <Text style={ss.saveBtnText}>Save & Generate PDF</Text>
                 </>
             }
           </TouchableOpacity>
         </View>
       </View>
+
+      <ConfirmModal
+        visible={showSaveModal}
+        icon="document-text-outline"
+        iconColor={C.orange}
+        iconBg="#fff7ed"
+        title="Confirm Save"
+        subtitle="Are you sure you want to save this form and convert it to PDF? This will compile the document and store it in Bigin."
+        confirmLabel="Yes, Save & Generate"
+        confirmColor={C.orange}
+        cancelLabel="Cancel"
+        loading={saving}
+        onConfirm={handleGenerate}
+        onCancel={() => setShowSaveModal(false)}
+      />
     </View>
   );
 }

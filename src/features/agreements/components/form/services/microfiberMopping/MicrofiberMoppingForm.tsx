@@ -20,6 +20,7 @@ import {
   type MicrofiberMoppingFormState,
   type MicrofiberFrequencyKey,
 } from './microfiberMoppingCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
@@ -131,6 +132,7 @@ export function MicrofiberMoppingForm({
   const update = useCallback(
     (fields: Record<string, any>) => {
       const merged = {...data, ...fields};
+      trackServiceChanges('microfiberMopping', fields, {customIncludedBathroomRate: data?.customIncludedBathroomRate ?? includedBathroomRate, customHugeBathroomRatePerSqFt: data?.customHugeBathroomRatePerSqFt ?? hugeBathroomRatePerSqFt, customExtraAreaRatePerUnit: data?.customExtraAreaRatePerUnit ?? extraAreaRatePerUnit, customStandaloneRatePerUnit: data?.customStandaloneRatePerUnit ?? standaloneRatePerUnit}, {quantity: bathroomCount, frequency: freq});
 
       // Entering huge-bathroom sq ft zeroes standard bathrooms (matches web).
       if ('hugeBathroomSqFt' in fields) {

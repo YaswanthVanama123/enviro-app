@@ -297,7 +297,7 @@ const ss = StyleSheet.create({
   selectChipTextActive: {color: '#fff', fontWeight: '700'},
   dropdown: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.sm},
   dropdownText: {fontSize: FontSize.md, color: Colors.textPrimary, flex: 1},
-  dropdownMenu: {position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, zIndex: 100, shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.1, shadowRadius: 8, elevation: 8, maxHeight: 280, overflow: 'hidden'},
+  dropdownMenu: {position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, zIndex: 100, maxHeight: 280, overflow: 'hidden'},
   dropdownScroll: {maxHeight: 278},
   dropdownOption: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight},
   dropdownOptionActive: {backgroundColor: Colors.primaryLight},

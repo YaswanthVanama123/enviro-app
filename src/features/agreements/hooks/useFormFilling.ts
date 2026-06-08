@@ -7,6 +7,10 @@ import {
   DEFAULT_HEADER_ROWS,
   formApi,
 } from '../../../services/api/endpoints/form.api';
+import {normalizeEditServices} from '../utils/serviceDataTransformers';
+import {serviceToBackendFormat} from '../utils/serviceToBackend';
+import {hasPriceChanges, getPriceChangeCount, createVersionLogFile, trackProductChange, clearPriceChanges} from '../utils/fileLogger';
+import {useAuth} from '../../admin/context/AdminAuthContext';
 
 export interface SmallProduct {
   id: string;
@@ -127,9 +131,14 @@ const INITIAL_STATE: FormState = {
 
 export function useFormFilling(editAgreementId?: string) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
+  const {user} = useAuth();
+  const salespersonId = user?.id ?? 'salesperson_001';
+  const salespersonName = user?.fullName ?? user?.username ?? 'Sales Person';
 
   useEffect(() => {
     setForm(prev => ({...prev, initialLoading: true}));
+    // Start each create/edit session with a clean price-change log.
+    clearPriceChanges();
 
     console.log('[FormFilling] Starting initial API load...', editAgreementId ? `editMode=${editAgreementId}` : 'createMode');
 
@@ -205,7 +214,7 @@ export function useFormFilling(editAgreementId?: string) {
           }
         }
 
-        if (catalogRes.status === 'fulfilled' && catalogRes.value) {
+        if (!editAgreementId && catalogRes.status === 'fulfilled' && catalogRes.value) {
           const catalog = catalogRes.value;
           const allProducts: any[] = (catalog.families ?? []).flatMap((f: any) =>
             (f.products ?? []),
@@ -290,7 +299,9 @@ export function useFormFilling(editAgreementId?: string) {
 
         if (editRes && editRes.status === 'fulfilled' && editRes.value) {
           const doc = editRes.value;
-          const payload = doc.payload ?? {};
+          // Edit-format may return content at top level OR nested under `payload`
+          // (matches web: `const fromBackend = json.payload ?? json`).
+          const payload = doc.payload ?? doc;
           const ts = Date.now();
 
           next.savedId = doc._id ?? doc.id ?? editAgreementId!;
@@ -310,46 +321,152 @@ export function useFormFilling(editAgreementId?: string) {
             console.log('[FormFilling] No accountTypeCache in saved agreement');
           }
 
-          if (doc.headerTitle) {next.headerTitle = doc.headerTitle;}
-          if (Array.isArray(doc.headerRows) && doc.headerRows.length > 0) {next.headerRows = doc.headerRows;}
+          const editTitle = payload.headerTitle ?? doc.headerTitle;
+          const editRows = payload.headerRows ?? doc.headerRows;
+          if (editTitle) {next.headerTitle = editTitle;}
+          if (Array.isArray(editRows) && editRows.length > 0) {next.headerRows = editRows;}
 
           const savedProducts = payload.products ?? {};
-          if (Array.isArray(savedProducts.smallProducts)) {
-            next.smallProducts = savedProducts.smallProducts.map((p: any, i: number) => ({
-              id: `edit_sp_${ts}_${i}`,
-              displayName: p.displayName ?? '',
-              qty: p.qty ?? 1,
-              unitPrice: p.unitPrice ?? 0,
-              frequency: p.frequency ?? 'monthly',
-              costType: p.costType ?? 'productCost',
-            }));
-          }
-          if (Array.isArray(savedProducts.dispensers)) {
-            next.dispensers = savedProducts.dispensers.map((d: any, i: number) => ({
-              id: `edit_dp_${ts}_${i}`,
-              displayName: d.displayName ?? '',
-              qty: d.qty ?? 1,
-              warrantyRate: d.warrantyRate ?? 0,
-              replacementRate: d.replacementRate ?? 0,
-              frequency: d.frequency ?? 'monthly',
-              costType: d.costType ?? 'productCost',
-            }));
-          }
-          if (Array.isArray(savedProducts.bigProducts)) {
-            next.bigProducts = savedProducts.bigProducts.map((p: any, i: number) => ({
-              id: `edit_bp_${ts}_${i}`,
-              displayName: p.displayName ?? '',
-              qty: p.qty ?? 1,
-              amount: p.amount ?? 0,
-              frequency: p.frequency ?? 'monthly',
-            }));
+          const productName = (p: any) =>
+            p.displayName || p.customName || p.productName || p.productKey || '';
+          const toNum = (v: any) => {
+            const n = parseFloat(String(v ?? ''));
+            return Number.isFinite(n) ? n : 0;
+          };
+          const toInt = (v: any) => {
+            const n = parseInt(String(v ?? ''), 10);
+            return Number.isFinite(n) ? n : 0;
+          };
+
+          // In edit mode products come ENTIRELY from the saved agreement (no
+          // catalog defaults). Mirror the web app's `extractProductsFromBackend`
+          // which accepts three shapes: merged products[], legacy 3 arrays, rows[].
+          const editSmall: any[] = [];
+          const editBig: any[] = [];
+          const editDispensers: any[] = [];
+
+          if (Array.isArray(savedProducts.products)) {
+            savedProducts.products.forEach((p: any, i: number) => {
+              const isSmall = p._productType ? p._productType === 'small' : p.unitPrice != null;
+              if (isSmall) {
+                editSmall.push({
+                  id: `edit_sp_${ts}_${i}`,
+                  displayName: productName(p),
+                  qty: toInt(p.qty) || 1,
+                  unitPrice: toNum(p.unitPrice ?? p.amount),
+                  frequency: p.frequency || 'monthly',
+                  costType: p.costType ?? 'productCost',
+                });
+              } else {
+                editBig.push({
+                  id: `edit_bp_${ts}_${i}`,
+                  displayName: productName(p),
+                  qty: toInt(p.qty) || 1,
+                  amount: toNum(p.amount ?? p.unitPrice),
+                  frequency: p.frequency || 'monthly',
+                });
+              }
+            });
+            (savedProducts.dispensers ?? []).forEach((d: any, i: number) => {
+              editDispensers.push({
+                id: `edit_dp_${ts}_${i}`,
+                displayName: productName(d),
+                qty: toInt(d.qty) || 1,
+                warrantyRate: toNum(d.warrantyRate),
+                replacementRate: toNum(d.replacementRate),
+                frequency: d.frequency || 'monthly',
+                costType: d.costType ?? 'productCost',
+              });
+            });
+          } else if (
+            Array.isArray(savedProducts.smallProducts) ||
+            Array.isArray(savedProducts.dispensers) ||
+            Array.isArray(savedProducts.bigProducts)
+          ) {
+            (savedProducts.smallProducts ?? []).forEach((p: any, i: number) => {
+              editSmall.push({
+                id: `edit_sp_${ts}_${i}`,
+                displayName: productName(p),
+                qty: toInt(p.qty ?? p.quantity) || 1,
+                unitPrice: toNum(p.unitPrice ?? p.amount),
+                frequency: p.frequency || 'monthly',
+                costType: p.costType ?? 'productCost',
+              });
+            });
+            (savedProducts.bigProducts ?? []).forEach((p: any, i: number) => {
+              editBig.push({
+                id: `edit_bp_${ts}_${i}`,
+                displayName: productName(p),
+                qty: toInt(p.qty ?? p.quantity) || 1,
+                amount: toNum(p.amount ?? p.unitPrice),
+                frequency: p.frequency || 'monthly',
+              });
+            });
+            (savedProducts.dispensers ?? []).forEach((d: any, i: number) => {
+              editDispensers.push({
+                id: `edit_dp_${ts}_${i}`,
+                displayName: productName(d),
+                qty: toInt(d.qty ?? d.quantity) || 1,
+                warrantyRate: toNum(d.warrantyRate),
+                replacementRate: toNum(d.replacementRate),
+                frequency: d.frequency || 'monthly',
+                costType: d.costType ?? 'productCost',
+              });
+            });
+          } else if (Array.isArray(savedProducts.rows)) {
+            // Row-matrix format: [small(0-4)] [dispenser(5-10)] [big(11-15)]
+            savedProducts.rows.forEach((row: any[], i: number) => {
+              if (row[0] && String(row[0]).trim() !== '') {
+                editSmall.push({
+                  id: `edit_sp_${ts}_${i}`,
+                  displayName: row[0],
+                  unitPrice: toNum(row[1]),
+                  frequency: row[2] || 'monthly',
+                  qty: toInt(row[3]) || 1,
+                  costType: 'productCost',
+                });
+              }
+              if (row[5] && String(row[5]).trim() !== '') {
+                editDispensers.push({
+                  id: `edit_dp_${ts}_${i}`,
+                  displayName: row[5],
+                  qty: toInt(row[6]) || 1,
+                  warrantyRate: toNum(row[7]),
+                  replacementRate: toNum(row[8]),
+                  frequency: row[9] || 'monthly',
+                  costType: 'productCost',
+                });
+              }
+              if (row[11] && String(row[11]).trim() !== '') {
+                editBig.push({
+                  id: `edit_bp_${ts}_${i}`,
+                  displayName: row[11],
+                  qty: toInt(row[12]) || 1,
+                  amount: toNum(row[13]),
+                  frequency: row[14] || 'monthly',
+                });
+              }
+            });
           }
 
+          // Always replace (even with empty arrays) so nothing leaks from defaults.
+          next.smallProducts = editSmall;
+          next.bigProducts = editBig;
+          next.dispensers = editDispensers;
+          console.log('[FormFilling] Edit products loaded — small:', editSmall.length, 'big:', editBig.length, 'dispensers:', editDispensers.length);
+          console.log('[FormFilling] Raw products keys:', Object.keys(savedProducts), '| products[]:', Array.isArray(savedProducts.products) ? savedProducts.products.length : 'n/a', '| dispensers[]:', Array.isArray(savedProducts.dispensers) ? savedProducts.dispensers.length : 'n/a', '| smallProducts[]:', Array.isArray(savedProducts.smallProducts) ? savedProducts.smallProducts.length : 'n/a', '| bigProducts[]:', Array.isArray(savedProducts.bigProducts) ? savedProducts.bigProducts.length : 'n/a', '| rows[]:', Array.isArray(savedProducts.rows) ? savedProducts.rows.length : 'n/a');
+          console.log('[FormFilling] Raw products sample:', JSON.stringify(savedProducts).slice(0, 1000));
+
           if (payload.services && typeof payload.services === 'object') {
-            next.services = payload.services;
-            next.visibleServices = Object.keys(payload.services).filter(
-              k => payload.services[k]?.isActive !== false,
-            );
+            next.services = normalizeEditServices(payload.services);
+            // Only services that were actually added show in edit mode. Inactive
+            // services are saved as null (or {isActive:false}) by the web app —
+            // exclude both; a real added service is a truthy object not marked inactive.
+            next.visibleServices = Object.keys(payload.services).filter(k => {
+              const s = payload.services[k];
+              return !!s && typeof s === 'object' && s.isActive !== false;
+            });
+            console.log('[FormFilling] Edit visible services:', next.visibleServices);
           }
 
           const savedSummary = payload.summary ?? {};
@@ -379,7 +496,7 @@ export function useFormFilling(editAgreementId?: string) {
         return next;
       });
     });
-  }, []);
+  }, [editAgreementId]);
 
   const goToStep = useCallback((step: FormStep) => {
     setForm(prev => ({...prev, step}));
@@ -422,10 +539,18 @@ export function useFormFilling(editAgreementId?: string) {
   }, []);
 
   const updateSmallProduct = useCallback((id: string, data: Partial<SmallProduct>) => {
-    setForm(prev => ({
-      ...prev,
-      smallProducts: prev.smallProducts.map(p => p.id === id ? {...p, ...data} : p),
-    }));
+    setForm(prev => {
+      const old = prev.smallProducts.find(p => p.id === id);
+      if (old) {
+        if (data.unitPrice !== undefined) {
+          trackProductChange('product', old.displayName || 'Product', 'unitPrice', old.unitPrice, Number(data.unitPrice), {
+            quantity: data.qty ?? old.qty,
+            frequency: data.frequency ?? old.frequency,
+          });
+        }
+      }
+      return {...prev, smallProducts: prev.smallProducts.map(p => (p.id === id ? {...p, ...data} : p))};
+    });
   }, []);
 
   const addBigProduct = useCallback(() => {
@@ -444,10 +569,16 @@ export function useFormFilling(editAgreementId?: string) {
   }, []);
 
   const updateBigProduct = useCallback((id: string, data: Partial<BigProduct>) => {
-    setForm(prev => ({
-      ...prev,
-      bigProducts: prev.bigProducts.map(p => p.id === id ? {...p, ...data} : p),
-    }));
+    setForm(prev => {
+      const old = prev.bigProducts.find(p => p.id === id);
+      if (old && data.amount !== undefined) {
+        trackProductChange('product', old.displayName || 'Product', 'amount', old.amount, Number(data.amount), {
+          quantity: data.qty ?? old.qty,
+          frequency: data.frequency ?? old.frequency,
+        });
+      }
+      return {...prev, bigProducts: prev.bigProducts.map(p => (p.id === id ? {...p, ...data} : p))};
+    });
   }, []);
 
   const addDispenser = useCallback(() => {
@@ -468,10 +599,24 @@ export function useFormFilling(editAgreementId?: string) {
   }, []);
 
   const updateDispenser = useCallback((id: string, data: Partial<Dispenser>) => {
-    setForm(prev => ({
-      ...prev,
-      dispensers: prev.dispensers.map(d => d.id === id ? {...d, ...data} : d),
-    }));
+    setForm(prev => {
+      const old = prev.dispensers.find(d => d.id === id);
+      if (old) {
+        if (data.warrantyRate !== undefined) {
+          trackProductChange('dispenser', old.displayName || 'Dispenser', 'warrantyRate', old.warrantyRate, Number(data.warrantyRate), {
+            quantity: data.qty ?? old.qty,
+            frequency: data.frequency ?? old.frequency,
+          });
+        }
+        if (data.replacementRate !== undefined) {
+          trackProductChange('dispenser', old.displayName || 'Dispenser', 'replacementRate', old.replacementRate, Number(data.replacementRate), {
+            quantity: data.qty ?? old.qty,
+            frequency: data.frequency ?? old.frequency,
+          });
+        }
+      }
+      return {...prev, dispensers: prev.dispensers.map(d => (d.id === id ? {...d, ...data} : d))};
+    });
   }, []);
 
   const setContractMonths = useCallback((contractMonths: number) => {
@@ -549,7 +694,9 @@ export function useFormFilling(editAgreementId?: string) {
     const activeServices: Record<string, any> = {};
     for (const id of form.visibleServices) {
       if (form.services[id]) {
-        activeServices[id] = form.services[id];
+        // Save each service in the web app's structured shape (with flat fields
+        // kept) so it round-trips on mobile AND opens correctly on the web app.
+        activeServices[id] = serviceToBackendFormat(id, form.services[id]);
       }
     }
 
@@ -582,34 +729,63 @@ export function useFormFilling(editAgreementId?: string) {
       productContractTotal: 0,
     };
 
+    // Build products in the EXACT web app structure so save/edit round-trips on
+    // both apps: a merged `products` array (small w/ unitPrice + big w/ amount),
+    // a `dispensers` array, plus raw `smallProducts`/`bigProducts` arrays.
+    const smallProducts = form.smallProducts.map(p => ({
+      displayName: p.displayName,
+      qty: p.qty,
+      unitPrice: p.unitPrice,
+      frequency: p.frequency,
+      costType: p.costType ?? 'productCost',
+      total: p.qty * p.unitPrice,
+      customFields: {},
+    }));
+    const bigProducts = form.bigProducts.map(p => ({
+      displayName: p.displayName,
+      qty: p.qty,
+      amount: p.amount,
+      frequency: p.frequency,
+      total: p.qty * p.amount,
+      customFields: {},
+    }));
+    const dispensers = form.dispensers.map(d => ({
+      displayName: d.displayName,
+      qty: d.qty,
+      warrantyRate: d.warrantyRate,
+      replacementRate: d.replacementRate,
+      frequency: d.frequency,
+      costType: d.costType ?? 'productCost',
+      total: d.qty * (d.costType === 'warranty' ? d.warrantyRate : d.replacementRate),
+      customFields: {},
+    }));
+    const mergedProducts = [
+      ...smallProducts.map(p => ({
+        displayName: p.displayName,
+        qty: p.qty,
+        unitPrice: p.unitPrice,
+        frequency: p.frequency,
+        total: p.total,
+        customFields: {},
+      })),
+      ...bigProducts.map(b => ({
+        displayName: b.displayName,
+        qty: b.qty,
+        amount: b.amount,
+        frequency: b.frequency,
+        total: b.total,
+        customFields: {},
+      })),
+    ];
+
     return {
       headerTitle: form.headerTitle || 'New Agreement',
       headerRows: form.headerRows,
       products: {
-        smallProducts: form.smallProducts.map(p => ({
-          displayName: p.displayName,
-          qty: p.qty,
-          unitPrice: p.unitPrice,
-          frequency: p.frequency,
-          costType: p.costType ?? 'productCost',
-          total: p.qty * p.unitPrice,
-        })),
-        bigProducts: form.bigProducts.map(p => ({
-          displayName: p.displayName,
-          qty: p.qty,
-          amount: p.amount,
-          frequency: p.frequency,
-          total: p.qty * p.amount,
-        })),
-        dispensers: form.dispensers.map(d => ({
-          displayName: d.displayName,
-          qty: d.qty,
-          warrantyRate: d.warrantyRate,
-          replacementRate: d.replacementRate,
-          frequency: d.frequency,
-          costType: d.costType ?? 'productCost',
-          total: d.qty * (d.costType === 'warranty' ? d.warrantyRate : d.replacementRate),
-        })),
+        products: mergedProducts,
+        dispensers,
+        smallProducts,
+        bigProducts,
       },
       services: activeServices,
       agreement: {
@@ -643,17 +819,98 @@ export function useFormFilling(editAgreementId?: string) {
         ok = true;
       }
     }
+    // Price-change log file (matches web app handleDraft: saveAction 'save_draft').
+    if (ok && agreementId && hasPriceChanges()) {
+      try {
+        await createVersionLogFile({
+          agreementId,
+          versionId: agreementId,
+          versionNumber: 1,
+          salespersonId,
+          salespersonName,
+          saveAction: 'save_draft',
+          documentTitle: form.headerTitle || 'Untitled Document',
+        });
+        console.log('[FormFilling] Draft price-change log created');
+      } catch (e) {
+        console.warn('[FormFilling] Draft log creation failed:', e);
+      }
+    }
     setForm(prev => ({
       ...prev,
       saving: false,
       saveError: ok ? null : 'Failed to save. Please try again.',
     }));
     return {ok, agreementId, status: docStatus};
-  }, [form.savedId, buildPayload]);
+  }, [form.savedId, form.headerTitle, buildPayload, salespersonId, salespersonName]);
 
   const generate = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
-    return saveDraft();
-  }, [saveDraft]);
+    // "Save & Generate PDF" — mirrors the web app:
+    //   1. save the agreement (create new / update existing)
+    //   2. createVersion → produces the PDF FILE shown in the agreement folder
+    setForm(prev => ({...prev, saving: true, saveError: null}));
+    const payload = buildPayload();
+    const docStatus = (payload.status ?? 'saved') as 'saved' | 'pending_approval';
+    let ok = false;
+    let agreementId: string | null = form.savedId ?? null;
+    console.log('[FormFilling] Generate PDF — savedId:', form.savedId, 'status:', docStatus);
+
+    if (form.savedId) {
+      ok = await formApi.updateAndRecompileAgreement(form.savedId, payload);
+    } else {
+      const result = await formApi.createAgreement(payload);
+      if (result) {
+        agreementId = result.id;
+        setForm(prev => ({...prev, savedId: result.id}));
+        ok = true;
+      }
+    }
+
+    // Create the version PDF file (what appears in the folder).
+    if (ok && agreementId) {
+      try {
+        const vstatus = await formApi.checkVersionStatus(agreementId);
+        const isFirstTime = vstatus?.isFirstTime ?? true;
+        const versionResult = await formApi.createVersion(agreementId, {
+          changeNotes: isFirstTime ? 'Initial version' : 'Updated version',
+          replaceRecent: false,
+          isFirstTime,
+        });
+        console.log('[FormFilling] createVersion result:', versionResult ? 'ok' : 'null', 'isFirstTime:', isFirstTime);
+        if (!versionResult) {
+          ok = false;
+        } else if (hasPriceChanges()) {
+          // Price-change log file (matches web app: saveAction 'generate_pdf').
+          try {
+            const version = versionResult.version ?? {};
+            await createVersionLogFile({
+              agreementId,
+              versionId: version.id ?? version._id ?? agreementId,
+              versionNumber: version.versionNumber ?? 1,
+              salespersonId,
+              salespersonName,
+              saveAction: 'generate_pdf',
+              documentTitle: form.headerTitle || 'Untitled Document',
+            });
+            console.log('[FormFilling] Generate price-change log created (', getPriceChangeCount(), 'changes)');
+          } catch (logErr) {
+            console.warn('[FormFilling] Generate log creation failed:', logErr);
+          }
+        }
+      } catch (e) {
+        console.warn('[FormFilling] version creation error:', e);
+        ok = false;
+      }
+    }
+
+    console.log('[FormFilling] Generate PDF result — ok:', ok, 'agreementId:', agreementId);
+    setForm(prev => ({
+      ...prev,
+      saving: false,
+      saveError: ok ? null : 'Failed to generate. Please try again.',
+    }));
+    return {ok, agreementId, status: docStatus};
+  }, [form.savedId, form.headerTitle, buildPayload, salespersonId, salespersonName]);
 
   const reset = useCallback(() => {
     setForm(INITIAL_STATE);

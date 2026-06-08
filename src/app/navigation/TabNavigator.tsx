@@ -75,31 +75,35 @@ function ProfileScreen() {
       <View style={profileStyles.actionsSection}>
         <Text style={profileStyles.sectionTitle}>Quick Actions</Text>
 
-        <TouchableOpacity
-          style={profileStyles.actionRow}
-          onPress={() => navigation.navigate('MyQuota')}>
-          <View style={[profileStyles.actionIcon, {backgroundColor: '#dbeafe'}]}>
-            <Ionicons name="trending-up" size={20} color="#2563eb" />
-          </View>
-          <View style={profileStyles.actionContent}>
-            <Text style={profileStyles.actionLabel}>My Quota</Text>
-            <Text style={profileStyles.actionDesc}>View your quota progress</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
+        {!isAdmin && (
+          <>
+            <TouchableOpacity
+              style={profileStyles.actionRow}
+              onPress={() => navigation.navigate('MyQuota')}>
+              <View style={[profileStyles.actionIcon, {backgroundColor: '#dbeafe'}]}>
+                <Ionicons name="trending-up" size={20} color="#2563eb" />
+              </View>
+              <View style={profileStyles.actionContent}>
+                <Text style={profileStyles.actionLabel}>My Quota</Text>
+                <Text style={profileStyles.actionDesc}>View your quota progress</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={profileStyles.actionRow}
-          onPress={() => navigation.navigate('MyCommissions')}>
-          <View style={[profileStyles.actionIcon, {backgroundColor: '#dcfce7'}]}>
-            <Ionicons name="calculator" size={20} color="#16a34a" />
-          </View>
-          <View style={profileStyles.actionContent}>
-            <Text style={profileStyles.actionLabel}>My Commissions</Text>
-            <Text style={profileStyles.actionDesc}>View your commission earnings</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={profileStyles.actionRow}
+              onPress={() => navigation.navigate('MyCommissions')}>
+              <View style={[profileStyles.actionIcon, {backgroundColor: '#dcfce7'}]}>
+                <Ionicons name="calculator" size={20} color="#16a34a" />
+              </View>
+              <View style={profileStyles.actionContent}>
+                <Text style={profileStyles.actionLabel}>My Commissions</Text>
+                <Text style={profileStyles.actionDesc}>View your commission earnings</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity
           style={profileStyles.actionRow}
@@ -113,6 +117,36 @@ function ProfileScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
+
+        {isAdmin && (
+          <>
+            <TouchableOpacity
+              style={profileStyles.actionRow}
+              onPress={() => navigation.navigate('AdminCommissions')}>
+              <View style={[profileStyles.actionIcon, {backgroundColor: '#dcfce7'}]}>
+                <Ionicons name="cash-outline" size={20} color="#16a34a" />
+              </View>
+              <View style={profileStyles.actionContent}>
+                <Text style={profileStyles.actionLabel}>Employee Commissions</Text>
+                <Text style={profileStyles.actionDesc}>Review commissions across the team</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={profileStyles.actionRow}
+              onPress={() => navigation.navigate('AdminPanel')}>
+              <View style={[profileStyles.actionIcon, {backgroundColor: '#ede9fe'}]}>
+                <Ionicons name="shield-checkmark" size={20} color="#7c3aed" />
+              </View>
+              <View style={profileStyles.actionContent}>
+                <Text style={profileStyles.actionLabel}>Admin Panel</Text>
+                <Text style={profileStyles.actionDesc}>Manage pricing, staff and settings</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       {}
@@ -316,11 +350,11 @@ const profileStyles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 16,
     marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+
+
+
+
+
   },
   avatarContainer: {
     width: 80,

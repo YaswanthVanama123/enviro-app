@@ -17,6 +17,7 @@ import {
   type ElectrostaticSprayFormState,
   type ElectrostaticSprayFrequency,
 } from './electrostaticSprayCalc';
+import {trackServiceChanges} from '../../../../utils/fileLogger';
 import {FREQUENCY_OPTIONS} from '../../../../../../shared/constants/frequency';
 
 interface Props {
@@ -96,6 +97,7 @@ export function ElectrostaticSprayForm({
     (fields: Record<string, any>) => {
       const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
       const merged = {...data, ...fields};
+      trackServiceChanges('electrostaticSpray', fields, {customRatePerRoom: data?.customRatePerRoom ?? ratePerRoom, customRatePerThousandSqFt: data?.customRatePerThousandSqFt ?? ratePerThousandSqFt, customTripChargePerVisit: data?.customTripChargePerVisit ?? tripChargePerVisit}, {quantity: roomCount || squareFeet, frequency: freq});
       if (clearOverrides) {
         merged.customRatePerRoom = undefined;
         merged.customRatePerThousandSqFt = undefined;

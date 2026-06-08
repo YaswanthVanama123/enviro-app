@@ -112,8 +112,33 @@ class ApiClient {
     }
   }
 
-  async patch<T, D = any>(endpoint: string, body: D): Promise<ApiResponse<T>> {
+  // PUT that tolerates a non-JSON response body (e.g. the PDF recompile endpoint
+  // returns a non-JSON payload). Success is decided by the HTTP status, not by
+  // whether the body parses as JSON.
+  async putRaw<T, D = any>(endpoint: string, body: D): Promise<ApiResponse<T>> {
     try {
+      const res = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      const text = await res.text();
+      let data: any = null;
+      try {data = JSON.parse(text);} catch {}
+      if (!res.ok) {
+        this.handleUnauthorized(res.status, endpoint);
+        return {error: data?.message || `HTTP ${res.status}: ${endpoint}`, status: res.status};
+      }
+      return {data, status: res.status};
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : 'Network error',
+        status: 0,
+      };
+    }
+  }
+
+  async patch<T, D = any>(endpoint: string, body: D): Promise<ApiResponse<T>> {    try {
       const res = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'PATCH',
         headers: this.getHeaders(),

@@ -365,11 +365,11 @@ const acStyles = StyleSheet.create({
     borderColor: Colors.primary,
     borderRadius: Radius.md,
     zIndex: 200,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 10,
+
+
+
+
+
     maxHeight: 220,
     overflow: 'hidden',
   },

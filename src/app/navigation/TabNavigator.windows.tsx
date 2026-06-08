@@ -17,6 +17,7 @@ import {AdminDashboardScreen} from '../../features/admin/screens/AdminDashboardS
 import {ApprovalDocumentsScreen} from '../../features/admin/screens/ApprovalDocumentsScreen';
 import {PricingDetailsScreen} from '../../features/admin/screens/PricingDetailsScreen';
 import {useAdminAuth} from '../../features/admin/context/AdminAuthContext';
+import {MoreScreen} from './MoreScreen';
 
 const C = {
   primary:        '#c00000',
@@ -42,7 +43,7 @@ interface NavItem {
   component:  React.ComponentType<any>;
 }
 
-const AUTH_NAV: NavItem[] = [
+const ADMIN_NAV: NavItem[] = [
   {name: 'Dashboard',  label: 'Dashboard',      icon: 'grid-outline',              component: AdminDashboardScreen},
   {name: 'New',        label: 'New Agreement',   icon: 'add-circle-outline',        component: CreateAgreementScreen},
   {name: 'Saved',      label: 'Saved PDFs',      icon: 'document-text-outline',     component: SavedAgreementsScreen},
@@ -51,16 +52,16 @@ const AUTH_NAV: NavItem[] = [
   {name: 'Admin',      label: 'Admin Panel',     icon: 'shield-checkmark-outline',  component: AdminPanelScreen},
 ];
 
-const PUBLIC_NAV: NavItem[] = [
+const EMPLOYEE_NAV: NavItem[] = [
   {name: 'Home',    label: 'Home',          icon: 'home-outline',                       component: HomeScreen},
   {name: 'New',     label: 'Form Filling',  icon: 'create-outline',                     component: CreateAgreementScreen},
   {name: 'Saved',   label: 'Saved PDFs',    icon: 'document-text-outline',              component: SavedAgreementsScreen},
   {name: 'Trash',   label: 'Trash',         icon: 'trash-outline',                      component: TrashScreen},
-  {name: 'More',    label: 'Admin Panel',   icon: 'shield-checkmark-outline',           component: AdminPanelScreen},
+  {name: 'More',    label: 'More',          icon: 'ellipsis-horizontal-circle-outline', component: MoreScreen},
 ];
 
 export function TabNavigator() {
-  const {isAuthenticated, authReady} = useAdminAuth();
+  const {isAuthenticated, isAdmin, authReady} = useAdminAuth();
   const [activeTab, setActiveTab] = useState(0);
 
   if (!authReady) {
@@ -71,7 +72,7 @@ export function TabNavigator() {
     );
   }
 
-  const navItems = isAuthenticated ? AUTH_NAV : PUBLIC_NAV;
+  const navItems = isAuthenticated && isAdmin ? ADMIN_NAV : EMPLOYEE_NAV;
   const ActiveScreen = navItems[activeTab]?.component ?? navItems[0].component;
 
   return (
