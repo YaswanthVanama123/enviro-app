@@ -68,6 +68,46 @@ export function GlobalCommissionSummary({
     return null;
   }
 
+  // Commission is only calculated / shown / saved when connected to Bigin.
+  if (!isCompanyMapped) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Text style={styles.icon}>💰</Text>
+            <Text style={styles.title}>Commission Summary</Text>
+          </View>
+          {showDetectButton && onDetect && (
+            <TouchableOpacity
+              style={[styles.detectButton, isDetecting && styles.detectButtonDisabled]}
+              onPress={onDetect}
+              disabled={isDetecting}>
+              {isDetecting ? (
+                <>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.detectButtonText}>Connecting…</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.detectButtonIcon}>🔄</Text>
+                  <Text style={styles.detectButtonText}>Connect</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>ℹ️ Please connect to Bigin to calculate commission.</Text>
+        </View>
+        {error && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -222,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   icon: {
-    fontSize: FontSize.base,
+    fontSize: FontSize.md,
   },
   title: {
     fontSize: FontSize.sm,

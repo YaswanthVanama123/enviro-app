@@ -14,7 +14,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {biginAuditApi} from '../../../services/api/endpoints/biginAudit.api';
-import {useAdminAuth} from '../../admin/context/AdminAuthContext';
+import {useAuth} from '../../admin/context/AdminAuthContext';
 
 interface InsideSalesResult {
   salespersonName: string;
@@ -56,7 +56,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function MyInsideSalesScreen() {
-  const {adminUser} = useAdminAuth();
+  const {user} = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export function MyInsideSalesScreen() {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const checkEligibility = useCallback(async (isRefresh = false) => {
-    const salespersonName = adminUser?.fullName || adminUser?.username;
+    const salespersonName = user?.fullName || user?.username;
 
     if (!salespersonName) {
       setError('User not logged in');
@@ -96,7 +96,7 @@ export function MyInsideSalesScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [adminUser?.fullName, adminUser?.username]);
+  }, [user?.fullName, user?.username]);
 
   useEffect(() => {
     checkEligibility();
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     marginHorizontal: Spacing.lg,
-    marginTop: -Spacing.md,
+    marginTop: Spacing.md,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 2,

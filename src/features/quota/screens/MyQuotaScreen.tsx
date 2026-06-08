@@ -12,7 +12,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {quotaApi, agreementApi} from '../../../services/api/endpoints/quota.api';
-import {useAdminAuth} from '../../admin/context/AdminAuthContext';
+import {useAuth} from '../../admin/context/AdminAuthContext';
 import type {
   QuotaStatusResponse,
   QuotaPeriod,
@@ -42,7 +42,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function MyQuotaScreen() {
-  const {adminUser} = useAdminAuth();
+  const {user} = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export function MyQuotaScreen() {
   const [expandedAgreementId, setExpandedAgreementId] = useState<string | null>(null);
 
   const fetchData = useCallback(async (isRefresh = false) => {
-    if (!adminUser?._id) {
+    if (!user?.username) {
       setError('Please log in to view your quota');
       setLoading(false);
       return;
@@ -67,8 +67,8 @@ export function MyQuotaScreen() {
       setError(null);
 
       const [statusResult, historyResult] = await Promise.all([
-        quotaApi.getStatus(adminUser._id, {periodType}),
-        quotaApi.getHistory(adminUser._id, 6),
+        quotaApi.getStatus(user.username, {periodType}),
+        quotaApi.getHistory(user.username, 6),
       ]);
 
       setQuotaStatus(statusResult);
@@ -79,7 +79,7 @@ export function MyQuotaScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [adminUser?._id, periodType]);
+  }, [user?.username, periodType]);
 
   useEffect(() => {
     fetchData();
@@ -595,7 +595,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
-    paddingBottom: Spacing.xl,
   },
   titleRow: {
     flexDirection: 'row',
@@ -626,7 +625,7 @@ const styles = StyleSheet.create({
   periodToggle: {
     flexDirection: 'row',
     marginHorizontal: Spacing.lg,
-    marginTop: -Spacing.md,
+    marginTop: Spacing.md,
     backgroundColor: '#fff',
     borderRadius: Radius.md,
     padding: 4,

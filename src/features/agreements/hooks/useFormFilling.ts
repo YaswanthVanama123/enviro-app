@@ -312,6 +312,11 @@ export function useFormFilling(editAgreementId?: string) {
           if (typeof doc.isConnectedToBigin === 'boolean') {
             next.isConnectedToBigin = doc.isConnectedToBigin;
           }
+          console.log('[BIGIN-EDIT] Loaded connection from edit-format →', {
+            isConnectedToBigin: doc.isConnectedToBigin,
+            biginCompanyId: doc.biginCompanyId,
+            zohoMapping: doc.zohoMapping,
+          });
 
           if (doc.accountTypeCache && typeof doc.accountTypeCache === 'object' && Object.keys(doc.accountTypeCache).length > 0) {
             next.accountTypeCache = doc.accountTypeCache;

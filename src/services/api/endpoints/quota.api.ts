@@ -182,7 +182,8 @@ export const quotaApi = {
         data: QuotaStatusResponse;
       }>(`${BASE_PATH}/status/${salesPersonId}?${queryParams.toString()}`);
 
-      return response.success ? response.data : null;
+      const result = response.data;
+      return result?.success ? result.data : null;
     } catch (error) {
       console.error('Error fetching quota status:', error);
       return null;
@@ -201,7 +202,8 @@ export const quotaApi = {
         `${BASE_PATH}/history/${salesPersonId}?${queryParams.toString()}`,
       );
 
-      return response.success ? response.data : null;
+      const result = response.data;
+      return result?.success ? result.data : null;
     } catch (error) {
       console.error('Error fetching quota history:', error);
       return null;

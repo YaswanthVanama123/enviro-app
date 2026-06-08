@@ -279,13 +279,8 @@ export const biginAuditApi = {
         };
       }>(`${BASE_PATH}/check-inside-sales?salespersonName=${encodeURIComponent(salespersonName)}`);
 
-      if (response.success !== false) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-      return null;
+      const result = response.data;
+      return result?.success ? result : null;
     } catch (error) {
       console.error('Error checking inside sales eligibility:', error);
       return null;

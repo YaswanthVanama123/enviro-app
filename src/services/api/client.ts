@@ -6,6 +6,28 @@ export interface ApiResponse<T> {
   status: number;
 }
 
+// Surface the most meaningful server error message. The backend returns errors as
+// { error, detail } (e.g. { error: "Unauthorized", detail: "Invalid credentials" }),
+// sometimes { message }, occasionally { errors: [{ message }] }. Fall back to a
+// status-based message instead of a generic "Request failed".
+function extractError(data: any, status: number): string {
+  const d = data ?? {};
+  const resolved =
+    (typeof d.detail === 'string' && d.detail) ||
+    (typeof d.message === 'string' && d.message) ||
+    (Array.isArray(d.errors) && typeof d.errors[0]?.message === 'string' && d.errors[0].message) ||
+    (typeof d.error === 'string' && d.error) ||
+    '';
+  if (resolved) {
+    return resolved;
+  }
+  if (status === 401 || status === 403) return 'Invalid credentials';
+  if (status === 404) return 'Not found';
+  if (status === 400) return 'Invalid request';
+  if (status >= 500) return 'Server error. Please try again.';
+  return 'Request failed';
+}
+
 type UnauthorizedCallback = () => void;
 
 class ApiClient {
@@ -59,7 +81,7 @@ class ApiClient {
       const data = await res.json();
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Request failed', status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -80,7 +102,7 @@ class ApiClient {
       const data = await res.json();
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Request failed', status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -101,7 +123,7 @@ class ApiClient {
       const data = await res.json();
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Request failed', status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -127,7 +149,7 @@ class ApiClient {
       try {data = JSON.parse(text);} catch {}
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data?.message || `HTTP ${res.status}: ${endpoint}`, status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -149,7 +171,7 @@ class ApiClient {
       try {data = JSON.parse(text);} catch {}
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data?.message || `HTTP ${res.status}: ${endpoint}`, status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -174,7 +196,7 @@ class ApiClient {
       const data = await res.json();
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Upload failed', status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
@@ -194,7 +216,7 @@ class ApiClient {
       const data = await res.json();
       if (!res.ok) {
         this.handleUnauthorized(res.status, endpoint);
-        return {error: data.message || 'Request failed', status: res.status};
+        return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
     } catch (err) {
