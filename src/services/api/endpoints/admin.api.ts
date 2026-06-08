@@ -106,6 +106,8 @@ export interface PayrollEmployeesResponse {
   success: boolean;
   totals: PayrollTotals;
   employees: EmployeePayroll[];
+  finalized?: boolean;
+  snapshotAt?: string | null;
 }
 
 export interface PayrollHistoryItem {
@@ -114,6 +116,8 @@ export interface PayrollHistoryItem {
   totalAgreements: number;
   totalRevenue: number;
   totalCommission: number;
+  finalized?: boolean;
+  snapshotAt?: string | null;
 }
 
 export interface PayrollHistoryResponse {
@@ -177,8 +181,17 @@ export const adminApi = {
     return res.data;
   },
 
-  async getPayrollEmployees(): Promise<PayrollEmployeesResponse | null> {
-    const res = await apiClient.get<PayrollEmployeesResponse>('/api/payroll/employees');
+  async getPayrollEmployees(
+    periodStart?: string,
+    periodEnd?: string,
+  ): Promise<PayrollEmployeesResponse | null> {
+    const query =
+      periodStart && periodEnd
+        ? `?periodStart=${encodeURIComponent(periodStart)}&periodEnd=${encodeURIComponent(periodEnd)}`
+        : '';
+    const res = await apiClient.get<PayrollEmployeesResponse>(
+      `/api/payroll/employees${query}`,
+    );
     if (res.error || !res.data?.success) return null;
     return res.data;
   },

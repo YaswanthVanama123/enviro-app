@@ -23,6 +23,7 @@ import {EmployeeAgreementsScreen} from '../../features/admin/screens/EmployeeAgr
 import {EditHistoryScreen} from '../../features/admin/screens/EditHistoryScreen';
 import {PayrollSettingsScreen} from '../../features/admin/screens/PayrollSettingsScreen';
 import {PayrollScreen} from '../../features/admin/screens/PayrollScreen';
+import {PayrollPeriodDetailScreen} from '../../features/admin/screens/PayrollPeriodDetailScreen';
 import {useAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors} from '../../theme';
 import type {RootStackParamList} from './types';
@@ -70,6 +71,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="EditHistory" component={EditHistoryScreen} />
                 <Stack.Screen name="PayrollSettings" component={PayrollSettingsScreen} />
                 <Stack.Screen name="Payroll" component={PayrollScreen} />
+                <Stack.Screen name="PayrollPeriodDetail" component={PayrollPeriodDetailScreen} />
               </>
             ) : (
               /* Employee-only — personal commission & quota views */

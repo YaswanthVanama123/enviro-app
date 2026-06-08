@@ -21,6 +21,10 @@ export type RootStackParamList = {
   EditHistory: undefined;
   PayrollSettings: undefined;
   Payroll: undefined;
+  PayrollPeriodDetail: {
+    period: {start: string; end: string; label: string};
+    isCurrent?: boolean;
+  };
 };
 
 export type TabParamList = {

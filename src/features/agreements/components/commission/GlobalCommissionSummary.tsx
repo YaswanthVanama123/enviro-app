@@ -97,7 +97,7 @@ export function GlobalCommissionSummary({
           )}
         </View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>ℹ️ Please connect to Bigin to calculate commission.</Text>
+          <Text style={styles.infoText}>ℹ️ Please connect to Bigin to show the commission details.</Text>
         </View>
         {error && (
           <View style={styles.errorBox}>
