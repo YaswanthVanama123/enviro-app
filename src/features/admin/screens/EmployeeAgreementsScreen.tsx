@@ -403,7 +403,10 @@ export function EmployeeAgreementsScreen() {
 
       agreements.forEach(agreement => {
         const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
-        const createdBy = mainFile?.createdBy || agreement.files[0]?.createdBy;
+        // Always attribute the agreement to its ORIGINAL creator. Edits/new versions
+        // by other people change a version's createdBy, but never the owner.
+        const createdBy =
+          agreement.createdBy || mainFile?.createdBy || agreement.files[0]?.createdBy;
 
         if (createdBy) {
           const key = createdBy.toLowerCase();

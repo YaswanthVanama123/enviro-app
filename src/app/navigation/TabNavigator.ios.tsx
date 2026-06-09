@@ -101,8 +101,10 @@ function MobileNav() {
               onPress={() => setActiveTab(idx)}
               activeOpacity={0.8}>
               {isNew ? (
-                <View style={[mob.newBtn, isActive && mob.newBtnActive]}>
-                  <Ionicons name="add" size={26} color={isActive ? C.navTextActive : C.primary} />
+                <View style={mob.newBtnWrap}>
+                  <View style={mob.newBtn}>
+                    <Ionicons name="add" size={30} color="#ffffff" />
+                  </View>
                 </View>
               ) : (
                 <>
@@ -157,6 +159,7 @@ const mob = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingHorizontal: 4,
+    overflow: 'visible',
   },
   tabItem: {
     flex: 1,
@@ -172,15 +175,24 @@ const mob = StyleSheet.create({
   tabLabelActive: {
     color: C.primary,
   },
-  newBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: C.primaryLight,
+  newBtnWrap: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -22,
   },
-  newBtnActive: {
+  newBtn: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: C.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: C.navBg,
+    shadowColor: C.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

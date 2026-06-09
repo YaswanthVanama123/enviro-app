@@ -17,6 +17,7 @@ import {BiginCompaniesSection} from '../components/bigin/BiginCompaniesSection';
 import {CompanyMappingSection} from '../components/company-mapping/CompanyMappingSection';
 import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 import {Colors} from '../../../theme/colors';
+import {Spacing, Radius} from '../../../theme/spacing';
 
 export function PricingDetailsScreen() {
   const insets = useSafeAreaInsets();
@@ -48,18 +49,19 @@ export function PricingDetailsScreen() {
 
   return (
     <View style={[styles.screen, {paddingTop: insets.top}]}>
-      <View style={styles.navRow}>
-        <View style={styles.tabBarWrap}>
-          <PricingTabBar active={activeTab} onSelect={setActiveTab} />
-        </View>
+      <View style={styles.topBar}>
+        <Text style={styles.title}>Pricing</Text>
         <TouchableOpacity
           style={[styles.exportBtn, exporting && {opacity: 0.6}]}
           onPress={handleExportPdf}
           disabled={exporting}
           activeOpacity={0.8}>
-          <Ionicons name={exporting ? 'hourglass-outline' : 'download-outline'} size={13} color="#fff" />
+          <Ionicons name={exporting ? 'hourglass-outline' : 'download-outline'} size={14} color="#fff" />
           <Text style={styles.exportBtnText}>Export PDF</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.tabBarRow}>
+        <PricingTabBar active={activeTab} onSelect={setActiveTab} />
       </View>
       <View style={styles.tabContent}>
         {activeTab === 'pricing'   && <PricingTablesSection />}
@@ -80,31 +82,39 @@ export function PricingDetailsScreen() {
 
 const styles = StyleSheet.create({
   screen: {flex: 1, backgroundColor: Colors.background},
-  navRow: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    letterSpacing: -0.5,
+  },
+  tabBarRow: {
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  tabBarWrap: {
-    flex: 1,
-    borderBottomWidth: 0,
-  },
   exportBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#4f46e5',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 6,
-    marginRight: 10,
+    gap: 5,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: Radius.full,
     flexShrink: 0,
   },
   exportBtnText: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
   tabContent: {flex: 1},

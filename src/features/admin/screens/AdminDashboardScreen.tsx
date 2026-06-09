@@ -18,6 +18,13 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
+const STATUS_SEGMENTS = [
+  {key: 'done', label: 'Done', color: '#10b981'},
+  {key: 'pending', label: 'Pending', color: '#f59e0b'},
+  {key: 'saved', label: 'Saved', color: '#3b82f6'},
+  {key: 'drafts', label: 'Drafts', color: '#9ca3af'},
+] as const;
+
 function timeAgo(iso: string): string {
   if (!iso) {return '—';}
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -30,44 +37,76 @@ function timeAgo(iso: string): string {
   return `${Math.floor(m / 12)}y ago`;
 }
 
-function StatCard({
-  icon,
-  iconBg,
-  iconColor,
-  value,
-  label,
-}: {
-  icon: string;
-  iconBg: string;
-  iconColor: string;
-  value: number;
-  label: string;
-}) {
+function StatusDistribution({counts}: {counts: Record<string, number>}) {
+  const segments = STATUS_SEGMENTS.map(s => ({...s, value: counts[s.key] ?? 0}));
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+
   return (
-    <View style={styles.statCard}>
-      <View style={[styles.statIconBox, {backgroundColor: iconBg}]}>
-        <Ionicons name={icon} size={24} color={iconColor} />
+    <View style={styles.analyticsCard}>
+      <Text style={styles.cardTitle}>Document Status</Text>
+
+      <View style={styles.distTotalRow}>
+        <Text style={styles.distTotalValue}>{total.toLocaleString()}</Text>
+        <Text style={styles.distTotalLabel}>total documents</Text>
       </View>
-      <Text style={styles.statValue}>{value}+</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+
+      <View style={styles.distBar}>
+        {total === 0 ? (
+          <View style={[styles.distSegment, {flex: 1, backgroundColor: Colors.borderLight}]} />
+        ) : (
+          segments
+            .filter(s => s.value > 0)
+            .map(s => (
+              <View
+                key={s.key}
+                style={[styles.distSegment, {flex: s.value, backgroundColor: s.color}]}
+              />
+            ))
+        )}
+      </View>
+
+      <View style={styles.legendGrid}>
+        {segments.map(s => {
+          const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
+          return (
+            <View key={s.key} style={styles.legendItem}>
+              <View style={[styles.legendDot, {backgroundColor: s.color}]} />
+              <Text style={styles.legendLabel}>{s.label}</Text>
+              <Text style={styles.legendValue}>{s.value}</Text>
+              <Text style={styles.legendPct}>{pct}%</Text>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
-function StatusRow({
-  color,
-  label,
-  count,
-}: {
-  color: string;
-  label: string;
-  count: number;
-}) {
+function OverviewBars({stats}: {stats: AdminDashboardData['stats']}) {
+  const items = [
+    {label: 'Manual Uploads', value: stats?.manualUploads ?? 0},
+    {label: 'Saved Documents', value: stats?.savedDocuments ?? 0},
+    {label: 'Total Documents', value: stats?.totalDocuments ?? 0},
+  ];
+  const max = Math.max(...items.map(i => i.value), 1);
+
   return (
-    <View style={styles.statusRow}>
-      <View style={[styles.statusDot, {backgroundColor: color}]} />
-      <Text style={styles.statusLabel}>{label}</Text>
-      <Text style={styles.statusCount}>{count}</Text>
+    <View style={styles.analyticsCard}>
+      <Text style={styles.cardTitle}>Documents Overview</Text>
+      {items.map(item => (
+        <View key={item.label} style={styles.barRow}>
+          <Text style={styles.barLabel}>{item.label}</Text>
+          <View style={styles.barTrack}>
+            <View
+              style={[
+                styles.barFill,
+                {width: `${Math.max((item.value / max) * 100, 3)}%`},
+              ]}
+            />
+          </View>
+          <Text style={styles.barValue}>{item.value.toLocaleString()}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -128,12 +167,7 @@ function getStatusColor(s: string): string {
 
 function SkeletonBlock({width, height}: {width: number | string; height: number}) {
   return (
-    <View
-      style={[
-        styles.skeleton,
-        {width: width as any, height},
-      ]}
-    />
+    <View style={[styles.skeleton, {width: width as any, height}]} />
   );
 }
 
@@ -199,65 +233,43 @@ export function AdminDashboardScreen() {
           />
         }>
 
+        <View style={styles.header}>
+          <View style={{flex: 1}}>
+            <Text style={styles.headerTitle}>Dashboard</Text>
+            <Text style={styles.headerSubtitle}>Overview of your documents</Text>
+          </View>
+          <View style={styles.headerBadge}>
+            <Ionicons name="shield-checkmark" size={14} color={Colors.primary} />
+            <Text style={styles.headerBadgeText}>Admin</Text>
+          </View>
+        </View>
+
         {loading ? (
-          <View style={styles.statsRow}>
-            {[1, 2, 3].map(i => (
-              <View key={i} style={[styles.statCard, {alignItems: 'center', gap: 8}]}>
-                <SkeletonBlock width={44} height={44} />
-                <SkeletonBlock width="60%" height={20} />
-                <SkeletonBlock width="80%" height={12} />
-              </View>
-            ))}
-          </View>
+          <>
+            <View style={styles.analyticsCard}>
+              <SkeletonBlock width="40%" height={16} />
+              <View style={{height: 12}} />
+              <SkeletonBlock width="100%" height={16} />
+              <View style={{height: 12}} />
+              <SkeletonBlock width="100%" height={48} />
+            </View>
+            <View style={styles.analyticsCard}>
+              <SkeletonBlock width="45%" height={16} />
+              <View style={{height: 12}} />
+              {[1, 2, 3].map(i => (
+                <SkeletonBlock key={i} width="100%" height={18} />
+              ))}
+            </View>
+          </>
         ) : (
-          <View style={styles.statsRow}>
-            <StatCard
-              icon="cloud-upload-outline"
-              iconBg="#dbeafe"
-              iconColor="#2563eb"
-              value={stats?.manualUploads ?? 0}
-              label="Manual Uploads"
-            />
-            <StatCard
-              icon="document-text-outline"
-              iconBg="#dcfce7"
-              iconColor="#16a34a"
-              value={stats?.savedDocuments ?? 0}
-              label="Saved Documents"
-            />
-            <StatCard
-              icon="briefcase-outline"
-              iconBg="#f3e8ff"
-              iconColor="#7c3aed"
-              value={stats?.totalDocuments ?? 0}
-              label="Total Documents"
-            />
-          </View>
+          <>
+            <StatusDistribution counts={(statusCounts as any) ?? {}} />
+            <OverviewBars stats={stats as any} />
+          </>
         )}
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Document Status</Text>
-          {loading ? (
-            <View style={{gap: 8}}>
-              {[1, 2, 3, 4].map(i => (
-                <SkeletonBlock key={i} width="100%" height={16} />
-              ))}
-            </View>
-          ) : (
-            <>
-              <StatusRow color="#10b981" label="Done" count={statusCounts?.done ?? 0} />
-              <View style={styles.statusDivider} />
-              <StatusRow color="#f59e0b" label="Pending" count={statusCounts?.pending ?? 0} />
-              <View style={styles.statusDivider} />
-              <StatusRow color="#3b82f6" label="Saved" count={statusCounts?.saved ?? 0} />
-              <View style={styles.statusDivider} />
-              <StatusRow color="#9ca3af" label="Drafts" count={statusCounts?.drafts ?? 0} />
-            </>
-          )}
-        </View>
-
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Recent Documents</Text>
+          <Text style={styles.cardTitle}>Recent Documents</Text>
           {loading ? (
             <View style={{gap: 12}}>
               {[1, 2, 3, 4].map(i => (
@@ -285,7 +297,6 @@ export function AdminDashboardScreen() {
           )}
         </View>
 
-        {}
         <TouchableOpacity
           style={styles.actionCard}
           onPress={() => navigation.navigate('AdminCommissions')}
@@ -320,87 +331,148 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
 
-  statsRow: {
+  header: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    alignItems: 'flex-start',
-    gap: 4,
-
-
-  },
-  statIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
-  statValue: {
-    fontSize: FontSize.xl,
+  headerTitle: {
+    fontSize: 26,
     fontWeight: '800',
     color: Colors.textPrimary,
-    lineHeight: 28,
+    letterSpacing: -0.5,
   },
-  statLabel: {
-    fontSize: 10,
+  headerSubtitle: {
+    fontSize: FontSize.sm,
     color: Colors.textMuted,
-    fontWeight: '500',
-    lineHeight: 14,
+    marginTop: 2,
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+  },
+  headerBadgeText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.primary,
   },
 
-  sectionCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
+  analyticsCard: {
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: 0,
     gap: Spacing.sm,
-
-
   },
-  sectionTitle: {
+  cardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
 
-  statusRow: {
+  distTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  distTotalValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  distTotalLabel: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+  },
+  distBar: {
+    flexDirection: 'row',
+    height: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: Colors.borderLight,
+    marginTop: Spacing.xs,
+  },
+  distSegment: {
+    height: '100%',
+  },
+  legendGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: Spacing.sm,
+  },
+  legendItem: {
+    width: '50%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 6,
+    paddingVertical: 6,
   },
-  statusDot: {
+  legendDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
   },
-  statusLabel: {
+  legendLabel: {
     flex: 1,
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
   },
-  statusCount: {
+  legendValue: {
     fontSize: FontSize.sm,
     fontWeight: '700',
     color: Colors.textPrimary,
   },
-  statusDivider: {
-    height: 1,
+  legendPct: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    width: 38,
+    textAlign: 'right',
+  },
+
+  barRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 6,
+  },
+  barLabel: {
+    width: 110,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  barTrack: {
+    flex: 1,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: Colors.borderLight,
-    marginLeft: Spacing.xl,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: 6,
+    backgroundColor: Colors.primary,
+  },
+  barValue: {
+    width: 48,
+    textAlign: 'right',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+
+  sectionCard: {
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: 0,
+    gap: Spacing.sm,
   },
 
   recentRow: {
@@ -461,11 +533,9 @@ const styles = StyleSheet.create({
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: 0,
     gap: Spacing.md,
   },
   actionIconBox: {
@@ -490,3 +560,5 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+export default AdminDashboardScreen;

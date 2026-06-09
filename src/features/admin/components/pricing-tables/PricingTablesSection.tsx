@@ -341,20 +341,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    maxHeight: 42,
   },
   familyTabBarContent: {
     paddingHorizontal: Spacing.md,
-    gap: 4,
+    gap: 6,
     alignItems: 'center',
-    paddingVertical: 5,
+    paddingVertical: 8,
   },
   familyTab: {
     paddingHorizontal: Spacing.md,
-    paddingVertical: 5,
+    paddingVertical: 8,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   familyTabActive: {
     backgroundColor: Colors.primary,
@@ -362,6 +362,7 @@ const styles = StyleSheet.create({
   },
   familyTabText: {
     fontSize: 12,
+    lineHeight: 18,
     fontWeight: '600',
     color: Colors.textMuted,
   },

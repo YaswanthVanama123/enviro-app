@@ -231,34 +231,72 @@ interface StatusStripProps {
 }
 
 function StatusStrip({pending, salesman, admin, total}: StatusStripProps) {
+  const segments = [
+    {key: 'pending', label: 'Pending', value: pending, color: '#f59e0b'},
+    {key: 'salesman', label: 'Salesman', value: salesman, color: '#3b82f6'},
+    {key: 'admin', label: 'Admin', value: admin, color: '#10b981'},
+  ];
+  const pipeline = pending + salesman + admin;
+  const max = Math.max(pending, salesman, admin, 1);
+
   return (
-    <View style={styles.statusStrip}>
-      <Text style={styles.statusStripTitle}>Approval Status</Text>
-      <View style={styles.statusStripRow}>
-        <View style={styles.statusStripItem}>
-          <View style={[styles.statusStripDot, {backgroundColor: '#f59e0b'}]} />
-          <Text style={styles.statusStripLabel}>Pending</Text>
-          <Text style={[styles.statusStripCount, {color: '#92400e'}]}>{pending}</Text>
-        </View>
-        <View style={styles.statusStripDivider} />
-        <View style={styles.statusStripItem}>
-          <View style={[styles.statusStripDot, {backgroundColor: '#3b82f6'}]} />
-          <Text style={styles.statusStripLabel}>Salesman</Text>
-          <Text style={[styles.statusStripCount, {color: '#1e40af'}]}>{salesman}</Text>
-        </View>
-        <View style={styles.statusStripDivider} />
-        <View style={styles.statusStripItem}>
-          <View style={[styles.statusStripDot, {backgroundColor: '#10b981'}]} />
-          <Text style={styles.statusStripLabel}>Admin</Text>
-          <Text style={[styles.statusStripCount, {color: '#065f46'}]}>{admin}</Text>
-        </View>
-        <View style={styles.statusStripDivider} />
-        <View style={styles.statusStripItem}>
-          <Ionicons name="documents-outline" size={12} color={Colors.textMuted} />
-          <Text style={styles.statusStripLabel}>Total</Text>
-          <Text style={[styles.statusStripCount, {color: Colors.textPrimary}]}>{total}</Text>
-        </View>
+    <View style={styles.analyticsBlock}>
+      <Text style={styles.analyticsTitle}>Approval Status</Text>
+
+      <View style={styles.distTotalRow}>
+        <Text style={styles.distTotalValue}>{total.toLocaleString()}</Text>
+        <Text style={styles.distTotalLabel}>total files</Text>
       </View>
+
+      <View style={styles.distBar}>
+        {pipeline === 0 ? (
+          <View style={[styles.distSegment, {flex: 1, backgroundColor: Colors.borderLight}]} />
+        ) : (
+          segments
+            .filter(s => s.value > 0)
+            .map(s => (
+              <View
+                key={s.key}
+                style={[styles.distSegment, {flex: s.value, backgroundColor: s.color}]}
+              />
+            ))
+        )}
+      </View>
+
+      <View style={styles.legendRow}>
+        {segments.map(s => {
+          const pct = pipeline > 0 ? Math.round((s.value / pipeline) * 100) : 0;
+          return (
+            <View key={s.key} style={styles.legendItem}>
+              <View style={[styles.legendDot, {backgroundColor: s.color}]} />
+              <View style={styles.legendText}>
+                <Text style={styles.legendLabel}>{s.label}</Text>
+                <Text style={styles.legendValue}>
+                  {s.value} <Text style={styles.legendPct}>· {pct}%</Text>
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={styles.analyticsDivider} />
+
+      <Text style={styles.analyticsSubTitle}>Approval Breakdown</Text>
+      {segments.map(s => (
+        <View key={s.key} style={styles.barRow}>
+          <Text style={styles.barLabel}>{s.label}</Text>
+          <View style={styles.barTrack}>
+            <View
+              style={[
+                styles.barFill,
+                {width: `${Math.max((s.value / max) * 100, 3)}%`, backgroundColor: s.color},
+              ]}
+            />
+          </View>
+          <Text style={styles.barValue}>{s.value}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -667,38 +705,89 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  statusStrip: {
+  analyticsBlock: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  statusStripTitle: {
-    fontSize: FontSize.xs,
+  analyticsTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  analyticsSubTitle: {
+    fontSize: FontSize.sm,
     fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: Spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
-  statusStripRow: {
+  analyticsDivider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginVertical: Spacing.sm,
+  },
+  distTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  distTotalValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  distTotalLabel: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+  },
+  distBar: {
+    flexDirection: 'row',
+    height: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: Colors.borderLight,
+    marginTop: Spacing.xs,
+  },
+  distSegment: {height: '100%'},
+  legendRow: {
+    flexDirection: 'row',
+    marginTop: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  legendItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
-  statusStripItem: {
-    flex: 1,
-    flexDirection: 'column',
+  legendDot: {width: 10, height: 10, borderRadius: 5},
+  legendText: {flex: 1},
+  legendLabel: {fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '500'},
+  legendValue: {fontSize: FontSize.sm, fontWeight: '700', color: Colors.textPrimary},
+  legendPct: {fontSize: FontSize.xs, fontWeight: '500', color: Colors.textMuted},
+  barRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: Spacing.sm,
+    paddingVertical: 5,
   },
-  statusStripDot: {width: 8, height: 8, borderRadius: 4},
-  statusStripLabel: {fontSize: 10, color: Colors.textMuted, fontWeight: '500'},
-  statusStripCount: {fontSize: FontSize.md, fontWeight: '800'},
-  statusStripDivider: {width: 1, height: 32, backgroundColor: Colors.border},
+  barLabel: {width: 80, fontSize: FontSize.xs, color: Colors.textSecondary},
+  barTrack: {
+    flex: 1,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.borderLight,
+    overflow: 'hidden',
+  },
+  barFill: {height: '100%', borderRadius: 6, backgroundColor: Colors.primary},
+  barValue: {
+    width: 36,
+    textAlign: 'right',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
 
   columnHeader: {
     flexDirection: 'row',
