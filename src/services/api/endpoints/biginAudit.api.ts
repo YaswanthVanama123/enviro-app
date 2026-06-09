@@ -31,11 +31,12 @@ export const biginAuditApi = {
         `${BASE_PATH}?${queryParams.toString()}`,
       );
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          data: response.data || [],
-          pagination: response.pagination || {
+          data: body.data || [],
+          pagination: body.pagination || {
             total: 0,
             skip: 0,
             limit: 50,
@@ -56,7 +57,8 @@ export const biginAuditApi = {
         success: boolean;
         data: BiginAuditLog;
       }>(`${BASE_PATH}/${id}`);
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching audit log:', error);
       return null;
@@ -70,10 +72,8 @@ export const biginAuditApi = {
         data: AuditStats;
       }>(`${BASE_PATH}/stats`);
 
-      if (response.success !== false) {
-        return response.data || (response as unknown as AuditStats);
-      }
-      return null;
+      const body = response.data as any;
+      return body ? (body.data ?? body) : null;
     } catch (error) {
       console.error('Error fetching audit stats:', error);
       return null;
@@ -87,10 +87,8 @@ export const biginAuditApi = {
         data: ScrapeStatus;
       }>(`${BASE_PATH}/scrape/status`);
 
-      if (response.success !== false) {
-        return response.data || (response as unknown as ScrapeStatus);
-      }
-      return null;
+      const body = response.data as any;
+      return body ? (body.data ?? body) : null;
     } catch (error) {
       console.error('Error fetching scrape status:', error);
       return null;
@@ -105,10 +103,11 @@ export const biginAuditApi = {
         sessionId?: string;
       }>(`${BASE_PATH}/scrape/start`, {});
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
-          message: response.message || 'Scrape started',
-          sessionId: response.sessionId,
+          message: body.message || 'Scrape started',
+          sessionId: body.sessionId,
         };
       }
       return null;
@@ -137,7 +136,7 @@ export const biginAuditApi = {
         name: fileName,
       } as unknown as Blob);
 
-      const response = await apiClient.post<{
+      const response = await apiClient.postFormData<{
         success: boolean;
         message: string;
         data: {
@@ -147,17 +146,14 @@ export const biginAuditApi = {
           errors: number;
           sessionId: string;
         };
-      }>(`${BASE_PATH}/upload-csv`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      }>(`${BASE_PATH}/upload-csv`, formData);
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          message: response.message || 'Upload complete',
-          data: response.data,
+          message: body.message || 'Upload complete',
+          data: body.data,
         };
       }
       return null;
@@ -179,11 +175,12 @@ export const biginAuditApi = {
         data: {deletedCount: number; previousCount: number};
       }>(`${BASE_PATH}/delete-all`);
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          message: response.message || 'All audit logs deleted',
-          data: response.data,
+          message: body.message || 'All audit logs deleted',
+          data: body.data,
         };
       }
       return null;
@@ -205,11 +202,12 @@ export const biginAuditApi = {
         data: {deletedCount: number; keptCount: number; previousTotal: number};
       }>(`${BASE_PATH}/delete-unnecessary`);
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          message: response.message || 'Unnecessary audit logs deleted',
-          data: response.data,
+          message: body.message || 'Unnecessary audit logs deleted',
+          data: body.data,
         };
       }
       return null;

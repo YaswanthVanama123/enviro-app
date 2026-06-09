@@ -15,7 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {agreementsApi} from '../../../services/api/endpoints/agreements.api';
-import {useAdminAuth} from '../../admin/context/AdminAuthContext';
+import {useAuth} from '../../admin/context/AdminAuthContext';
 
 interface CommissionBreakdown {
   baseRate: number;
@@ -227,7 +227,7 @@ function isWithinTimePeriod(
 }
 
 export function MyCommissionsScreen() {
-  const {adminUser} = useAdminAuth();
+  const {user} = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -430,7 +430,7 @@ export function MyCommissionsScreen() {
             <View style={styles.titleContent}>
               <Text style={styles.title}>My Commissions</Text>
               <Text style={styles.subtitle}>
-                {adminUser?.fullName || adminUser?.username || data.user}
+                {user?.fullName || user?.username || data.user}
               </Text>
             </View>
           </View>

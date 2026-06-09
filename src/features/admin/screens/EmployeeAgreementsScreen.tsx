@@ -367,13 +367,15 @@ export function EmployeeAgreementsScreen() {
     try {
       
       const [usersResult, agreementsResult] = await Promise.all([
-        adminApi.listUsers(),
+        adminApi.listUsers({limit: 100}),
         agreementsApi.getGrouped({
           page: 1,
           limit: 500,
           status: 'all',
           search: '',
-          includeDeleted: false,
+          isDeleted: false,
+          includeLogs: true,
+          includeDrafts: true,
         }),
       ]);
 

@@ -12,7 +12,6 @@ import type {
 const BASE_PATH = '/api/routestar-customers';
 
 export const routestarCustomersApi = {
-  
   async getAll(
     params?: CustomersQueryParams,
   ): Promise<CustomersListResponse | null> {
@@ -29,11 +28,12 @@ export const routestarCustomersApi = {
         `${BASE_PATH}?${queryParams.toString()}`,
       );
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          data: response.data || [],
-          pagination: response.pagination || {
+          data: body.data || [],
+          pagination: body.pagination || {
             total: 0,
             skip: 0,
             limit: 50,
@@ -54,7 +54,8 @@ export const routestarCustomersApi = {
         success: boolean;
         data: RouteStarCustomer;
       }>(`${BASE_PATH}/${id}`);
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching customer:', error);
       return null;
@@ -68,9 +69,9 @@ export const routestarCustomersApi = {
         data: CustomerStats;
       }>(`${BASE_PATH}/stats`);
 
-      if (response.success !== false) {
-        
-        return response.data || (response as unknown as CustomerStats);
+      const body = response.data as any;
+      if (body) {
+        return body.data ?? body;
       }
       return null;
     } catch (error) {
@@ -86,9 +87,9 @@ export const routestarCustomersApi = {
         data: CustomerSyncStatus;
       }>(`${BASE_PATH}/sync/status`);
 
-      if (response.success !== false) {
-        
-        return response.data || (response as unknown as CustomerSyncStatus);
+      const body = response.data as any;
+      if (body) {
+        return body.data ?? body;
       }
       return null;
     } catch (error) {
@@ -105,10 +106,11 @@ export const routestarCustomersApi = {
         syncId?: string;
       }>(`${BASE_PATH}/sync/start`, {});
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
-          message: response.message || 'Sync started',
-          syncId: response.syncId,
+          message: body.message || 'Sync started',
+          syncId: body.syncId,
         };
       }
       return null;
@@ -125,8 +127,9 @@ export const routestarCustomersApi = {
         data: RouteStarCustomer[];
       }>(`${BASE_PATH}?search=${encodeURIComponent(query)}&limit=20`);
 
-      if (response.success !== false) {
-        return response.data || [];
+      const body = response.data as any;
+      if (body) {
+        return body.data || [];
       }
       return null;
     } catch (error) {

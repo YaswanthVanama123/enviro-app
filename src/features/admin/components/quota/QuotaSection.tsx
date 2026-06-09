@@ -14,6 +14,7 @@ import {
   quotaApi,
   salesPersonApi,
 } from '../../../../services/api/endpoints/quota.api';
+import {SalesPersonManager} from './SalesPersonManager';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
@@ -36,7 +37,7 @@ import {
   getAccountTypeBgColor,
 } from '../../types/accountType.types';
 
-type SubTab = 'dashboard' | 'leaderboard';
+type SubTab = 'dashboard' | 'salesPersons';
 
 export function QuotaSection() {
   const insets = useSafeAreaInsets();
@@ -46,7 +47,7 @@ export function QuotaSection() {
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [quotaStatus, setQuotaStatus] = useState<QuotaStatusResponse | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,26 +67,26 @@ export function QuotaSection() {
   }, []);
 
   const loadData = useCallback(async () => {
-    if (!selectedPersonId) return;
+    if (activeTab !== 'dashboard') {
+      setLoading(false);
+      return;
+    }
+    if (!selectedPersonId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      if (activeTab === 'dashboard') {
-        const status = await quotaApi.getStatus(selectedPersonId, {
-          periodType: 'monthly',
-        });
-        if (status) {
-          setQuotaStatus(status);
-        } else {
-          setError('Failed to load quota status');
-        }
-      } else if (activeTab === 'leaderboard') {
-        const result = await quotaApi.getLeaderboard({periodType: 'monthly'});
-        if (result) {
-          setLeaderboard(result.leaderboard);
-        }
+      const status = await quotaApi.getStatus(selectedPersonId, {
+        periodType: 'monthly',
+      });
+      if (status) {
+        setQuotaStatus(status);
+      } else {
+        setError('Failed to load quota status');
       }
     } catch (err) {
       setError('Failed to load data');
@@ -334,21 +335,23 @@ export function QuotaSection() {
       </View>
 
       {}
-      <TouchableOpacity
-        style={styles.personSelector}
-        onPress={() => setShowPersonPicker(!showPersonPicker)}>
-        <Ionicons name="person-outline" size={20} color={Colors.textMuted} />
-        <Text style={styles.personName}>
-          {selectedPerson?.name || 'Select Sales Person'}
-        </Text>
-        <Ionicons
-          name={showPersonPicker ? 'chevron-up' : 'chevron-down'}
-          size={20}
-          color={Colors.textMuted}
-        />
-      </TouchableOpacity>
+      {activeTab === 'dashboard' && (
+        <TouchableOpacity
+          style={styles.personSelector}
+          onPress={() => setShowPersonPicker(!showPersonPicker)}>
+          <Ionicons name="person-outline" size={20} color={Colors.textMuted} />
+          <Text style={styles.personName}>
+            {selectedPerson?.name || 'Select Sales Person'}
+          </Text>
+          <Ionicons
+            name={showPersonPicker ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={Colors.textMuted}
+          />
+        </TouchableOpacity>
+      )}
 
-      {showPersonPicker && (
+      {activeTab === 'dashboard' && showPersonPicker && (
         <View style={styles.pickerDropdown}>
           {salesPersons.map(sp => (
             <TouchableOpacity
@@ -391,20 +394,22 @@ export function QuotaSection() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'leaderboard' && styles.tabActive]}
-          onPress={() => setActiveTab('leaderboard')}>
+          style={[styles.tab, activeTab === 'salesPersons' && styles.tabActive]}
+          onPress={() => setActiveTab('salesPersons')}>
           <Text
             style={[
               styles.tabText,
-              activeTab === 'leaderboard' && styles.tabTextActive,
+              activeTab === 'salesPersons' && styles.tabTextActive,
             ]}>
-            Leaderboard
+            Sales Persons
           </Text>
         </TouchableOpacity>
       </View>
 
       {}
-      {loading ? (
+      {activeTab === 'salesPersons' ? (
+        <SalesPersonManager />
+      ) : loading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -420,7 +425,6 @@ export function QuotaSection() {
       ) : (
         <>
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'leaderboard' && renderLeaderboard()}
         </>
       )}
     </ScrollView>

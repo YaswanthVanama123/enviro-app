@@ -19,15 +19,18 @@ export interface MapDistanceResult {
 }
 
 export interface MapDistanceStats {
-  totalCustomers: number;
-  customersWithDistance: number;
-  customersWithoutDistance: number;
-  lastSyncDate: string | null;
+  totalRecords: number;
+  customersWithData: number;
+  lastSyncAt: string | null;
+  lastSyncRecords: number;
+  storageSizeBytes: number;
+  storageSizeFormatted: string;
+  avgBytesPerRecord: number;
 }
 
 export interface MapDistanceSyncJob {
   _id: string;
-  jobType: 'full_sync' | 'single_fetch';
+  jobType: 'full_sync' | 'single_fetch' | 'update_sync';
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused';
   totalCustomers: number;
   processedCustomers: number;
@@ -39,6 +42,7 @@ export interface MapDistanceSyncJob {
 }
 
 export interface SyncStatusResponse {
+  success?: boolean;
   isRunning: boolean;
   isInterrupted: boolean;
   isPaused: boolean;
@@ -48,13 +52,16 @@ export interface SyncStatusResponse {
 const BASE_PATH = '/api/map-distance';
 
 export const mapDistanceApi = {
-  
-  async getCustomers(): Promise<RouteStarCustomerOption[]> {
+  async getCustomers(search?: string): Promise<RouteStarCustomerOption[]> {
     try {
-      const response = await apiClient.get<RouteStarCustomerOption[]>(
-        `${BASE_PATH}/customers`,
-      );
-      return response || [];
+      const query = search ? `?search=${encodeURIComponent(search)}` : '';
+      const response = await apiClient.get<{
+        success: boolean;
+        data: RouteStarCustomerOption[];
+        total: number;
+      }>(`${BASE_PATH}/customers${query}`);
+      const body = response.data as any;
+      return body?.success ? body.data : [];
     } catch (error) {
       console.error('Error fetching RouteStar customers:', error);
       return [];
@@ -70,7 +77,12 @@ export const mapDistanceApi = {
         error?: string;
         jobId?: string;
       }>(`${BASE_PATH}/fetch`, {customerName});
-      return response || {success: false, error: 'No response'};
+      return (
+        (response.data as any) ?? {
+          success: false,
+          error: response.error || 'No response',
+        }
+      );
     } catch (error) {
       console.error('Error fetching distance:', error);
       return {
@@ -82,10 +94,11 @@ export const mapDistanceApi = {
 
   async getSyncStatus(): Promise<SyncStatusResponse> {
     try {
-      const response =
-        await apiClient.get<SyncStatusResponse>(`${BASE_PATH}/sync-status`);
+      const response = await apiClient.get<SyncStatusResponse>(
+        `${BASE_PATH}/sync/status`,
+      );
       return (
-        response || {
+        (response.data as any) ?? {
           isRunning: false,
           isInterrupted: false,
           isPaused: false,
@@ -105,9 +118,12 @@ export const mapDistanceApi = {
 
   async getStats(): Promise<MapDistanceStats | null> {
     try {
-      const response =
-        await apiClient.get<MapDistanceStats>(`${BASE_PATH}/stats`);
-      return response;
+      const response = await apiClient.get<{
+        success: boolean;
+        stats: MapDistanceStats;
+      }>(`${BASE_PATH}/stats`);
+      const body = response.data as any;
+      return body?.stats ?? null;
     } catch (error) {
       console.error('Error getting stats:', error);
       return null;
@@ -117,10 +133,13 @@ export const mapDistanceApi = {
   async startSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
-        `${BASE_PATH}/sync`,
+        `${BASE_PATH}/sync/start`,
         {},
       );
-      return response || {success: false, error: 'No response'};
+      const body = response.data as any;
+      return body?.success
+        ? {success: true}
+        : {success: false, error: body?.error || response.error || 'Failed to start sync'};
     } catch (error) {
       console.error('Error starting sync:', error);
       return {
@@ -133,10 +152,11 @@ export const mapDistanceApi = {
   async cancelSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
-        `${BASE_PATH}/cancel-sync`,
+        `${BASE_PATH}/sync/cancel`,
         {},
       );
-      return response || {success: false, error: 'No response'};
+      const body = response.data as any;
+      return {success: body?.success ?? false, error: body?.error};
     } catch (error) {
       console.error('Error cancelling sync:', error);
       return {
@@ -149,10 +169,11 @@ export const mapDistanceApi = {
   async pauseSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
-        `${BASE_PATH}/pause-sync`,
+        `${BASE_PATH}/sync/pause`,
         {},
       );
-      return response || {success: false, error: 'No response'};
+      const body = response.data as any;
+      return {success: body?.success ?? false, error: body?.error};
     } catch (error) {
       console.error('Error pausing sync:', error);
       return {
@@ -164,10 +185,12 @@ export const mapDistanceApi = {
 
   async getSyncHistory(): Promise<MapDistanceSyncJob[]> {
     try {
-      const response = await apiClient.get<MapDistanceSyncJob[]>(
-        `${BASE_PATH}/sync-history`,
-      );
-      return response || [];
+      const response = await apiClient.get<{
+        success: boolean;
+        data: MapDistanceSyncJob[];
+      }>(`${BASE_PATH}/sync/history`);
+      const body = response.data as any;
+      return body?.data ?? [];
     } catch (error) {
       console.error('Error getting sync history:', error);
       return [];

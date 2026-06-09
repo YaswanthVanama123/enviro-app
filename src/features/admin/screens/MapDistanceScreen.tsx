@@ -404,40 +404,42 @@ export function MapDistanceScreen() {
                 <View style={styles.statsGrid}>
                   <View style={styles.statCard}>
                     <View style={styles.statIcon}>
-                      <Ionicons name="people" size={20} color="#2563eb" />
+                      <Ionicons name="documents" size={20} color="#2563eb" />
                     </View>
-                    <Text style={styles.statValue}>{stats.totalCustomers}</Text>
-                    <Text style={styles.statLabel}>Total Customers</Text>
+                    <Text style={styles.statValue}>
+                      {stats.totalRecords.toLocaleString()}
+                    </Text>
+                    <Text style={styles.statLabel}>Total Records</Text>
                   </View>
 
                   <View style={styles.statCard}>
                     <View
                       style={[styles.statIcon, {backgroundColor: '#dcfce7'}]}>
-                      <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                      <Ionicons name="people" size={20} color="#16a34a" />
                     </View>
                     <Text style={styles.statValue}>
-                      {stats.customersWithDistance}
+                      {stats.customersWithData.toLocaleString()}
                     </Text>
-                    <Text style={styles.statLabel}>With Distance</Text>
+                    <Text style={styles.statLabel}>Customers with Data</Text>
                   </View>
 
                   <View style={styles.statCard}>
                     <View
                       style={[styles.statIcon, {backgroundColor: '#fef3c7'}]}>
-                      <Ionicons name="alert-circle" size={20} color="#f59e0b" />
+                      <Ionicons name="server" size={20} color="#f59e0b" />
                     </View>
                     <Text style={styles.statValue}>
-                      {stats.customersWithoutDistance}
+                      {stats.storageSizeFormatted || 'N/A'}
                     </Text>
-                    <Text style={styles.statLabel}>Without Distance</Text>
+                    <Text style={styles.statLabel}>Storage Size</Text>
                   </View>
                 </View>
 
-                {stats.lastSyncDate && (
+                {stats.lastSyncAt && (
                   <View style={styles.lastSyncCard}>
                     <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
                     <Text style={styles.lastSyncText}>
-                      Last sync: {formatDate(stats.lastSyncDate)}
+                      Last sync: {formatDate(stats.lastSyncAt)}
                     </Text>
                   </View>
                 )}

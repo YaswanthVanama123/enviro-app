@@ -41,6 +41,19 @@ export interface CreateSalesPersonInput {
   managerId?: string;
 }
 
+export interface UpdateSalesPersonInput {
+  salesRole?: SalesRole;
+  territory?: string;
+  phone?: string;
+  name?: string;
+  email?: string;
+}
+
+export interface UpdateQuotaInput {
+  monthlyTarget: number;
+  periodType: 'monthly' | 'quarterly' | 'annual';
+}
+
 export type AgreementStatus =
   | 'draft'
   | 'pending_approval'

@@ -244,10 +244,28 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
       const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd);
       const response = await agreementsApi.getAllEmployeesCommissions(dateRange);
       if (response?.success) {
-        setEmployeesData({
-          grandTotals: response.grandTotals,
-          employees: response.employees,
+        const emptyCounts = {draft: 0, saved: 0, pending_approval: 0, approved: 0, active: 0};
+        const employees: EmployeeSummary[] = (response.employees || []).map((e: any) => {
+          const totalCommission = e.totalCommission ?? e.totalContractCommission ?? 0;
+          const totalRevenue = e.totalRevenue ?? e.totalContractValue ?? 0;
+          return {
+            username: e.userId ?? e.username ?? '',
+            totalAgreements: e.totalAgreements ?? 0,
+            statusCounts: e.statusCounts ?? emptyCounts,
+            totalMonthlyCommission: totalCommission / 12,
+            totalContractCommission: totalCommission,
+            totalContractValue: totalRevenue,
+            averageCommissionRate: e.averageCommissionRate ?? 0,
+          };
         });
+        const grandTotals: GrandTotals = {
+          totalEmployees: employees.length,
+          totalAgreements: employees.reduce((s, e) => s + e.totalAgreements, 0),
+          totalMonthlyCommission: employees.reduce((s, e) => s + e.totalMonthlyCommission, 0),
+          totalContractCommission: employees.reduce((s, e) => s + e.totalContractCommission, 0),
+          totalContractValue: employees.reduce((s, e) => s + e.totalContractValue, 0),
+        };
+        setEmployeesData({grandTotals, employees});
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch employees commissions');

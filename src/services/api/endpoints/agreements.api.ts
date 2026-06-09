@@ -98,7 +98,7 @@ export const agreementsApi = {
     if (options.page !== undefined) {params.set('page', String(options.page));}
     if (options.limit !== undefined) {params.set('limit', String(options.limit));}
     if (options.search) {params.set('search', options.search);}
-    if (options.status) {params.set('status', options.status);}
+    if (options.status && options.status !== 'all') {params.set('status', options.status);}
     if (options.isDeleted !== undefined) {
       params.set('isDeleted', String(options.isDeleted));
     }

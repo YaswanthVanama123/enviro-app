@@ -60,7 +60,7 @@ export interface MappingQueryParams {
 const BASE_PATH = '/api/company-mappings';
 
 export const companyMappingApi = {
-  
+
   async getAll(params?: MappingQueryParams): Promise<MappingsListResponse | null> {
     try {
       const queryParams = new URLSearchParams();
@@ -73,11 +73,12 @@ export const companyMappingApi = {
         `${BASE_PATH}?${queryParams.toString()}`,
       );
 
-      if (response.success !== false) {
+      const body = response.data as any;
+      if (body && body.success !== false) {
         return {
           success: true,
-          data: response.data || [],
-          pagination: response.pagination || {
+          data: body.data || [],
+          pagination: body.pagination || {
             total: 0,
             skip: 0,
             limit: 30,
@@ -99,10 +100,8 @@ export const companyMappingApi = {
         data: MappingStats;
       }>(`${BASE_PATH}/stats`);
 
-      if (response.success !== false) {
-        return response.data || (response as unknown as MappingStats);
-      }
-      return null;
+      const body = response.data as any;
+      return body ? (body.data ?? body) : null;
     } catch (error) {
       console.error('Error fetching mapping stats:', error);
       return null;
@@ -124,10 +123,8 @@ export const companyMappingApi = {
         data: RouteStarCustomerOption[];
       }>(`${BASE_PATH}/routestar-available?${queryParams.toString()}`);
 
-      if (response.success !== false) {
-        return response.data || [];
-      }
-      return null;
+      const body = response.data as any;
+      return body ? (body.data || []) : null;
     } catch (error) {
       console.error('Error fetching available RouteStar customers:', error);
       return null;
@@ -144,7 +141,8 @@ export const companyMappingApi = {
         success: boolean;
         data: CompanyMapping;
       }>(BASE_PATH, {biginId, routeStarId, mappedBy: mappedBy || 'admin'});
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error saving mapping:', error);
       return null;
@@ -161,7 +159,8 @@ export const companyMappingApi = {
         success: boolean;
         data: CompanyMapping;
       }>(`${BASE_PATH}/${id}`, {routeStarId, mappedBy: mappedBy || 'admin'});
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error updating mapping:', error);
       return null;
@@ -173,7 +172,8 @@ export const companyMappingApi = {
       const response = await apiClient.delete<{success: boolean}>(
         `${BASE_PATH}/${id}`,
       );
-      return response.success || false;
+      const body = response.data as any;
+      return !!body?.success;
     } catch (error) {
       console.error('Error deleting mapping:', error);
       return false;
@@ -197,7 +197,8 @@ export const companyMappingApi = {
           errors: number;
         };
       }>(`${BASE_PATH}/bulk`, {mappings, mappedBy: mappedBy || 'admin'});
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error bulk saving mappings:', error);
       return null;
@@ -214,7 +215,8 @@ export const companyMappingApi = {
         success: boolean;
         data: {total: number; created: number; skipped: number};
       }>(`${BASE_PATH}/initialize`, {});
-      return response.success ? response.data : null;
+      const body = response.data as any;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error initializing mappings:', error);
       return null;

@@ -4,6 +4,8 @@ import {apiClient} from '../client';
 import type {
   SalesPerson,
   CreateSalesPersonInput,
+  UpdateSalesPersonInput,
+  UpdateQuotaInput,
   Agreement,
   CreateAgreementInput,
   AgreementStatus,
@@ -35,7 +37,8 @@ export const salesPersonApi = {
         count: number;
       }>(`${BASE_PATH}/sales-persons?${queryParams.toString()}`);
 
-      return response.success ? {data: response.data, count: response.count} : null;
+      const body = response.data;
+      return body?.success ? {data: body.data, count: body.count} : null;
     } catch (error) {
       console.error('Error fetching sales persons:', error);
       return null;
@@ -47,7 +50,8 @@ export const salesPersonApi = {
       const response = await apiClient.get<{success: boolean; data: SalesPerson}>(
         `${BASE_PATH}/sales-persons/${id}`,
       );
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching sales person:', error);
       return null;
@@ -60,9 +64,44 @@ export const salesPersonApi = {
         `${BASE_PATH}/sales-persons`,
         input,
       );
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error creating sales person:', error);
+      return null;
+    }
+  },
+
+  async update(
+    id: string,
+    input: UpdateSalesPersonInput,
+  ): Promise<SalesPerson | null> {
+    try {
+      const response = await apiClient.put<{success: boolean; data: SalesPerson}>(
+        `${BASE_PATH}/sales-persons/${id}`,
+        input,
+      );
+      const body = response.data;
+      return body?.success ? body.data : null;
+    } catch (error) {
+      console.error('Error updating sales person:', error);
+      return null;
+    }
+  },
+
+  async updateQuota(
+    id: string,
+    input: UpdateQuotaInput,
+  ): Promise<SalesPerson | null> {
+    try {
+      const response = await apiClient.put<{success: boolean; data: SalesPerson}>(
+        `${BASE_PATH}/sales-persons/${id}/quota`,
+        input,
+      );
+      const body = response.data;
+      return body?.success ? body.data : null;
+    } catch (error) {
+      console.error('Error updating quota:', error);
       return null;
     }
   },
@@ -97,8 +136,9 @@ export const agreementApi = {
         pagination: {total: number; limit: number; skip: number; hasMore: boolean};
       }>(`${BASE_PATH}/agreements?${queryParams.toString()}`);
 
-      return response.success
-        ? {data: response.data, pagination: response.pagination}
+      const body = response.data;
+      return body?.success
+        ? {data: body.data, pagination: body.pagination}
         : null;
     } catch (error) {
       console.error('Error fetching agreements:', error);
@@ -111,7 +151,8 @@ export const agreementApi = {
       const response = await apiClient.get<{success: boolean; data: Agreement}>(
         `${BASE_PATH}/agreements/${id}`,
       );
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching agreement:', error);
       return null;
@@ -141,7 +182,8 @@ export const agreementApi = {
         };
       }>(`${BASE_PATH}/agreements`, input);
 
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error creating agreement:', error);
       return null;
@@ -158,7 +200,8 @@ export const agreementApi = {
         `${BASE_PATH}/agreements/${id}/status`,
         {status, approvedBy},
       );
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error updating agreement status:', error);
       return null;
@@ -217,7 +260,8 @@ export const quotaApi = {
         data: QuotaLevelResponse;
       }>(`${BASE_PATH}/level/${salesPersonId}`);
 
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching quota level:', error);
       return null;
@@ -238,7 +282,8 @@ export const quotaApi = {
         data: LeaderboardResponse;
       }>(`${BASE_PATH}/leaderboard?${queryParams.toString()}`);
 
-      return response.success ? response.data : null;
+      const body = response.data;
+      return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       return null;
