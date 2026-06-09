@@ -10,6 +10,11 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.swift */; };
 		13B07FBD1A68108700A75B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.storyboard */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		6E553D542FD7E35C004F739D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.swift */; };
+		6E553D582FD7E35C004F739D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.storyboard */; };
+		6E553D592FD7E35C004F739D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		6E553D5A2FD7E35C004F739D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5AD04A50A2AF3CCA113E09A6 /* PrivacyInfo.xcprivacy */; };
+		7D8BD2A8F0E1E95623162E59 /* libPods-EnviroApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CE0D5E0F2CF9D897464016F /* libPods-EnviroApp.a */; };
 		9E34CA146C37C3B6B8594C3B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5AD04A50A2AF3CCA113E09A6 /* PrivacyInfo.xcprivacy */; };
 		D3A2AC46AA1CF626FBCE2604 /* libPods-EnviroApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CE0D5E0F2CF9D897464016F /* libPods-EnviroApp.a */; };
 /* End PBXBuildFile section */
@@ -21,9 +26,11 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = EnviroApp/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = EnviroApp/Info.plist; sourceTree = "<group>"; };
 		5AD04A50A2AF3CCA113E09A6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = EnviroApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6E39D57652BE4578CC597E8B /* Pods-EnviroApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EnviroApp.release.xcconfig"; path = "Target Support Files/Pods-EnviroApp/Pods-EnviroApp.release.xcconfig"; sourceTree = "<group>"; };
+		6E553D612FD7E35C004F739D /* EnviroApp copy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EnviroApp copy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E553D622FD7E35D004F739D /* EnviroApp copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "EnviroApp copy-Info.plist"; path = "/Users/yaswanthgandhi/Documents/structure/enviro-app/ios/EnviroApp copy-Info.plist"; sourceTree = "<absolute>"; };
 		7CE0D5E0F2CF9D897464016F /* libPods-EnviroApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-EnviroApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A3C2E79B10D0AE3E2FBE995C /* Pods-EnviroApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EnviroApp.debug.xcconfig"; path = "Target Support Files/Pods-EnviroApp/Pods-EnviroApp.debug.xcconfig"; sourceTree = "<group>"; };
-		BBAFF3498DEFCF12EEAF74B2 /* Pods-EnviroApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EnviroApp.release.xcconfig"; path = "Target Support Files/Pods-EnviroApp/Pods-EnviroApp.release.xcconfig"; sourceTree = "<group>"; };
+		C11A53FAD048060AD9F6479F /* Pods-EnviroApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EnviroApp.debug.xcconfig"; path = "Target Support Files/Pods-EnviroApp/Pods-EnviroApp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +39,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D3A2AC46AA1CF626FBCE2604 /* libPods-EnviroApp.a in Frameworks */,
+				7D8BD2A8F0E1E95623162E59 /* libPods-EnviroApp.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E553D552FD7E35C004F739D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,6 +88,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				DAED62AEB679DEF23DB2F4B1 /* Pods */,
+				6E553D622FD7E35D004F739D /* EnviroApp copy-Info.plist */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -83,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* EnviroApp.app */,
+				6E553D612FD7E35C004F739D /* EnviroApp copy.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,8 +107,8 @@
 		DAED62AEB679DEF23DB2F4B1 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				A3C2E79B10D0AE3E2FBE995C /* Pods-EnviroApp.debug.xcconfig */,
-				BBAFF3498DEFCF12EEAF74B2 /* Pods-EnviroApp.release.xcconfig */,
+				C11A53FAD048060AD9F6479F /* Pods-EnviroApp.debug.xcconfig */,
+				6E39D57652BE4578CC597E8B /* Pods-EnviroApp.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -118,6 +135,24 @@
 			name = EnviroApp;
 			productName = EnviroApp;
 			productReference = 13B07F961A680F5B00A75B9A /* EnviroApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6E553D512FD7E35C004F739D /* EnviroApp copy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E553D5E2FD7E35C004F739D /* Build configuration list for PBXNativeTarget "EnviroApp copy" */;
+			buildPhases = (
+				6E553D532FD7E35C004F739D /* Sources */,
+				6E553D552FD7E35C004F739D /* Frameworks */,
+				6E553D572FD7E35C004F739D /* Resources */,
+				6E553D5B2FD7E35C004F739D /* Bundle React Native code and images */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "EnviroApp copy";
+			productName = EnviroApp;
+			productReference = 6E553D612FD7E35C004F739D /* EnviroApp copy.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -147,6 +182,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* EnviroApp */,
+				6E553D512FD7E35C004F739D /* EnviroApp copy */,
 			);
 		};
 /* End PBXProject section */
@@ -159,6 +195,16 @@
 				13B07FBD1A68108700A75B9A /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				9E34CA146C37C3B6B8594C3B /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E553D572FD7E35C004F739D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E553D582FD7E35C004F739D /* LaunchScreen.storyboard in Resources */,
+				6E553D592FD7E35C004F739D /* Images.xcassets in Resources */,
+				6E553D5A2FD7E35C004F739D /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,18 +257,30 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-EnviroApp/Pods-EnviroApp-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-EnviroApp/Pods-EnviroApp-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-EnviroApp/Pods-EnviroApp-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		6E553D5B2FD7E35C004F739D /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/.xcode.env",
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
 		F0D70CE3CE37C93EB2B18C40 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -232,13 +290,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-EnviroApp/Pods-EnviroApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-EnviroApp/Pods-EnviroApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -256,12 +310,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6E553D532FD7E35C004F739D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E553D542FD7E35C004F739D /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A3C2E79B10D0AE3E2FBE995C /* Pods-EnviroApp.debug.xcconfig */;
+			baseConfigurationReference = C11A53FAD048060AD9F6479F /* Pods-EnviroApp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -297,7 +359,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BBAFF3498DEFCF12EEAF74B2 /* Pods-EnviroApp.release.xcconfig */;
+			baseConfigurationReference = 6E39D57652BE4578CC597E8B /* Pods-EnviroApp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -324,6 +386,75 @@
 				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.enviromaster.EnviroApp;
 				PRODUCT_NAME = EnviroApp;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		6E553D5F2FD7E35C004F739D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = VZ3L92DCUW;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = "EnviroApp copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"$(SDKROOT)/System/iOSSupport/usr/lib/swift",
+					"$(inherited)",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enviromaster.EnviroApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		6E553D602FD7E35C004F739D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = VZ3L92DCUW;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = "EnviroApp copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"$(SDKROOT)/System/iOSSupport/usr/lib/swift",
+					"$(inherited)",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enviromaster.EnviroApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -395,7 +526,10 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -460,7 +594,10 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -476,6 +613,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6E553D5E2FD7E35C004F739D /* Build configuration list for PBXNativeTarget "EnviroApp copy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E553D5F2FD7E35C004F739D /* Debug */,
+				6E553D602FD7E35C004F739D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

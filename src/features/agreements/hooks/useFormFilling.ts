@@ -3,6 +3,7 @@ import {
   FormPayload,
   HeaderRow,
   GlobalSummary,
+  CommissionData,
   ServiceAgreementData,
   DEFAULT_HEADER_ROWS,
   formApi,
@@ -11,6 +12,10 @@ import {normalizeEditServices} from '../utils/serviceDataTransformers';
 import {serviceToBackendFormat} from '../utils/serviceToBackend';
 import {hasPriceChanges, getPriceChangeCount, createVersionLogFile, trackProductChange, clearPriceChanges} from '../utils/fileLogger';
 import {useAuth} from '../../admin/context/AdminAuthContext';
+import {computeGlobalCommission} from './useServiceCommission';
+import {resolveCommissionRules, type ResolvedCommissionRules} from '../../admin/types/commission.types';
+import {commissionApi} from '../../../services/api/endpoints/commission.api';
+import {useQuotaContext} from '../context/QuotaContext';
 
 export interface SmallProduct {
   id: string;
@@ -134,6 +139,26 @@ export function useFormFilling(editAgreementId?: string) {
   const {user} = useAuth();
   const salespersonId = user?.id ?? 'salesperson_001';
   const salespersonName = user?.fullName ?? user?.username ?? 'Sales Person';
+
+  const {baseCommissionRate, quotaLevelData} = useQuotaContext();
+  const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
+    resolveCommissionRules(null),
+  );
+  useEffect(() => {
+    let cancelled = false;
+    commissionApi
+      .getActiveRules()
+      .then(loaded => {
+        if (cancelled || !loaded) return;
+        setActiveRules(resolveCommissionRules(loaded));
+      })
+      .catch(err => {
+        console.error('[RULES] useFormFilling failed to load active rules:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setForm(prev => ({...prev, initialLoading: true}));
@@ -723,6 +748,31 @@ export function useFormFilling(editAgreementId?: string) {
         ? 'pending_approval'
         : 'saved';
 
+    const commissionResult = computeGlobalCommission(
+      form.services,
+      form.accountTypeCache ?? {},
+      form.contractMonths,
+      baseCommissionRate,
+      activeRules,
+      quotaLevelData?.actualSales ?? 0,
+    );
+    const years = form.contractMonths > 0 ? form.contractMonths / 12 : 1;
+    const commission: CommissionData = {
+      weeklyCommission:
+        commissionResult.totalAnnualCommission / activeRules.weeksPerAnnualCommission,
+      annualCommission: commissionResult.totalAnnualCommission,
+      contractCommission: commissionResult.totalAnnualCommission * years,
+      finalCommissionRate: commissionResult.effectiveCommissionRate,
+      agreementMultiplier: commissionResult.agreementMultiplier,
+      baseRate: baseCommissionRate,
+      serviceBreakdown: commissionResult.services.map(s => ({
+        serviceName: s.serviceName,
+        accountType: s.accountType,
+        perVisitCommission: s.perVisitCommission,
+        annualCommission: s.annualCommission,
+      })),
+    };
+
     const summary: GlobalSummary = {
       contractMonths: form.contractMonths,
       tripCharge: form.tripCharge,
@@ -732,6 +782,7 @@ export function useFormFilling(editAgreementId?: string) {
       serviceAgreementTotal: 0,
       productMonthlyTotal: 0,
       productContractTotal: 0,
+      quotaCredit: Math.round((commissionResult.totalQuotaCredit || 0) * 100) / 100,
     };
 
     // Build products in the EXACT web app structure so save/edit round-trips on
@@ -805,8 +856,9 @@ export function useFormFilling(editAgreementId?: string) {
       includeProductsTable: form.includeProductsTable,
       status: documentStatus,
       summary,
+      commission,
     };
-  }, [form]);
+  }, [form, baseCommissionRate, quotaLevelData, activeRules]);
 
   const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));

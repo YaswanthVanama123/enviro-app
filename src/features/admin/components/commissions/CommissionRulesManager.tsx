@@ -18,6 +18,7 @@ import {
   ACCOUNT_TYPE_REVENUE_RULES,
   FREQUENCY_VISITS_PER_YEAR,
   DEFAULT_QUOTA_TIER_CUTOFFS,
+  DEFAULT_QUOTA_TARGET,
   PIT_PER_VISIT_THRESHOLD,
   ANCHOR_PER_VISIT_THRESHOLD,
   ANCHOR_BONUS_MULTIPLIER,
@@ -28,7 +29,6 @@ import {FontSize} from '../../../../theme/typography';
 
 type PerVisitKey = 'Bread5' | 'Bread15' | 'Pit';
 type FreqKey = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'one-time';
-type CutoffKey = 'aboveQuota' | 'doubleQuota';
 type TierField = 'minRatio' | 'maxRatio' | 'quotaMultiplier' | 'label' | 'requiresApproval';
 
 const DEFAULT_PRICING_TIERS = [
@@ -67,6 +67,7 @@ function hydrateV2Fields(rules: CommissionRules): CommissionRules {
       aboveQuota: DEFAULT_QUOTA_TIER_CUTOFFS.aboveQuota,
       doubleQuota: DEFAULT_QUOTA_TIER_CUTOFFS.doubleQuota,
     },
+    quotaTarget: rules.quotaTarget ?? DEFAULT_QUOTA_TARGET,
     weeksPerAnnualCommission: rules.weeksPerAnnualCommission ?? 52,
   };
 }
@@ -161,15 +162,6 @@ export const CommissionRulesManager: React.FC = () => {
     setRules({
       ...rules,
       frequencyVisitsPerYear: {...current, [key]: parseNum(value)},
-    });
-  };
-
-  const updateQuotaTierCutoff = (key: CutoffKey, value: string) => {
-    if (!rules) return;
-    const current = rules.quotaTierCutoffs || {aboveQuota: 10000, doubleQuota: 20000};
-    setRules({
-      ...rules,
-      quotaTierCutoffs: {...current, [key]: parseNum(value)},
     });
   };
 
@@ -436,19 +428,13 @@ export const CommissionRulesManager: React.FC = () => {
 
       {}
       <Section
-        title="Quota Tier Cutoffs (V2 — $)"
-        subtitle="Piecewise commission rate splits at these annualized quota-credit positions.">
+        title="Weekly Quota Target (V2 — $)"
+        subtitle="Quota resets weekly. Commission rate splits by quota-credit position: below target → below %, target to 2× target → above %, above 2× target → double %.">
         <NumberField
-          label="Above Quota Cutoff"
-          value={num(rules.quotaTierCutoffs?.aboveQuota, 10000)}
-          onChange={v => updateQuotaTierCutoff('aboveQuota', v)}
-          step={500}
-        />
-        <NumberField
-          label="Double Quota Cutoff"
-          value={num(rules.quotaTierCutoffs?.doubleQuota, 20000)}
-          onChange={v => updateQuotaTierCutoff('doubleQuota', v)}
-          step={500}
+          label="Weekly Quota Target"
+          value={num(rules.quotaTarget, DEFAULT_QUOTA_TARGET)}
+          onChange={v => rules && setRules({...rules, quotaTarget: parseNum(v)})}
+          step={1000}
         />
       </Section>
 

@@ -21,6 +21,22 @@ export interface GlobalSummary {
   serviceAgreementTotal: number;
   productMonthlyTotal: number;
   productContractTotal: number;
+  quotaCredit?: number;
+}
+
+export interface CommissionData {
+  weeklyCommission: number;
+  annualCommission: number;
+  contractCommission: number;
+  finalCommissionRate: number;
+  agreementMultiplier: number;
+  baseRate: number;
+  serviceBreakdown: Array<{
+    serviceName: string;
+    accountType: string | null;
+    perVisitCommission: number;
+    annualCommission: number;
+  }>;
 }
 
 export interface ServiceAgreementData {
@@ -59,6 +75,7 @@ export interface FormPayload {
   };
   serviceAgreement?: ServiceAgreementData;
   summary: GlobalSummary;
+  commission?: CommissionData;
   includeProductsTable?: boolean;
   status?: string;
 }

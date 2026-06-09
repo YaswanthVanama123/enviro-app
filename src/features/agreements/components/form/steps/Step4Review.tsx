@@ -334,7 +334,10 @@ export function Step4Review({form}: Step4ReviewProps) {
     const annualContractTotal = currentContract12Months;
     const annualQuotaCredit = annualContractTotal * pricingMultiplier;
 
-    const tierCutoffs = rulesV2.quotaTierCutoffs;
+    const tierCutoffs = {
+      aboveQuota: rulesV2.quotaTarget,
+      doubleQuota: rulesV2.quotaTarget * 2,
+    };
     const positionBefore = repActualSalesBefore;
     const positionAfter = positionBefore + annualQuotaCredit;
     const belowQuotaPortion = Math.max(0, Math.min(positionAfter, tierCutoffs.aboveQuota) - positionBefore);
@@ -370,7 +373,7 @@ export function Step4Review({form}: Step4ReviewProps) {
       effectiveBaseRate,
       finalCommissionRate,
       weeklyCommission,
-      annualCommission: annualCommissionV1,
+      annualCommission: annualCommissionV2,
       contractCommission,
 
       currentContract12Months,

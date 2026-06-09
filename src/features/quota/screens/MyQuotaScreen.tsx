@@ -179,23 +179,11 @@ export function MyQuotaScreen() {
 
         {}
         <View style={styles.periodToggle}>
-          {(['monthly', 'quarterly', 'annual'] as PeriodType[]).map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.periodBtn,
-                periodType === type && styles.periodBtnActive,
-              ]}
-              onPress={() => setPeriodType(type)}>
-              <Text
-                style={[
-                  styles.periodBtnText,
-                  periodType === type && styles.periodBtnTextActive,
-                ]}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={[styles.periodBtn, styles.periodBtnActive]}>
+            <Text style={[styles.periodBtnText, styles.periodBtnTextActive]}>
+              Weekly
+            </Text>
+          </View>
         </View>
 
         {}

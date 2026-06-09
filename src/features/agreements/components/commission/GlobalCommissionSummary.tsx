@@ -53,7 +53,7 @@ export function GlobalCommissionSummary({
 }: GlobalCommissionSummaryProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const {quotaLevel, baseCommissionRate, isLoading: quotaLoading} = useQuotaContext();
+  const {quotaLevel, baseCommissionRate, quotaLevelData, isLoading: quotaLoading} = useQuotaContext();
   const commissionRate = baseCommissionRate;
   const quotaConfig = QUOTA_LEVEL_CONFIG[quotaLevel];
 
@@ -62,6 +62,7 @@ export function GlobalCommissionSummary({
     accountTypeCache,
     commissionRate,
     contractMonths,
+    priorQuotaCredit: quotaLevelData?.actualSales || 0,
   });
 
   if (global.serviceCount === 0) {

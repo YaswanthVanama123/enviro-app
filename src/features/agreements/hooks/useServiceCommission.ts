@@ -23,6 +23,27 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function progressiveQuotaCommissionRate(
+  priorQuotaCredit: number,
+  agreementQuotaCredit: number,
+  quotaTarget: number,
+  rates: {below: number; above: number; double: number},
+  fallbackRate: number,
+): number {
+  if (agreementQuotaCredit <= 0 || quotaTarget <= 0) return fallbackRate;
+  const bounds = [0, quotaTarget, quotaTarget * 2, Infinity];
+  const tierRates = [rates.below, rates.above, rates.double];
+  const lo = Math.max(0, priorQuotaCredit);
+  const hi = lo + agreementQuotaCredit;
+  let commission = 0;
+  for (let i = 0; i < tierRates.length; i++) {
+    const from = Math.max(lo, bounds[i]);
+    const to = Math.min(hi, bounds[i + 1]);
+    if (to > from) commission += (to - from) * (tierRates[i] / 100);
+  }
+  return (commission / agreementQuotaCredit) * 100;
+}
+
 export function backendFrequencyToServiceFrequency(
   freqNum: number,
 ): ServiceFrequency {
@@ -256,6 +277,9 @@ export interface GlobalCommissionResult {
   totalAnnualCommission: number;
   totalPerVisitRevenue: number;
   totalCommissionableRevenue: number;
+  totalQuotaCredit: number;
+  effectiveCommissionRate: number;
+  agreementMultiplier: number;
 
   services: Array<{
     serviceName: string;
@@ -280,6 +304,7 @@ export interface UseGlobalCommissionOptions {
   accountTypeCache: AccountTypeCache;
   commissionRate?: number;
   contractMonths?: number;
+  priorQuotaCredit?: number;
 }
 
 export function useGlobalCommission({
@@ -287,6 +312,7 @@ export function useGlobalCommission({
   accountTypeCache,
   commissionRate = 6,
   contractMonths = 12,
+  priorQuotaCredit = 0,
 }: UseGlobalCommissionOptions): GlobalCommissionResult {
   
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
@@ -309,15 +335,33 @@ export function useGlobalCommission({
     };
   }, []);
 
-  return useMemo(() => {
+  return useMemo(
+    () =>
+      computeGlobalCommission(
+        services,
+        accountTypeCache,
+        contractMonths,
+        commissionRate,
+        activeRules,
+        priorQuotaCredit,
+      ),
+    [services, accountTypeCache, contractMonths, commissionRate, activeRules, priorQuotaCredit],
+  );
+}
 
-    const rules = activeRules;
+export function computeGlobalCommission(
+  services: Record<string, any>,
+  accountTypeCache: AccountTypeCache,
+  contractMonths: number,
+  commissionRate: number,
+  rules: ResolvedCommissionRules,
+  priorQuotaCredit: number = 0,
+): GlobalCommissionResult {
 
     const agreementTerm =
       contractMonths >= 36 ? '3-year' :
       contractMonths >= 12 ? '1-year' : 'MTM-with-install';
     const agreementMultiplier = rules.agreementMultipliers[agreementTerm];
-    const effectiveCommissionRate = commissionRate * (agreementMultiplier / 100);
 
     const visitsPerYearOf = (freqStr: string): number => {
       const v = rules.frequencyVisitsPerYear;
@@ -423,6 +467,16 @@ export function useGlobalCommission({
     const pricingMultiplier = agreementTier.quotaMultiplier;
     const isGreenline = agreementTier.label === 'Greenline (130%+)';
 
+    const totalQuotaCredit = agreementCurrentAnnual * pricingMultiplier;
+    const baseQuotaRate = progressiveQuotaCommissionRate(
+      priorQuotaCredit,
+      totalQuotaCredit,
+      rules.quotaTarget,
+      rules.quotaRates,
+      commissionRate,
+    );
+    const effectiveCommissionRate = baseQuotaRate * (agreementMultiplier / 100);
+
     groups.forEach(g => {
       const adjustedAnnual = g.annualCurrent * pricingMultiplier;
 
@@ -504,6 +558,9 @@ export function useGlobalCommission({
       totalAnnualCommission,
       totalPerVisitRevenue,
       totalCommissionableRevenue,
+      totalQuotaCredit,
+      effectiveCommissionRate,
+      agreementMultiplier,
 
       services: servicesList,
 
@@ -517,7 +574,6 @@ export function useGlobalCommission({
       hasDetectedServices: servicesList.some(s => s.accountType !== null),
       serviceCount: servicesList.length,
     };
-  }, [services, accountTypeCache, commissionRate, contractMonths, activeRules]);
 }
 
 export default useServiceCommission;
