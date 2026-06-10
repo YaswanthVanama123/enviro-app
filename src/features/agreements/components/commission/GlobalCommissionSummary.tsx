@@ -9,6 +9,7 @@ import {
 import {
   useGlobalCommission,
   GlobalCommissionResult,
+  formatCurrency,
 } from '../../hooks/useServiceCommission';
 import {AccountTypeCache} from '../../hooks/useAccountTypeDetection';
 import {useQuotaContext, QuotaLevel} from '../../context/QuotaContext';
@@ -30,10 +31,17 @@ const QUOTA_LEVEL_CONFIG: Record<QuotaLevel, {label: string; color: string; bgCo
   double: {label: 'Double Quota', color: '#7c3aed', bgColor: '#ede9fe'},
 };
 
+const QUOTA_TIER_COLORS: Record<'below' | 'above' | 'double', string> = {
+  below: '#dc2626',
+  above: '#059669',
+  double: '#7c3aed',
+};
+
 interface GlobalCommissionSummaryProps {
   services: Record<string, any>;
   accountTypeCache: AccountTypeCache;
   contractMonths?: number;
+  priorQuotaCredit?: number;
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
@@ -45,6 +53,7 @@ export function GlobalCommissionSummary({
   services,
   accountTypeCache,
   contractMonths = 12,
+  priorQuotaCredit,
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
@@ -62,7 +71,7 @@ export function GlobalCommissionSummary({
     accountTypeCache,
     commissionRate,
     contractMonths,
-    priorQuotaCredit: quotaLevelData?.actualSales || 0,
+    priorQuotaCredit: priorQuotaCredit ?? quotaLevelData?.actualSales ?? 0,
   });
 
   if (global.serviceCount === 0) {
@@ -178,6 +187,67 @@ export function GlobalCommissionSummary({
           </Text>
         </View>
       </View>
+
+      {global.quotaTierBreakdown.length > 0 && (
+        <View style={styles.quotaTiers}>
+          <Text style={styles.quotaTiersTitle}>Quota Tier Breakdown</Text>
+          <Text style={styles.quotaTiersNote}>
+            This agreement adds {formatCurrency(global.totalQuotaCredit)} of quota credit on top of{' '}
+            {formatCurrency(global.priorQuotaCredit)} already earned this week (weekly target{' '}
+            {formatCurrency(global.quotaTarget)}). Split across rate tiers:
+          </Text>
+          {global.quotaTierBreakdown
+            .filter(tier => tier.quotaCredit > 0)
+            .map(tier => (
+              <View key={tier.level} style={styles.quotaTierRow}>
+                <Text
+                  style={[
+                    styles.quotaTierLabel,
+                    {color: QUOTA_TIER_COLORS[tier.level]},
+                  ]}>
+                  {tier.label} @ {tier.rate}%
+                </Text>
+                <Text style={styles.quotaTierValue}>
+                  {formatCurrency(tier.quotaCredit)} × {tier.rate}% ={' '}
+                  {formatCurrency(tier.commission)}
+                </Text>
+              </View>
+            ))}
+        </View>
+      )}
+
+      {global.commissionTierBreakdown.length > 0 && (
+        <View style={styles.quotaTiers}>
+          <Text style={styles.quotaTiersTitle}>Commission Tier Breakdown</Text>
+          <Text style={styles.quotaTiersNote}>
+            Commission is charged on commissionable revenue, each tier at its rate ×
+            agreement multiplier ({global.agreementMultiplier}%), then summed:
+          </Text>
+          {global.commissionTierBreakdown
+            .filter(tier => tier.base > 0)
+            .map(tier => (
+              <View key={tier.level} style={styles.quotaTierRow}>
+                <Text
+                  style={[
+                    styles.quotaTierLabel,
+                    {color: QUOTA_TIER_COLORS[tier.level]},
+                  ]}>
+                  {tier.label} @ {tier.effectiveRate.toFixed(2)}%
+                </Text>
+                <Text style={styles.quotaTierValue}>
+                  {formatCurrency(tier.base)} × {tier.effectiveRate.toFixed(2)}% ={' '}
+                  {formatCurrency(tier.commission)}
+                </Text>
+              </View>
+            ))}
+          <View style={styles.quotaTierRow}>
+            <Text style={[styles.quotaTierLabel, {fontWeight: '700'}]}>Final Commission</Text>
+            <Text style={[styles.quotaTierValue, {fontWeight: '700'}]}>
+              {global.formatted.totalAnnualCommission}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {global.services.length > 0 && (
         <View style={styles.servicesSection}>
@@ -326,6 +396,41 @@ const styles = StyleSheet.create({
   totalsRow: {
     flexDirection: 'row',
     gap: Spacing.lg,
+  },
+  quotaTiers: {
+    marginTop: Spacing.md,
+    padding: Spacing.sm,
+    backgroundColor: '#f8fafc',
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  quotaTiersTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    marginBottom: 4,
+  },
+  quotaTiersNote: {
+    fontSize: FontSize.xs,
+    color: '#64748b',
+    marginBottom: Spacing.sm,
+  },
+  quotaTierRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  quotaTierLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+  },
+  quotaTierValue: {
+    fontSize: FontSize.xs,
+    color: '#334155',
   },
   totalItem: {
     alignItems: 'flex-end',

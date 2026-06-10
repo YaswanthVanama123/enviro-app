@@ -83,6 +83,9 @@ export interface FormState {
   
   accountTypeCache: AccountTypeCache | null;
   accountTypeCacheLoadedFromSaved: boolean;
+  loadedPriorQuotaCredit: number | null;
+  loadedQuotaCredit: number | null;
+  loadedCommission: CommissionData | null;
 }
 
 const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
@@ -132,6 +135,9 @@ const INITIAL_STATE: FormState = {
   isConnectedToBigin: false,
   accountTypeCache: null,
   accountTypeCacheLoadedFromSaved: false,
+  loadedPriorQuotaCredit: null,
+  loadedQuotaCredit: null,
+  loadedCommission: null,
 };
 
 export function useFormFilling(editAgreementId?: string) {
@@ -141,6 +147,11 @@ export function useFormFilling(editAgreementId?: string) {
   const salespersonName = user?.fullName ?? user?.username ?? 'Sales Person';
 
   const {baseCommissionRate, quotaLevelData} = useQuotaContext();
+  // Frozen "prior" weekly quota credit (stored value on reopen, else live).
+  const effectivePriorQuotaCredit =
+    form.loadedPriorQuotaCredit != null
+      ? form.loadedPriorQuotaCredit
+      : quotaLevelData?.actualSales ?? 0;
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
     resolveCommissionRules(null),
   );
@@ -505,6 +516,9 @@ export function useFormFilling(editAgreementId?: string) {
           if (typeof savedSummary.tripChargeFrequency === 'number') {next.tripChargeFrequency = savedSummary.tripChargeFrequency;}
           if (typeof savedSummary.parkingCharge === 'number') {next.parkingCharge = savedSummary.parkingCharge;}
           if (typeof savedSummary.parkingChargeFrequency === 'number') {next.parkingChargeFrequency = savedSummary.parkingChargeFrequency;}
+          if (typeof savedSummary.priorQuotaCredit === 'number') {next.loadedPriorQuotaCredit = savedSummary.priorQuotaCredit;}
+          if (typeof savedSummary.quotaCredit === 'number') {next.loadedQuotaCredit = savedSummary.quotaCredit;}
+          if (payload.commission) {next.loadedCommission = payload.commission;}
 
           const savedAgreement = payload.agreement ?? {};
           if (savedAgreement.enviroOf) {next.enviroOf = savedAgreement.enviroOf;}
@@ -748,30 +762,41 @@ export function useFormFilling(editAgreementId?: string) {
         ? 'pending_approval'
         : 'saved';
 
+    // The effective (frozen-aware) prior weekly quota credit is computed at the
+    // hook level so display and save stay consistent.
     const commissionResult = computeGlobalCommission(
       form.services,
       form.accountTypeCache ?? {},
       form.contractMonths,
       baseCommissionRate,
       activeRules,
-      quotaLevelData?.actualSales ?? 0,
+      effectivePriorQuotaCredit,
     );
     const years = form.contractMonths > 0 ? form.contractMonths / 12 : 1;
-    const commission: CommissionData = {
-      weeklyCommission:
-        commissionResult.totalAnnualCommission / activeRules.weeksPerAnnualCommission,
-      annualCommission: commissionResult.totalAnnualCommission,
-      contractCommission: commissionResult.totalAnnualCommission * years,
-      finalCommissionRate: commissionResult.effectiveCommissionRate,
-      agreementMultiplier: commissionResult.agreementMultiplier,
-      baseRate: baseCommissionRate,
-      serviceBreakdown: commissionResult.services.map(s => ({
-        serviceName: s.serviceName,
-        accountType: s.accountType,
-        perVisitCommission: s.perVisitCommission,
-        annualCommission: s.annualCommission,
-      })),
-    };
+    // Only Bigin-connected agreements carry commission + quota credit. Drafts
+    // saved before Bigin connect must NOT count toward quota (matches web app).
+    const isBiginConnected = !!form.biginCompanyId;
+    // Only Bigin-connected agreements (now, or previously — they already carry a
+    // saved commission) store the commission/quota keys. A never-connected draft
+    // stores none of them.
+    const hasBiginCommission = isBiginConnected || !!form.loadedCommission;
+    const commission: CommissionData | null = isBiginConnected
+      ? {
+          weeklyCommission:
+            commissionResult.totalAnnualCommission / activeRules.weeksPerAnnualCommission,
+          annualCommission: commissionResult.totalAnnualCommission,
+          contractCommission: commissionResult.totalAnnualCommission * years,
+          finalCommissionRate: commissionResult.effectiveCommissionRate,
+          agreementMultiplier: commissionResult.agreementMultiplier,
+          baseRate: baseCommissionRate,
+          serviceBreakdown: commissionResult.services.map(s => ({
+            serviceName: s.serviceName,
+            accountType: s.accountType,
+            perVisitCommission: s.perVisitCommission,
+            annualCommission: s.annualCommission,
+          })),
+        }
+      : form.loadedCommission;
 
     const summary: GlobalSummary = {
       contractMonths: form.contractMonths,
@@ -782,7 +807,10 @@ export function useFormFilling(editAgreementId?: string) {
       serviceAgreementTotal: 0,
       productMonthlyTotal: 0,
       productContractTotal: 0,
-      quotaCredit: Math.round((commissionResult.totalQuotaCredit || 0) * 100) / 100,
+      quotaCredit: isBiginConnected
+        ? Math.round((commissionResult.totalQuotaCredit || 0) * 100) / 100
+        : form.loadedQuotaCredit ?? 0,
+      priorQuotaCredit: hasBiginCommission ? effectivePriorQuotaCredit : undefined,
     };
 
     // Build products in the EXACT web app structure so save/edit round-trips on
@@ -858,7 +886,7 @@ export function useFormFilling(editAgreementId?: string) {
       summary,
       commission,
     };
-  }, [form, baseCommissionRate, quotaLevelData, activeRules]);
+  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectivePriorQuotaCredit]);
 
   const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
@@ -992,6 +1020,7 @@ export function useFormFilling(editAgreementId?: string) {
 
   return {
     form,
+    effectivePriorQuotaCredit,
     goToStep,
     nextStep,
     prevStep,

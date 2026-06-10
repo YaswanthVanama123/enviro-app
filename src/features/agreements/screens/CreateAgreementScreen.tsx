@@ -40,6 +40,7 @@ export function CreateAgreementScreen() {
 
   const {
     form,
+    effectivePriorQuotaCredit,
     nextStep,
     prevStep,
     setHeaderTitle,
@@ -164,6 +165,7 @@ export function CreateAgreementScreen() {
             <GlobalCommissionSummary
               services={form.services}
               accountTypeCache={accountTypeCache}
+              priorQuotaCredit={effectivePriorQuotaCredit}
               showDetectButton={true}
               isDetecting={isDetectingAccountTypes}
               isCompanyMapped={isCompanyMapped}

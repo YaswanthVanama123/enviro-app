@@ -22,6 +22,7 @@ export interface GlobalSummary {
   productMonthlyTotal: number;
   productContractTotal: number;
   quotaCredit?: number;
+  priorQuotaCredit?: number;
 }
 
 export interface CommissionData {
@@ -75,7 +76,7 @@ export interface FormPayload {
   };
   serviceAgreement?: ServiceAgreementData;
   summary: GlobalSummary;
-  commission?: CommissionData;
+  commission?: CommissionData | null;
   includeProductsTable?: boolean;
   status?: string;
 }

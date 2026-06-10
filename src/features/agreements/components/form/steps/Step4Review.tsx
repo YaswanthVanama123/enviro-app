@@ -29,6 +29,7 @@ import {
   type ResolvedCommissionRules,
 } from '../../../../admin/types/commission.types';
 import {commissionApi} from '../../../../../services/api/endpoints/commission.api';
+import {computeCommissionTiers} from '../../../hooks/useServiceCommission';
 
 interface Step4ReviewProps {
   form: FormState;
@@ -275,10 +276,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     const renewalBonus = 0; 
     const insideSalesDeduction = isInsideSales ? rules.insideSalesDeduction : 0;
     const effectiveBaseRate = baseRate + accountTypeAdjustment + greenlineBonus + renewalBonus + insideSalesDeduction;
-    const finalCommissionRate = effectiveBaseRate * (agreementMultiplier / 100);
-    const weeklyCommission = (monthlyValue / 4.33) * (finalCommissionRate / 100);
-    const annualCommissionV1 = weeklyCommission * activeRules.weeksPerAnnualCommission;
-    const contractCommission = annualCommissionV1;
+    const finalCommissionRateV1 = effectiveBaseRate * (agreementMultiplier / 100);
 
     
     const pricingTierV2 = getPricingTierFromList(
@@ -301,7 +299,7 @@ export function Step4Review({form}: Step4ReviewProps) {
 
     
     const v2AgreementMultiplier = rulesV2.agreementMultipliers[agreementTerm];
-    const adjustedAnnual = currentContract12Months * pricingMultiplier * (v2AgreementMultiplier / 100);
+    const adjustedAnnual = currentContract12Months * pricingMultiplier;
     const adjustedPerVisit = visitsPerYear > 0 ? adjustedAnnual / visitsPerYear : 0;
     const commissionBaseRaw = adjustedAnnual;
 
@@ -334,30 +332,32 @@ export function Step4Review({form}: Step4ReviewProps) {
     const annualContractTotal = currentContract12Months;
     const annualQuotaCredit = annualContractTotal * pricingMultiplier;
 
-    const tierCutoffs = {
-      aboveQuota: rulesV2.quotaTarget,
-      doubleQuota: rulesV2.quotaTarget * 2,
-    };
-    const positionBefore = repActualSalesBefore;
-    const positionAfter = positionBefore + annualQuotaCredit;
-    const belowQuotaPortion = Math.max(0, Math.min(positionAfter, tierCutoffs.aboveQuota) - positionBefore);
-    const aboveQuotaPortion = Math.max(0, Math.min(positionAfter, tierCutoffs.doubleQuota) - Math.max(positionBefore, tierCutoffs.aboveQuota));
-    const doubleQuotaPortion = Math.max(0, positionAfter - Math.max(positionBefore, tierCutoffs.doubleQuota));
-
-    const v2InsideSalesDeduction = isInsideSales ? rulesV2.insideSalesDeduction : 0;
-    const belowRate = (rulesV2.quotaRates.below + v2InsideSalesDeduction) / 100;
-    const aboveRate = (rulesV2.quotaRates.above + v2InsideSalesDeduction) / 100;
-    const doubleRate = (rulesV2.quotaRates.double + v2InsideSalesDeduction) / 100;
-
-    const totalQuotaCredit = belowQuotaPortion + aboveQuotaPortion + doubleQuotaPortion;
-    const belowShare = totalQuotaCredit > 0 ? (belowQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
-    const aboveShare = totalQuotaCredit > 0 ? (aboveQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
-    const doubleShare = totalQuotaCredit > 0 ? (doubleQuotaPortion / totalQuotaCredit) * commissionableAnnual : 0;
-
-    const belowQuotaCommission = belowShare * Math.max(0, belowRate);
-    const aboveQuotaCommission = aboveShare * Math.max(0, aboveRate);
-    const doubleQuotaCommission = doubleShare * Math.max(0, doubleRate);
+    // Commission is tiered on the COMMISSIONABLE revenue (after deduction), each
+    // tier slice charged at its rate × agreement multiplier, then summed — quota
+    // credit ($annualQuotaCredit) only counts toward quota, not the commission base.
+    const positionBefore =
+      form.loadedPriorQuotaCredit != null ? form.loadedPriorQuotaCredit : repActualSalesBefore;
+    const commissionTiers = computeCommissionTiers(
+      positionBefore,
+      commissionableAnnual,
+      rulesV2.quotaTarget,
+      rulesV2.quotaRates,
+      v2AgreementMultiplier,
+    );
+    const belowTier = commissionTiers.find(t => t.level === 'below');
+    const aboveTier = commissionTiers.find(t => t.level === 'above');
+    const doubleTier = commissionTiers.find(t => t.level === 'double');
+    const belowQuotaPortion = belowTier?.base ?? 0;
+    const aboveQuotaPortion = aboveTier?.base ?? 0;
+    const doubleQuotaPortion = doubleTier?.base ?? 0;
+    const belowQuotaCommission = belowTier?.commission ?? 0;
+    const aboveQuotaCommission = aboveTier?.commission ?? 0;
+    const doubleQuotaCommission = doubleTier?.commission ?? 0;
     const annualCommissionV2 = belowQuotaCommission + aboveQuotaCommission + doubleQuotaCommission;
+    const weeklyCommission = annualCommissionV2 / activeRules.weeksPerAnnualCommission;
+    const contractCommission = annualCommissionV2;
+    const finalCommissionRate =
+      commissionableAnnual > 0 ? (annualCommissionV2 / commissionableAnnual) * 100 : finalCommissionRateV1;
 
     return {
       
@@ -407,6 +407,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     isInsideSales,
     isNewLocation,
     repActualSalesBefore,
+    form.loadedPriorQuotaCredit,
     activeRules,
   ]);
 
@@ -694,6 +695,33 @@ export function Step4Review({form}: Step4ReviewProps) {
 
             {}
             <View style={styles.commissionBreakdown}>
+              {commissionCalc.v2RevenueDeduction > 0 && (
+                <>
+                  <View style={styles.commissionRow}>
+                    <Text style={styles.commissionRowLabel}>
+                      Adjusted Annual ({commissionCalc.pricingMultiplier.toFixed(2)}×)
+                    </Text>
+                    <Text style={styles.commissionRowValue}>
+                      {formatCurrency(commissionCalc.commissionBaseRaw)}
+                    </Text>
+                  </View>
+                  <View style={styles.commissionRow}>
+                    <Text style={[styles.commissionRowLabel, {color: '#dc2626'}]}>
+                      Deduction ({accountType}: {formatCurrency(commissionCalc.v2RevenueDeduction)}/visit × {commissionCalc.visitsPerYear} visits)
+                    </Text>
+                    <Text style={[styles.commissionRowValue, {color: '#dc2626'}]}>
+                      -{formatCurrency(commissionCalc.v2RevenueDeduction * commissionCalc.visitsPerYear)}
+                    </Text>
+                  </View>
+                  <View style={styles.commissionRow}>
+                    <Text style={styles.commissionRowLabel}>Commissionable Revenue</Text>
+                    <Text style={styles.commissionRowValue}>
+                      {formatCurrency(commissionCalc.commissionableAnnual)}
+                    </Text>
+                  </View>
+                  <View style={styles.commissionDivider} />
+                </>
+              )}
               <View style={styles.commissionRow}>
                 <Text style={styles.commissionRowLabel}>Monthly Value</Text>
                 <Text style={styles.commissionRowValue}>{formatCurrency(commissionCalc.monthlyValue)}</Text>
@@ -746,6 +774,48 @@ export function Step4Review({form}: Step4ReviewProps) {
                 <Text style={styles.commissionHighlightLabel}>Final Commission Rate</Text>
                 <Text style={styles.commissionHighlightValue}>{commissionCalc.finalCommissionRate.toFixed(2)}%</Text>
               </View>
+
+              {commissionCalc.annualQuotaCredit > 0 && (
+                <>
+                  <View style={styles.commissionDivider} />
+                  <Text style={styles.quotaTiersTitle}>Commission Tier Breakdown</Text>
+                  <Text style={styles.quotaTiersNote}>
+                    Commission on {formatCurrency(commissionCalc.commissionableAnnual)} commissionable
+                    revenue (after deduction), each tier at its rate × {commissionCalc.agreementMultiplier}%
+                    multiplier, then summed:
+                  </Text>
+                  {commissionCalc.belowQuotaPortion > 0 && (
+                    <View style={styles.commissionRow}>
+                      <Text style={[styles.commissionRowLabel, {color: '#dc2626'}]}>
+                        Below Quota @ {activeRules.quotaRates.below}% × {commissionCalc.agreementMultiplier}%
+                      </Text>
+                      <Text style={styles.commissionRowValue}>
+                        {formatCurrency(commissionCalc.belowQuotaPortion)} → {formatCurrency(commissionCalc.belowQuotaCommission)}
+                      </Text>
+                    </View>
+                  )}
+                  {commissionCalc.aboveQuotaPortion > 0 && (
+                    <View style={styles.commissionRow}>
+                      <Text style={[styles.commissionRowLabel, {color: '#059669'}]}>
+                        Above Quota @ {activeRules.quotaRates.above}% × {commissionCalc.agreementMultiplier}%
+                      </Text>
+                      <Text style={styles.commissionRowValue}>
+                        {formatCurrency(commissionCalc.aboveQuotaPortion)} → {formatCurrency(commissionCalc.aboveQuotaCommission)}
+                      </Text>
+                    </View>
+                  )}
+                  {commissionCalc.doubleQuotaPortion > 0 && (
+                    <View style={styles.commissionRow}>
+                      <Text style={[styles.commissionRowLabel, {color: '#7c3aed'}]}>
+                        Double Quota @ {activeRules.quotaRates.double}% × {commissionCalc.agreementMultiplier}%
+                      </Text>
+                      <Text style={styles.commissionRowValue}>
+                        {formatCurrency(commissionCalc.doubleQuotaPortion)} → {formatCurrency(commissionCalc.doubleQuotaCommission)}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
 
               <View style={styles.commissionDivider} />
 
@@ -1164,6 +1234,17 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#e5e7eb',
     marginVertical: 6,
+  },
+  quotaTiersTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  quotaTiersNote: {
+    fontSize: FontSize.xs,
+    color: '#6b7280',
+    marginBottom: 6,
   },
   commissionHighlightRow: {
     flexDirection: 'row',
