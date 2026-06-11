@@ -108,6 +108,23 @@ export const companyMappingApi = {
     }
   },
 
+  async getStatusByBigin(
+    biginId: string,
+  ): Promise<{isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null} | null> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null};
+      }>(`${BASE_PATH}/status/${encodeURIComponent(biginId)}`);
+      const body = response.data as any;
+      const data = body?.data ?? body;
+      return data ? {isMapped: !!data.isMapped, routeStarId: data.routeStarId ?? null, routeStarCustomerName: data.routeStarCustomerName ?? null} : null;
+    } catch (error) {
+      console.error('Error fetching mapping status:', error);
+      return null;
+    }
+  },
+
   async getAvailableRouteStarCustomers(
     search?: string,
     includeAll?: boolean,

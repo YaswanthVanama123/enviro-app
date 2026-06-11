@@ -45,6 +45,7 @@ interface GlobalCommissionSummaryProps {
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
+  isRouteStarMapped?: boolean;
   error?: string | null;
   onDetect?: () => void;
 }
@@ -57,6 +58,7 @@ export function GlobalCommissionSummary({
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
+  isRouteStarMapped = false,
   error = null,
   onDetect,
 }: GlobalCommissionSummaryProps) {
@@ -108,6 +110,32 @@ export function GlobalCommissionSummary({
         </View>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>ℹ️ Please connect to Bigin to show the commission details.</Text>
+        </View>
+        {error && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // Commission/quota only count once this Bigin company is mapped to a RouteStar
+  // customer. Until then, don't calculate anything — prompt to map.
+  if (!isRouteStarMapped) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Text style={styles.icon}>💰</Text>
+            <Text style={styles.title}>Commission Summary</Text>
+          </View>
+        </View>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            ℹ️ This company isn't mapped to a RouteStar customer yet. Map it under Company
+            Mapping to calculate commission and count it toward quota.
+          </Text>
         </View>
         {error && (
           <View style={styles.errorBox}>

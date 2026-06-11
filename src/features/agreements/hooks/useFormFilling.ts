@@ -15,6 +15,7 @@ import {useAuth} from '../../admin/context/AdminAuthContext';
 import {computeGlobalCommission} from './useServiceCommission';
 import {resolveCommissionRules, type ResolvedCommissionRules} from '../../admin/types/commission.types';
 import {commissionApi} from '../../../services/api/endpoints/commission.api';
+import {companyMappingApi} from '../../../services/api/endpoints/companyMapping.api';
 import {useQuotaContext} from '../context/QuotaContext';
 
 export interface SmallProduct {
@@ -155,6 +156,29 @@ export function useFormFilling(editAgreementId?: string) {
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
     resolveCommissionRules(null),
   );
+
+  // Commission/quota only count once the Bigin company is mapped to a RouteStar
+  // customer. Bigin-connected-but-unmapped agreements must NOT be calculated.
+  const [isRouteStarMapped, setIsRouteStarMapped] = useState<boolean>(false);
+  useEffect(() => {
+    let cancelled = false;
+    const biginId = form.biginCompanyId;
+    if (!biginId) {
+      setIsRouteStarMapped(false);
+      return;
+    }
+    companyMappingApi
+      .getStatusByBigin(biginId)
+      .then(status => {
+        if (!cancelled) setIsRouteStarMapped(!!status?.isMapped);
+      })
+      .catch(() => {
+        if (!cancelled) setIsRouteStarMapped(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.biginCompanyId]);
   useEffect(() => {
     let cancelled = false;
     commissionApi
@@ -773,14 +797,12 @@ export function useFormFilling(editAgreementId?: string) {
       effectivePriorQuotaCredit,
     );
     const years = form.contractMonths > 0 ? form.contractMonths / 12 : 1;
-    // Only Bigin-connected agreements carry commission + quota credit. Drafts
-    // saved before Bigin connect must NOT count toward quota (matches web app).
-    const isBiginConnected = !!form.biginCompanyId;
-    // Only Bigin-connected agreements (now, or previously — they already carry a
-    // saved commission) store the commission/quota keys. A never-connected draft
-    // stores none of them.
-    const hasBiginCommission = isBiginConnected || !!form.loadedCommission;
-    const commission: CommissionData | null = isBiginConnected
+    // Commission/quota only count once the Bigin company is mapped to a RouteStar
+    // customer. Bigin-connected-but-unmapped agreements must NOT be calculated.
+    const canCalculate = !!form.biginCompanyId && isRouteStarMapped;
+    // Previously-saved commission is still preserved so a draft re-save never wipes it.
+    const hasBiginCommission = canCalculate || !!form.loadedCommission;
+    const commission: CommissionData | null = canCalculate
       ? {
           weeklyCommission:
             commissionResult.totalAnnualCommission / activeRules.weeksPerAnnualCommission,
@@ -807,7 +829,7 @@ export function useFormFilling(editAgreementId?: string) {
       serviceAgreementTotal: 0,
       productMonthlyTotal: 0,
       productContractTotal: 0,
-      quotaCredit: isBiginConnected
+      quotaCredit: canCalculate
         ? Math.round((commissionResult.totalQuotaCredit || 0) * 100) / 100
         : form.loadedQuotaCredit ?? 0,
       priorQuotaCredit: hasBiginCommission ? effectivePriorQuotaCredit : undefined,
@@ -886,7 +908,7 @@ export function useFormFilling(editAgreementId?: string) {
       summary,
       commission,
     };
-  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectivePriorQuotaCredit]);
+  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectivePriorQuotaCredit, isRouteStarMapped]);
 
   const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
@@ -1021,6 +1043,7 @@ export function useFormFilling(editAgreementId?: string) {
   return {
     form,
     effectivePriorQuotaCredit,
+    isRouteStarMapped,
     goToStep,
     nextStep,
     prevStep,

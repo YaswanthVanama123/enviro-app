@@ -41,6 +41,7 @@ export function CreateAgreementScreen() {
   const {
     form,
     effectivePriorQuotaCredit,
+    isRouteStarMapped,
     nextStep,
     prevStep,
     setHeaderTitle,
@@ -169,6 +170,7 @@ export function CreateAgreementScreen() {
               showDetectButton={true}
               isDetecting={isDetectingAccountTypes}
               isCompanyMapped={isCompanyMapped}
+              isRouteStarMapped={isRouteStarMapped}
               error={accountTypeError}
               onDetect={detectAccountTypes}
             />
