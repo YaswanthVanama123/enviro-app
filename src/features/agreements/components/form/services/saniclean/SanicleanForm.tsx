@@ -634,7 +634,12 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
           <View style={s.badgeRow}>
             <View style={[s.badge, isGreenline ? s.greenBadge : s.redBadge]}>
               <Text style={[s.badgeText, isGreenline ? s.greenText : s.redText]}>
-                {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+                <Ionicons
+                  name="ellipse"
+                  size={14}
+                  color={isGreenline ? '#388e3c' : '#d32f2f'}
+                />
+                {isGreenline ? ' Greenline Pricing' : ' Redline Pricing'}
               </Text>
             </View>
           </View>

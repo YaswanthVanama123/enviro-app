@@ -1,5 +1,6 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   ServiceCard,
   DropdownRow,
@@ -297,7 +298,12 @@ export function MicrofiberMoppingForm({
 
           <View style={styles.tierRow}>
             <Text style={[styles.tierText, isGreenline ? styles.tierGreen : styles.tierRed]}>
-              {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+              <Ionicons
+                name="ellipse"
+                size={14}
+                color={isGreenline ? '#16a34a' : '#dc2626'}
+              />
+              {isGreenline ? ' Greenline Pricing' : ' Redline Pricing'}
             </Text>
           </View>
 

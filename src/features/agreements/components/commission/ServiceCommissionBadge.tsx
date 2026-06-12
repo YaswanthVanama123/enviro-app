@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   useServiceCommission,
   ServiceCommissionResult,
@@ -48,7 +49,7 @@ export function ServiceCommissionBadge({
   if (!commission.accountType) {
     return (
       <View style={styles.pendingBadge}>
-        <Text style={styles.pendingIcon}>⏳</Text>
+        <Ionicons name="hourglass-outline" size={14} color={Colors.gray500} />
         <Text style={styles.pendingText}>Detecting...</Text>
       </View>
     );
@@ -160,7 +161,10 @@ export function ServiceCommissionBadge({
           )}
 
           {commission.usedFallback && (
-            <Text style={styles.warning}>⚠️ Using estimated driving time</Text>
+            <View style={styles.warningRow}>
+              <Ionicons name="warning" size={12} color="#f59e0b" />
+              <Text style={styles.warning}>Using estimated driving time</Text>
+            </View>
           )}
         </View>
       )}
@@ -256,6 +260,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: FontSize.xs - 1,
     color: '#f59e0b',
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });
 

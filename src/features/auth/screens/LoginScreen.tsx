@@ -129,9 +129,11 @@ export function LoginScreen() {
                 <TouchableOpacity
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={styles.eyeIcon}>
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
-                  </Text>
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={20}
+                    color={Colors.textMuted}
+                  />
                 </TouchableOpacity>
               </View>
             </View>

@@ -255,7 +255,7 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
           onPress={() => setIsExplanationExpanded(!isExplanationExpanded)}
           activeOpacity={0.7}>
           <View style={styles.explanationHeaderLeft}>
-            <Text style={styles.explanationIcon}>💡</Text>
+            <Ionicons name="bulb" size={16} color="#d97706" />
             <Text style={styles.explanationHeaderText}>
               How is my commission calculated?
             </Text>
@@ -356,7 +356,10 @@ export function CommissionResultCardV2({result}: CommissionResultCardV2Props) {
 
             {/* Tips Box */}
             <View style={styles.tipsBox}>
-              <Text style={styles.tipsTitle}>💡 Tips to earn more commission:</Text>
+            <View style={styles.tipsTitleRow}>
+                <Ionicons name="bulb" size={14} color="#92400e" />
+                <Text style={styles.tipsTitle}>Tips to earn more commission:</Text>
+              </View>
               {result.quotaLevel === 'below' && (
                 <Text style={styles.tipItem}>• Reach your sales quota to increase your base rate to 6% or 9%</Text>
               )}
@@ -693,6 +696,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: '700',
     color: '#92400e',
+    marginBottom: 4,
+  },
+  tipsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginBottom: 4,
   },
   tipItem: {

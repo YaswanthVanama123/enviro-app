@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   useGlobalCommission,
   GlobalCommissionResult,
@@ -90,7 +91,7 @@ export function GlobalCommissionSummary({
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Text style={styles.icon}>💰</Text>
+            <Ionicons name="cash-outline" size={16} color="#059669" />
             <Text style={styles.title}>Commission Summary</Text>
           </View>
           {showDetectButton && onDetect && (
@@ -105,7 +106,7 @@ export function GlobalCommissionSummary({
                 </>
               ) : (
                 <>
-                  <Text style={styles.detectButtonIcon}>🔄</Text>
+                  <Ionicons name="sync-outline" size={14} color="#ffffff" />
                   <Text style={styles.detectButtonText}>Connect</Text>
                 </>
               )}
@@ -113,11 +114,17 @@ export function GlobalCommissionSummary({
           )}
         </View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>ℹ️ Please connect to Bigin to show the commission details.</Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="information-circle-outline" size={14} color="#92400e" />
+            <Text style={styles.infoText}>Please connect to Bigin to show the commission details.</Text>
+          </View>
         </View>
         {error && (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
+            <View style={styles.errorRow}>
+            <Ionicons name="warning" size={14} color="#991b1b" />
+            <Text style={[styles.errorText, styles.infoTextFlex]}>{error}</Text>
+          </View>
           </View>
         )}
       </View>
@@ -131,19 +138,25 @@ export function GlobalCommissionSummary({
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Text style={styles.icon}>💰</Text>
+            <Ionicons name="cash-outline" size={16} color="#059669" />
             <Text style={styles.title}>Commission Summary</Text>
           </View>
         </View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            ℹ️ This company isn't mapped to a RouteStar customer yet. Map it under Company
-            Mapping to calculate commission and count it toward quota.
-          </Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="information-circle-outline" size={14} color="#92400e" />
+            <Text style={[styles.infoText, styles.infoTextFlex]}>
+              This company isn't mapped to a RouteStar customer yet. Map it under Company
+              Mapping to calculate commission and count it toward quota.
+            </Text>
+          </View>
         </View>
         {error && (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
+            <View style={styles.errorRow}>
+            <Ionicons name="warning" size={14} color="#991b1b" />
+            <Text style={[styles.errorText, styles.infoTextFlex]}>{error}</Text>
+          </View>
           </View>
         )}
       </View>
@@ -154,7 +167,7 @@ export function GlobalCommissionSummary({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.icon}>💰</Text>
+          <Ionicons name="cash-outline" size={16} color="#059669" />
           <Text style={styles.title}>Commission Summary</Text>
           {}
           <View
@@ -183,7 +196,7 @@ export function GlobalCommissionSummary({
               </>
             ) : (
               <>
-                <Text style={styles.detectButtonIcon}>🔄</Text>
+                <Ionicons name="sync-outline" size={14} color="#ffffff" />
                 <Text style={styles.detectButtonText}>Detect</Text>
               </>
             )}
@@ -193,15 +206,21 @@ export function GlobalCommissionSummary({
 
       {error && (
         <View style={styles.errorBox}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <View style={styles.errorRow}>
+            <Ionicons name="warning" size={14} color="#991b1b" />
+            <Text style={[styles.errorText, styles.infoTextFlex]}>{error}</Text>
+          </View>
         </View>
       )}
 
       {!isCompanyMapped && (
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            ℹ️ Connect to Bigin to detect account types
-          </Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="information-circle-outline" size={14} color="#92400e" />
+            <Text style={[styles.infoText, styles.infoTextFlex]}>
+              Connect to Bigin to detect account types
+            </Text>
+          </View>
         </View>
       )}
 
@@ -424,6 +443,19 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: FontSize.xs,
     color: '#92400e',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  infoTextFlex: {
+    flex: 1,
   },
   totalsRow: {
     flexDirection: 'row',

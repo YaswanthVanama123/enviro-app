@@ -1,5 +1,6 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   ServiceCard,
   DropdownRow,
@@ -165,7 +166,12 @@ export function StripWaxForm({data, onChange, contractMonths, onRemove, pricingC
           <View style={styles.badgeRow}>
             <View style={[styles.badge, isGreenline ? styles.greenBadge : styles.redBadge]}>
               <Text style={[styles.badgeText, isGreenline ? styles.greenText : styles.redText]}>
-                {isGreenline ? '🟢 Greenline Pricing' : '🔴 Redline Pricing'}
+                <Ionicons
+                  name="ellipse"
+                  size={14}
+                  color={isGreenline ? '#388e3c' : '#d32f2f'}
+                />
+                {isGreenline ? ' Greenline Pricing' : ' Redline Pricing'}
               </Text>
             </View>
           </View>

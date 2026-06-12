@@ -1,11 +1,17 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, FontSize, Spacing} from '../../../theme';
 
 export function AdminLoginScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>🔐</Text>
+      <Ionicons
+        name="lock-closed"
+        size={48}
+        color={Colors.textPrimary}
+        style={styles.icon}
+      />
       <Text style={styles.title}>Admin Login</Text>
       <Text style={styles.sub}>Coming soon</Text>
     </View>
