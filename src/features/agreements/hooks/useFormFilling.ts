@@ -87,6 +87,7 @@ export interface FormState {
   loadedPriorQuotaCredit: number | null;
   loadedQuotaCredit: number | null;
   loadedCommission: CommissionData | null;
+  loadedCommissionRules: ResolvedCommissionRules | null;
 }
 
 const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
@@ -139,6 +140,7 @@ const INITIAL_STATE: FormState = {
   loadedPriorQuotaCredit: null,
   loadedQuotaCredit: null,
   loadedCommission: null,
+  loadedCommissionRules: null,
 };
 
 export function useFormFilling(editAgreementId?: string) {
@@ -156,6 +158,13 @@ export function useFormFilling(editAgreementId?: string) {
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
     resolveCommissionRules(null),
   );
+  // Commission rules (quota target, tier rates, multipliers, deductions, pricing
+  // tiers …) are frozen at first calculation and stored with the agreement. A
+  // saved/reopened agreement keeps that snapshot so later admin rule changes
+  // never retroactively alter an already-created agreement; a new agreement uses
+  // the live active rules.
+  const effectiveCommissionRules =
+    form.loadedCommissionRules != null ? form.loadedCommissionRules : activeRules;
 
   // Commission/quota only count once the Bigin company is mapped to a RouteStar
   // customer. Bigin-connected-but-unmapped agreements must NOT be calculated.
@@ -543,6 +552,9 @@ export function useFormFilling(editAgreementId?: string) {
           if (typeof savedSummary.priorQuotaCredit === 'number') {next.loadedPriorQuotaCredit = savedSummary.priorQuotaCredit;}
           if (typeof savedSummary.quotaCredit === 'number') {next.loadedQuotaCredit = savedSummary.quotaCredit;}
           if (payload.commission) {next.loadedCommission = payload.commission;}
+          if (payload.commission?.rulesSnapshot && typeof payload.commission.rulesSnapshot === 'object') {
+            next.loadedCommissionRules = resolveCommissionRules(payload.commission.rulesSnapshot);
+          }
 
           const savedAgreement = payload.agreement ?? {};
           if (savedAgreement.enviroOf) {next.enviroOf = savedAgreement.enviroOf;}
@@ -793,7 +805,7 @@ export function useFormFilling(editAgreementId?: string) {
       form.accountTypeCache ?? {},
       form.contractMonths,
       baseCommissionRate,
-      activeRules,
+      effectiveCommissionRules,
       effectivePriorQuotaCredit,
     );
     const years = form.contractMonths > 0 ? form.contractMonths / 12 : 1;
@@ -805,12 +817,13 @@ export function useFormFilling(editAgreementId?: string) {
     const commission: CommissionData | null = canCalculate
       ? {
           weeklyCommission:
-            commissionResult.totalAnnualCommission / activeRules.weeksPerAnnualCommission,
+            commissionResult.totalAnnualCommission / effectiveCommissionRules.weeksPerAnnualCommission,
           annualCommission: commissionResult.totalAnnualCommission,
           contractCommission: commissionResult.totalAnnualCommission * years,
           finalCommissionRate: commissionResult.effectiveCommissionRate,
           agreementMultiplier: commissionResult.agreementMultiplier,
           baseRate: baseCommissionRate,
+          rulesSnapshot: effectiveCommissionRules,
           serviceBreakdown: commissionResult.services.map(s => ({
             serviceName: s.serviceName,
             accountType: s.accountType,
@@ -908,7 +921,7 @@ export function useFormFilling(editAgreementId?: string) {
       summary,
       commission,
     };
-  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectivePriorQuotaCredit, isRouteStarMapped]);
+  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectiveCommissionRules, effectivePriorQuotaCredit, isRouteStarMapped]);
 
   const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
@@ -1043,6 +1056,7 @@ export function useFormFilling(editAgreementId?: string) {
   return {
     form,
     effectivePriorQuotaCredit,
+    effectiveCommissionRules,
     isRouteStarMapped,
     goToStep,
     nextStep,

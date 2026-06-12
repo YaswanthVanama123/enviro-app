@@ -41,6 +41,7 @@ export function CreateAgreementScreen() {
   const {
     form,
     effectivePriorQuotaCredit,
+    effectiveCommissionRules,
     isRouteStarMapped,
     nextStep,
     prevStep,
@@ -167,6 +168,7 @@ export function CreateAgreementScreen() {
               services={form.services}
               accountTypeCache={accountTypeCache}
               priorQuotaCredit={effectivePriorQuotaCredit}
+              rulesOverride={effectiveCommissionRules}
               showDetectButton={true}
               isDetecting={isDetectingAccountTypes}
               isCompanyMapped={isCompanyMapped}

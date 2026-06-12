@@ -515,7 +515,7 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
                         </Text>
                         <View style={styles.rateBadge}>
                           <Text style={styles.rateText}>
-                            {agreement.commission.rate}%
+                            {Number(agreement.commission.rate).toFixed(2)}%
                           </Text>
                         </View>
                       </View>
@@ -554,7 +554,7 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
                           <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>
                             <Text style={styles.breakdownLabelTotal}>Final Rate</Text>
                             <Text style={styles.breakdownValueTotal}>
-                              {agreement.commission.rate}%
+                              {Number(agreement.commission.rate).toFixed(2)}%
                             </Text>
                           </View>
                           <View style={[styles.breakdownItem, styles.breakdownItemTotal]}>

@@ -32,6 +32,7 @@ export interface CommissionData {
   finalCommissionRate: number;
   agreementMultiplier: number;
   baseRate: number;
+  rulesSnapshot?: any;
   serviceBreakdown: Array<{
     serviceName: string;
     accountType: string | null;

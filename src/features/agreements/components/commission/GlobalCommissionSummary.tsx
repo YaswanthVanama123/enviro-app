@@ -13,6 +13,7 @@ import {
 } from '../../hooks/useServiceCommission';
 import {AccountTypeCache} from '../../hooks/useAccountTypeDetection';
 import {useQuotaContext, QuotaLevel} from '../../context/QuotaContext';
+import {type ResolvedCommissionRules} from '../../../admin/types/commission.types';
 import {AccountType} from '../../../../services/api/endpoints/accountType.api';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -42,6 +43,7 @@ interface GlobalCommissionSummaryProps {
   accountTypeCache: AccountTypeCache;
   contractMonths?: number;
   priorQuotaCredit?: number;
+  rulesOverride?: ResolvedCommissionRules | null;
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
@@ -55,6 +57,7 @@ export function GlobalCommissionSummary({
   accountTypeCache,
   contractMonths = 12,
   priorQuotaCredit,
+  rulesOverride = null,
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
@@ -74,6 +77,7 @@ export function GlobalCommissionSummary({
     commissionRate,
     contractMonths,
     priorQuotaCredit: priorQuotaCredit ?? quotaLevelData?.actualSales ?? 0,
+    rulesOverride,
   });
 
   if (global.serviceCount === 0) {

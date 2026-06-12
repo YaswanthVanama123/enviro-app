@@ -366,6 +366,7 @@ export interface UseGlobalCommissionOptions {
   commissionRate?: number;
   contractMonths?: number;
   priorQuotaCredit?: number;
+  rulesOverride?: ResolvedCommissionRules | null;
 }
 
 export function useGlobalCommission({
@@ -374,8 +375,9 @@ export function useGlobalCommission({
   commissionRate = 6,
   contractMonths = 12,
   priorQuotaCredit = 0,
+  rulesOverride = null,
 }: UseGlobalCommissionOptions): GlobalCommissionResult {
-  
+
   const [activeRules, setActiveRules] = useState<ResolvedCommissionRules>(() =>
     resolveCommissionRules(null),
   );
@@ -396,6 +398,10 @@ export function useGlobalCommission({
     };
   }, []);
 
+  // A reopened agreement passes its frozen rules snapshot so later admin rule
+  // changes never retroactively alter it; a new agreement uses the live rules.
+  const effectiveRules = rulesOverride ?? activeRules;
+
   return useMemo(
     () =>
       computeGlobalCommission(
@@ -403,10 +409,10 @@ export function useGlobalCommission({
         accountTypeCache,
         contractMonths,
         commissionRate,
-        activeRules,
+        effectiveRules,
         priorQuotaCredit,
       ),
-    [services, accountTypeCache, contractMonths, commissionRate, activeRules, priorQuotaCredit],
+    [services, accountTypeCache, contractMonths, commissionRate, effectiveRules, priorQuotaCredit],
   );
 }
 
