@@ -3,6 +3,7 @@ import {View, ActivityIndicator, StyleSheet} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {TabNavigator} from './TabNavigator';
+import {LandingScreen} from '../../features/auth/screens/LandingScreen';
 import {LoginScreen} from '../../features/auth/screens/LoginScreen';
 import {AdminLoginScreen} from '../../features/auth/screens/AdminLoginScreen';
 import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
@@ -57,7 +58,10 @@ export default function AppNavigator() {
     <NavigationContainer theme={WebTheme}>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         {!isAuthenticated ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <>
+            <Stack.Screen name="Landing" component={LandingScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </>
         ) : (
           <>
             {/* Shared — available to every authenticated role */}

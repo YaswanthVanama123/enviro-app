@@ -14,11 +14,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, FontSize, Spacing} from '../../../theme';
 import {useAuth} from '../../admin/context/AdminAuthContext';
 import {UserRole} from '../../../services/storage/storage.service';
+import {useTranslation} from '../../../i18n';
+import {LanguageSwitcher} from '../../../shared/components/ui/LanguageSwitcher';
 
 type TabType = 'employee' | 'admin';
 
 export function LoginScreen() {
   const {login, loading} = useAuth();
+  const {t} = useTranslation();
 
   const [activeTab, setActiveTab] = useState<TabType>('employee');
   const [username, setUsername] = useState('');
@@ -28,7 +31,7 @@ export function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password) {
-      setError('Please enter username and password');
+      setError(t('login.enterCredentials'));
       return;
     }
 
@@ -62,7 +65,11 @@ export function LoginScreen() {
           </View>
 
           <Text style={styles.title}>EnviroMaster</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
+          <View style={styles.regionPill}>
+            <Ionicons name="location-outline" size={13} color={Colors.primary} />
+            <Text style={styles.regionText}>{t('landing.region')}</Text>
+          </View>
 
           {}
           <View style={styles.tabContainer}>
@@ -77,7 +84,7 @@ export function LoginScreen() {
                   styles.tabText,
                   activeTab === 'employee' && styles.tabTextActive,
                 ]}>
-                Employee
+                {t('common.employee')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -91,7 +98,7 @@ export function LoginScreen() {
                   styles.tabText,
                   activeTab === 'admin' && styles.tabTextActive,
                 ]}>
-                Admin
+                {t('common.admin')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -99,12 +106,12 @@ export function LoginScreen() {
           {}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Username</Text>
+              <Text style={styles.label}>{t('login.username')}</Text>
               <TextInput
                 style={styles.input}
                 value={username}
                 onChangeText={setUsername}
-                placeholder="Enter your username"
+                placeholder={t('login.usernamePlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -113,13 +120,13 @@ export function LoginScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>{t('login.password')}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Enter your password"
+                  placeholder={t('login.passwordPlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
@@ -152,7 +159,12 @@ export function LoginScreen() {
                 <ActivityIndicator color={Colors.textWhite} size="small" />
               ) : (
                 <Text style={styles.buttonText}>
-                  Sign in as {activeTab === 'admin' ? 'Admin' : 'Employee'}
+                  {t('login.signInAs', {
+                    role:
+                      activeTab === 'admin'
+                        ? t('common.admin')
+                        : t('common.employee'),
+                  })}
                 </Text>
               )}
             </TouchableOpacity>
@@ -161,9 +173,13 @@ export function LoginScreen() {
           {}
           <Text style={styles.infoText}>
             {activeTab === 'admin'
-              ? 'Admin accounts have full system access including user management.'
-              : 'Employee accounts can create and manage service agreements.'}
+              ? t('login.infoAdmin')
+              : t('login.infoEmployee')}
           </Text>
+
+          <View style={styles.langRow}>
+            <LanguageSwitcher variant="dark" />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -213,7 +229,29 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  regionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'center',
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    borderRadius: 999,
     marginBottom: Spacing.xl,
+  },
+  regionText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  langRow: {
+    marginTop: Spacing.lg,
+    alignItems: 'center',
   },
   tabContainer: {
     flexDirection: 'row',
