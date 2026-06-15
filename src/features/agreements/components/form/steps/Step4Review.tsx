@@ -177,7 +177,7 @@ export function Step4Review({form}: Step4ReviewProps) {
   const [accountType, setAccountType] = useState<AccountType>('Anchor');
   const [isInsideSales, setIsInsideSales] = useState<boolean>(false);
 
-  const [isNewLocation, setIsNewLocation] = useState<boolean>(true);
+  const [isNewLocation, setIsNewLocation] = useState<boolean>(false);
 
   
   const [repActualSalesBefore, setRepActualSalesBefore] = useState<number>(0);
