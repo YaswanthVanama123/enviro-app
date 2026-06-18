@@ -373,9 +373,12 @@ export function GlobalCommissionSummary({
                       <>
                         <DetailRow label="Original Per-Visit (Redline):" value={formatCurrency(ft.originalPerVisit)} />
                         <DetailRow label="Current Per-Visit:" value={formatCurrency(ft.currentPerVisit)} />
-                        <DetailRow label="Price Ratio (Current ÷ Redline):" value={`${(service.priceRatio * 100).toFixed(1)}%`} />
+                        <DetailRow label="Price Ratio (Current ÷ Redline):" value={`${(ft.priceRatio * 100).toFixed(1)}%`} />
                         <DetailRow label="Pricing Tier:" value={service.pricingTierLabel} bold />
                         <DetailRow label="Pricing Multiplier:" value={`${service.pricingMultiplier.toFixed(2)}×`} color={service.pricingMultiplier > 1 ? '#059669' : undefined} />
+                        {service.pricingMultiplier !== 1 && (
+                          <DetailRow label={`Adjusted Per-Visit (${formatCurrency(ft.currentPerVisit)} × ${service.pricingMultiplier.toFixed(2)}×):`} value={formatCurrency(ft.adjustedPerVisit)} />
+                        )}
                         <DetailRow label="Prior Same-Location Per-Visit:" value={formatCurrency(ft.priorPerVisit)} />
                         <DetailRow label="Combined Per-Visit (prior + current):" value={formatCurrency(ft.combinedPerVisit)} bold />
                         <DetailRow label={`${formatCurrency(0)}–${formatCurrency(ft.pitThreshold)} (no commission):`} value={`${formatCurrency(0)}/visit`} color="#dc2626" />

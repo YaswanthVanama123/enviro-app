@@ -359,7 +359,8 @@ export interface GlobalCommissionResult {
   totalCommissionableRevenue: number;
   totalQuotaCredit: number;
   totalFarAnnual: number;
-  farIsGreenline: boolean;
+  totalFarAnnualRedline: number;
+  totalFarAnnualGreenline: number;
   effectiveCommissionRate: number;
   agreementMultiplier: number;
 
@@ -388,6 +389,8 @@ export interface GlobalCommissionResult {
     farTiers: {
       originalPerVisit: number;
       currentPerVisit: number;
+      adjustedPerVisit: number;
+      priceRatio: number;
       priorPerVisit: number;
       combinedPerVisit: number;
       pitThreshold: number;
@@ -574,6 +577,9 @@ export function computeGlobalCommission(
       revenueDeduction: number;
       anchorBonus: number;
       adjustedAnnual: number;
+      pricingMultiplier: number;
+      pricingTierLabel: string;
+      priceRatio: number;
       farTiers: GlobalCommissionResult['services'][number]['farTiers'];
     };
     const groups = new Map<string, Group>();
@@ -592,6 +598,9 @@ export function computeGlobalCommission(
           revenueDeduction: 0,
           anchorBonus: 0,
           adjustedAnnual: 0,
+          pricingMultiplier: 1,
+          pricingTierLabel: '',
+          priceRatio: 1,
           farTiers: null,
         });
       }
@@ -606,7 +615,8 @@ export function computeGlobalCommission(
     let totalAnnualCommission = 0;
     let totalPerVisitRevenue = 0;
     let totalCommissionableRevenue = 0;
-    let totalFarAnnual = 0;
+    let totalFarAnnualRedline = 0;
+    let totalFarAnnualGreenline = 0;
     const servicesList: GlobalCommissionResult['services'] = [];
     const groupsList: GlobalCommissionResult['groups'] = [];
 
@@ -616,25 +626,24 @@ export function computeGlobalCommission(
       agreementCurrentAnnual += r.annualCurrent;
       agreementOriginalAnnual += r.annualOriginal;
     });
-    const agreementTier = getPricingTierFromList(
-      agreementCurrentAnnual,
-      agreementOriginalAnnual,
-      rules.pricingTiers,
-    );
-    const pricingMultiplier = agreementTier.quotaMultiplier;
-    const isGreenline = agreementTier.label === 'Greenline (130%+)';
 
-    let numFarGroups = 0;
+    let numFarGroupsRedline = 0;
+    let numFarGroupsGreenline = 0;
     groups.forEach(g => {
-      if (g.accountType === 'Anchor' || g.accountType === 'Pit') numFarGroups++;
+      const tier = getPricingTierFromList(g.annualCurrent, g.annualOriginal, rules.pricingTiers);
+      g.pricingMultiplier = tier.quotaMultiplier;
+      g.pricingTierLabel = tier.label;
+      g.priceRatio = g.annualOriginal > 0 ? g.annualCurrent / g.annualOriginal : 1;
+      if (g.accountType === 'Anchor' || g.accountType === 'Pit') {
+        if (tier.label === 'Greenline (130%+)') numFarGroupsGreenline++;
+        else numFarGroupsRedline++;
+      }
     });
-    const priorLocationFarAnnual = isGreenline
-      ? priorLocationFarAnnualGreenline
-      : priorLocationFarAnnualRedline;
-    const perFarGroupPrior =
-      !isNewLocation && numFarGroups > 0 ? priorLocationFarAnnual / numFarGroups : 0;
 
-    const totalQuotaCredit = agreementCurrentAnnual * pricingMultiplier;
+    let totalQuotaCredit = 0;
+    groups.forEach(g => {
+      totalQuotaCredit += g.annualCurrent * g.pricingMultiplier;
+    });
     const baseQuotaRate = progressiveQuotaCommissionRate(
       priorQuotaCredit,
       totalQuotaCredit,
@@ -650,7 +659,13 @@ export function computeGlobalCommission(
 
     let totalCommissionableForTiers = 0;
     groups.forEach(g => {
-      const adjusted = g.annualCurrent * pricingMultiplier;
+      const isGreenline = g.pricingTierLabel === 'Greenline (130%+)';
+      const perFarGroupPrior = !isNewLocation
+        ? (isGreenline
+            ? (numFarGroupsGreenline > 0 ? priorLocationFarAnnualGreenline / numFarGroupsGreenline : 0)
+            : (numFarGroupsRedline > 0 ? priorLocationFarAnnualRedline / numFarGroupsRedline : 0))
+        : 0;
+      const adjusted = g.annualCurrent * g.pricingMultiplier;
 
       const visits = visitsPerYearOf(g.freqStr);
       const pitZoneAnnual = rules.pitPerVisitThreshold * visits;
@@ -665,8 +680,9 @@ export function computeGlobalCommission(
       switch (g.accountType) {
         case 'Anchor':
         case 'Pit': {
-          totalFarAnnual += adjusted;
-          const prior = perFarGroupPrior;
+          const prior = perFarGroupPrior * visitsF;
+          if (isGreenline) totalFarAnnualGreenline += adjusted / visitsF;
+          else totalFarAnnualRedline += adjusted / visitsF;
           const comb = adjusted + prior;
           const tieredFar = (v: number) =>
             Math.min(Math.max(0, v - pitZoneAnnual), Math.max(0, anchorZoneAnnual - pitZoneAnnual)) +
@@ -681,7 +697,9 @@ export function computeGlobalCommission(
           const bandNormal = Math.max(0, Math.min(comb, anchorZoneAnnual) - Math.max(prior, pitZoneAnnual));
           g.farTiers = {
             originalPerVisit: round2(g.annualOriginal / visitsF),
-            currentPerVisit: round2(adjusted / visitsF),
+            currentPerVisit: round2(g.annualCurrent / visitsF),
+            adjustedPerVisit: round2(adjusted / visitsF),
+            priceRatio: g.annualOriginal > 0 ? g.annualCurrent / g.annualOriginal : 1,
             priorPerVisit: round2(prior / visitsF),
             combinedPerVisit: round2(comb / visitsF),
             pitThreshold: rules.pitPerVisitThreshold,
@@ -743,9 +761,9 @@ export function computeGlobalCommission(
         commissionableRevenue: g.commissionableAnnual,
         anchorBonus: g.anchorBonus,
         annualOriginalRevenue: g.annualOriginal,
-        priceRatio: agreementOriginalAnnual > 0 ? agreementCurrentAnnual / agreementOriginalAnnual : 1,
-        pricingTierLabel: agreementTier.label,
-        pricingMultiplier,
+        priceRatio: g.priceRatio,
+        pricingTierLabel: g.pricingTierLabel,
+        pricingMultiplier: g.pricingMultiplier,
         perVisitCommission: groupVisits > 0 ? g.groupCommission / groupVisits : 0,
         weeklyCommission: g.groupCommission / rules.weeksPerAnnualCommission,
         annualCommission: g.groupCommission,
@@ -775,10 +793,10 @@ export function computeGlobalCommission(
           commissionableRevenue: rowCommissionable,
           anchorBonus: g.anchorBonus * share,
           annualOriginalRevenue: row.annualOriginal,
-          priceRatio: agreementOriginalAnnual > 0 ? agreementCurrentAnnual / agreementOriginalAnnual : 1,
-          pricingTierLabel: agreementTier.label,
-          pricingMultiplier,
-          adjustedAnnualRevenue: row.annualCurrent * pricingMultiplier,
+          priceRatio: g.priceRatio,
+          pricingTierLabel: g.pricingTierLabel,
+          pricingMultiplier: g.pricingMultiplier,
+          adjustedAnnualRevenue: row.annualCurrent * g.pricingMultiplier,
           frequencyLabel: BACKEND_TO_FREQUENCY[row.freqNum] || 'Unknown',
           visitsPerYear: groupVisits,
           farTiers: g.farTiers,
@@ -792,8 +810,9 @@ export function computeGlobalCommission(
       totalPerVisitRevenue,
       totalCommissionableRevenue,
       totalQuotaCredit,
-      totalFarAnnual,
-      farIsGreenline: isGreenline,
+      totalFarAnnual: totalFarAnnualRedline + totalFarAnnualGreenline,
+      totalFarAnnualRedline,
+      totalFarAnnualGreenline,
       effectiveCommissionRate,
       agreementMultiplier,
 
