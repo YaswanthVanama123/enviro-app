@@ -110,17 +110,36 @@ export const companyMappingApi = {
 
   async getStatusByBigin(
     biginId: string,
-  ): Promise<{isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null} | null> {
+  ): Promise<{isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null; isExistingLocation: boolean} | null> {
     try {
       const response = await apiClient.get<{
         success: boolean;
-        data: {isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null};
+        data: {isMapped: boolean; routeStarId: string | null; routeStarCustomerName: string | null; isExistingLocation: boolean};
       }>(`${BASE_PATH}/status/${encodeURIComponent(biginId)}`);
       const body = response.data as any;
       const data = body?.data ?? body;
-      return data ? {isMapped: !!data.isMapped, routeStarId: data.routeStarId ?? null, routeStarCustomerName: data.routeStarCustomerName ?? null} : null;
+      return data ? {isMapped: !!data.isMapped, routeStarId: data.routeStarId ?? null, routeStarCustomerName: data.routeStarCustomerName ?? null, isExistingLocation: !!data.isExistingLocation} : null;
     } catch (error) {
       console.error('Error fetching mapping status:', error);
+      return null;
+    }
+  },
+
+  async getPriorFarByBigin(
+    biginId: string,
+    excludeAgreementId?: string,
+  ): Promise<{redline: number; greenline: number} | null> {
+    try {
+      const qs = excludeAgreementId ? `?excludeAgreementId=${encodeURIComponent(excludeAgreementId)}` : '';
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {redline: number; greenline: number};
+      }>(`${BASE_PATH}/prior-far/${encodeURIComponent(biginId)}${qs}`);
+      const body = response.data as any;
+      const data = body?.data ?? body;
+      return data ? {redline: Number(data.redline) || 0, greenline: Number(data.greenline) || 0} : null;
+    } catch (error) {
+      console.error('Error fetching prior far revenue:', error);
       return null;
     }
   },

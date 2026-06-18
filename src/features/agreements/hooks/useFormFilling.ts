@@ -169,25 +169,65 @@ export function useFormFilling(editAgreementId?: string) {
   // Commission/quota only count once the Bigin company is mapped to a RouteStar
   // customer. Bigin-connected-but-unmapped agreements must NOT be calculated.
   const [isRouteStarMapped, setIsRouteStarMapped] = useState<boolean>(false);
+  const [isNewLocation, setIsNewLocation] = useState<boolean>(true);
+  const [isLocationTypeAuto, setIsLocationTypeAuto] = useState<boolean>(false);
   useEffect(() => {
     let cancelled = false;
     const biginId = form.biginCompanyId;
     if (!biginId) {
       setIsRouteStarMapped(false);
+      setIsLocationTypeAuto(false);
       return;
     }
     companyMappingApi
       .getStatusByBigin(biginId)
       .then(status => {
-        if (!cancelled) setIsRouteStarMapped(!!status?.isMapped);
+        if (cancelled) return;
+        setIsRouteStarMapped(!!status?.isMapped);
+        if (status) {
+          setIsNewLocation(!status.isExistingLocation);
+          setIsLocationTypeAuto(true);
+        }
       })
       .catch(() => {
-        if (!cancelled) setIsRouteStarMapped(false);
+        if (!cancelled) {
+          setIsRouteStarMapped(false);
+          setIsLocationTypeAuto(false);
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [form.biginCompanyId]);
+
+  const [fetchedPriorFarRedline, setFetchedPriorFarRedline] = useState<number>(0);
+  const [fetchedPriorFarGreenline, setFetchedPriorFarGreenline] = useState<number>(0);
+  useEffect(() => {
+    let cancelled = false;
+    const biginId = form.biginCompanyId;
+    if (!biginId) {
+      setFetchedPriorFarRedline(0);
+      setFetchedPriorFarGreenline(0);
+      return;
+    }
+    companyMappingApi
+      .getPriorFarByBigin(biginId, form.savedId || undefined)
+      .then(prior => {
+        if (cancelled || !prior) return;
+        setFetchedPriorFarRedline(Number(prior.redline) || 0);
+        setFetchedPriorFarGreenline(Number(prior.greenline) || 0);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [form.biginCompanyId, form.savedId]);
+  const loadedFar = form.loadedCommission as any;
+  const priorFarRedline =
+    typeof loadedFar?.priorFarRedline === 'number' ? loadedFar.priorFarRedline : fetchedPriorFarRedline;
+  const priorFarGreenline =
+    typeof loadedFar?.priorFarGreenline === 'number' ? loadedFar.priorFarGreenline : fetchedPriorFarGreenline;
+
   useEffect(() => {
     let cancelled = false;
     commissionApi
@@ -807,6 +847,9 @@ export function useFormFilling(editAgreementId?: string) {
       baseCommissionRate,
       effectiveCommissionRules,
       effectivePriorQuotaCredit,
+      isNewLocation,
+      priorFarRedline,
+      priorFarGreenline,
     );
     const years = form.contractMonths > 0 ? form.contractMonths / 12 : 1;
     // Commission/quota only count once the Bigin company is mapped to a RouteStar
@@ -921,7 +964,7 @@ export function useFormFilling(editAgreementId?: string) {
       summary,
       commission,
     };
-  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectiveCommissionRules, effectivePriorQuotaCredit, isRouteStarMapped]);
+  }, [form, baseCommissionRate, quotaLevelData, activeRules, effectiveCommissionRules, effectivePriorQuotaCredit, isRouteStarMapped, isNewLocation, priorFarRedline, priorFarGreenline]);
 
   const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
@@ -1058,6 +1101,10 @@ export function useFormFilling(editAgreementId?: string) {
     effectivePriorQuotaCredit,
     effectiveCommissionRules,
     isRouteStarMapped,
+    isNewLocation,
+    isLocationTypeAuto,
+    priorFarRedline,
+    priorFarGreenline,
     goToStep,
     nextStep,
     prevStep,

@@ -43,6 +43,9 @@ export function CreateAgreementScreen() {
     effectivePriorQuotaCredit,
     effectiveCommissionRules,
     isRouteStarMapped,
+    isNewLocation,
+    priorFarRedline,
+    priorFarGreenline,
     nextStep,
     prevStep,
     setHeaderTitle,
@@ -173,6 +176,9 @@ export function CreateAgreementScreen() {
               isDetecting={isDetectingAccountTypes}
               isCompanyMapped={isCompanyMapped}
               isRouteStarMapped={isRouteStarMapped}
+              isNewLocation={isNewLocation}
+              priorFarRedline={priorFarRedline}
+              priorFarGreenline={priorFarGreenline}
               error={accountTypeError}
               onDetect={detectAccountTypes}
             />

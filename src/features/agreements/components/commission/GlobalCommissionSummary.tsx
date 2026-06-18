@@ -45,6 +45,9 @@ interface GlobalCommissionSummaryProps {
   contractMonths?: number;
   priorQuotaCredit?: number;
   rulesOverride?: ResolvedCommissionRules | null;
+  isNewLocation?: boolean;
+  priorFarRedline?: number;
+  priorFarGreenline?: number;
   showDetectButton?: boolean;
   isDetecting?: boolean;
   isCompanyMapped?: boolean;
@@ -53,12 +56,24 @@ interface GlobalCommissionSummaryProps {
   onDetect?: () => void;
 }
 
+function DetailRow({label, value, bold, color}: {label: string; value: string; bold?: boolean; color?: string}) {
+  return (
+    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 3, gap: 8}}>
+      <Text style={{fontSize: FontSize.xs, color: Colors.gray600, flex: 1, fontWeight: bold ? '700' : '400'}}>{label}</Text>
+      <Text style={{fontSize: FontSize.xs, color: color || Colors.gray800, fontWeight: bold ? '700' : '500', textAlign: 'right'}}>{value}</Text>
+    </View>
+  );
+}
+
 export function GlobalCommissionSummary({
   services,
   accountTypeCache,
   contractMonths = 12,
   priorQuotaCredit,
   rulesOverride = null,
+  isNewLocation = true,
+  priorFarRedline = 0,
+  priorFarGreenline = 0,
   showDetectButton = true,
   isDetecting = false,
   isCompanyMapped = false,
@@ -79,6 +94,9 @@ export function GlobalCommissionSummary({
     contractMonths,
     priorQuotaCredit: priorQuotaCredit ?? quotaLevelData?.actualSales ?? 0,
     rulesOverride,
+    isNewLocation,
+    priorFarRedline,
+    priorFarGreenline,
   });
 
   if (global.serviceCount === 0) {
@@ -316,8 +334,10 @@ export function GlobalCommissionSummary({
 
           {expanded && (
             <View style={styles.servicesList}>
-              {global.services.map((service, idx) => (
-                <View key={idx} style={styles.serviceRow}>
+              {global.services.map((service, idx) => {
+                const ft = service.farTiers;
+                return (
+                <View key={idx} style={{borderBottomWidth: 1, borderBottomColor: Colors.gray100, paddingVertical: Spacing.sm}}>
                   <View style={styles.serviceNameRow}>
                     <View
                       style={[
@@ -339,17 +359,50 @@ export function GlobalCommissionSummary({
                         ({service.accountType})
                       </Text>
                     )}
-                  </View>
-                  <View style={styles.serviceCommission}>
+                    <View style={{flex: 1}} />
                     <Text style={styles.serviceCommissionValue}>
                       ${service.perVisitCommission.toFixed(2)}/visit
                     </Text>
-                    <Text style={styles.serviceCommissionAnnual}>
-                      (${service.annualCommission.toFixed(2)}/yr)
-                    </Text>
+                  </View>
+
+                  <View style={{marginTop: 6}}>
+                    <Text style={{fontSize: FontSize.xs - 1, fontWeight: '700', color: Colors.gray500, marginTop: 6, marginBottom: 2}}>REVENUE CALCULATION</Text>
+                    {ft ? (
+                      <>
+                        <DetailRow label="Original Per-Visit (Redline):" value={formatCurrency(ft.originalPerVisit)} />
+                        <DetailRow label="Current Per-Visit:" value={formatCurrency(ft.currentPerVisit)} />
+                        <DetailRow label="Price Ratio (Current ÷ Redline):" value={`${(service.priceRatio * 100).toFixed(1)}%`} />
+                        <DetailRow label="Pricing Tier:" value={service.pricingTierLabel} bold />
+                        <DetailRow label="Prior Same-Location Per-Visit:" value={formatCurrency(ft.priorPerVisit)} />
+                        <DetailRow label="Combined Per-Visit (prior + current):" value={formatCurrency(ft.combinedPerVisit)} bold />
+                        <DetailRow label={`${formatCurrency(0)}–${formatCurrency(ft.pitThreshold)} (no commission):`} value={`${formatCurrency(0)}/visit`} color="#dc2626" />
+                        {ft.anchorThreshold > ft.pitThreshold && (
+                          <DetailRow label={`${formatCurrency(ft.pitThreshold)}–${formatCurrency(ft.anchorThreshold)} (normal):`} value={`${formatCurrency(ft.normalPerVisit)}/visit`} />
+                        )}
+                        <DetailRow label={`Above ${formatCurrency(ft.anchorThreshold)} (150%):`} value={`${formatCurrency(ft.anchorPerVisit)} × 1.5 = ${formatCurrency(ft.anchorPerVisit * 1.5)}/visit`} color="#059669" />
+                        <DetailRow label="Commissionable Per-Visit:" value={formatCurrency(ft.commissionablePerVisit)} bold />
+                        <DetailRow label={`Annual Commissionable (${formatCurrency(ft.commissionablePerVisit)} × ${service.visitsPerYear} visits):`} value={formatCurrency(service.commissionableRevenue)} />
+                      </>
+                    ) : (
+                      <>
+                        <DetailRow label="Original Annual (Redline):" value={formatCurrency(service.annualOriginalRevenue)} />
+                        <DetailRow label="Current Annual Revenue:" value={formatCurrency(service.perVisitRevenue)} />
+                        <DetailRow label="Price Ratio (Current ÷ Redline):" value={`${(service.priceRatio * 100).toFixed(1)}%`} />
+                        <DetailRow label="Pricing Tier:" value={service.pricingTierLabel} bold />
+                        {service.revenueDeduction > 0 && (
+                          <DetailRow label={`Account Type Deduction (${service.accountType}):`} value={`-${formatCurrency(service.revenueDeduction)}`} color="#dc2626" />
+                        )}
+                        <DetailRow label="Commissionable Revenue:" value={formatCurrency(service.commissionableRevenue)} bold />
+                      </>
+                    )}
+                    <Text style={{fontSize: FontSize.xs - 1, fontWeight: '700', color: Colors.gray500, marginTop: 8, marginBottom: 2}}>COMMISSION CALCULATION</Text>
+                    <DetailRow label={`Annual Commission (@ ${global.effectiveCommissionRate.toFixed(2)}%):`} value={formatCurrency(service.annualCommission)} bold color="#059669" />
+                    <DetailRow label={`Per-Visit Commission (÷ ${service.visitsPerYear} visits):`} value={formatCurrency(service.perVisitCommission)} />
+                    <DetailRow label="Weekly Commission (÷ 52 weeks):" value={formatCurrency(service.weeklyCommission)} />
                   </View>
                 </View>
-              ))}
+                );
+              })}
             </View>
           )}
         </View>

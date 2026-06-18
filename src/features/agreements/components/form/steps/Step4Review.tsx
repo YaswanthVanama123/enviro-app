@@ -29,6 +29,7 @@ import {
   type ResolvedCommissionRules,
 } from '../../../../admin/types/commission.types';
 import {commissionApi} from '../../../../../services/api/endpoints/commission.api';
+import {companyMappingApi} from '../../../../../services/api/endpoints/companyMapping.api';
 import {computeCommissionTiers} from '../../../hooks/useServiceCommission';
 
 interface Step4ReviewProps {
@@ -206,6 +207,21 @@ export function Step4Review({form}: Step4ReviewProps) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const biginId = form.biginCompanyId;
+    if (!biginId) return;
+    companyMappingApi
+      .getStatusByBigin(biginId)
+      .then(status => {
+        if (!cancelled && status) setIsNewLocation(!status.isExistingLocation);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [form.biginCompanyId]);
+
+  useEffect(() => {
     const checkInsideSales = async () => {
       const salespersonName = adminUser?.fullName || adminUser?.username;
       if (!salespersonName) return;
@@ -311,21 +327,18 @@ export function Step4Review({form}: Step4ReviewProps) {
     let v2RevenueDeduction = 0;
     let v2AnchorBonus = 0;
 
-    if (accountType === 'Anchor') {
-      const standardPortionRaw = Math.min(adjustedPerVisit, effectiveAnchorThreshold) -
-        (isNewLocation ? Math.min(adjustedPerVisit, effectivePitThreshold) : 0);
-      const standardSafe = Math.max(0, standardPortionRaw);
+    if (accountType === 'Anchor' || accountType === 'Pit') {
+      const standardBand = Math.min(
+        Math.max(0, adjustedPerVisit - effectivePitThreshold),
+        Math.max(0, effectiveAnchorThreshold - effectivePitThreshold),
+      );
       const anchorPortion = Math.max(0, adjustedPerVisit - effectiveAnchorThreshold);
       v2AnchorBonus = anchorPortion * (rulesV2.anchorBonusMultiplier - 1);
-      commissionablePerVisit = standardSafe + anchorPortion * rulesV2.anchorBonusMultiplier;
-      v2RevenueDeduction = isNewLocation ? Math.min(adjustedPerVisit, effectivePitThreshold) : 0;
-    } else if (accountType === 'Bread5' || accountType === 'Bread15') {
-      v2RevenueDeduction = isNewLocation ? perVisitPenalty : 0;
-      commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
-    } else { 
-      const isExistingAlreadyOverThreshold = !isNewLocation && adjustedPerVisit > perVisitPenalty;
-      v2RevenueDeduction = isExistingAlreadyOverThreshold ? 0 : perVisitPenalty;
-      commissionablePerVisit = Math.max(0, adjustedPerVisit - v2RevenueDeduction);
+      commissionablePerVisit = standardBand + anchorPortion * rulesV2.anchorBonusMultiplier;
+      v2RevenueDeduction = Math.min(adjustedPerVisit, effectivePitThreshold);
+    } else {
+      v2RevenueDeduction = perVisitPenalty;
+      commissionablePerVisit = Math.max(0, adjustedPerVisit - perVisitPenalty);
     }
     const commissionableAnnual = commissionablePerVisit * visitsPerYear;
 
