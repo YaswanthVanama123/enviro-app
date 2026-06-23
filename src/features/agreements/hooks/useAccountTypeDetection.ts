@@ -97,6 +97,30 @@ export function getFrequencyNumber(serviceData: any): number | null {
   return null;
 }
 
+export function expandServiceAreas(
+  services: Record<string, any>,
+): Record<string, any> {
+  const out: Record<string, any> = {};
+  Object.entries(services || {}).forEach(([name, data]: [string, any]) => {
+    const areas = data && Array.isArray(data.areas) ? data.areas : null;
+    if (areas && areas.length > 0) {
+      areas.forEach((area: any) => {
+        if (!area || area.isActive === false) return;
+        out[`${name}__${area.key}`] = {
+          ...data,
+          ...area,
+          areas: undefined,
+          isActive: true,
+          serviceName: `${name}:${area.key}`,
+        };
+      });
+    } else {
+      out[name] = data;
+    }
+  });
+  return out;
+}
+
 export interface UseAccountTypeDetectionOptions {
   biginCompanyId: string | null;
   services: Record<string, any>;
@@ -172,10 +196,10 @@ export function useAccountTypeDetection({
   const getUniqueFrequencies = useCallback((): number[] => {
     const frequencies = new Set<number>();
 
-    Object.values(services).forEach((serviceData: any) => {
+    Object.values(expandServiceAreas(services)).forEach((serviceData: any) => {
       if (serviceData?.isActive) {
         const freqNum = getFrequencyNumber(serviceData);
-        
+
         if (freqNum !== null && freqNum !== 0) {
           frequencies.add(freqNum);
         }

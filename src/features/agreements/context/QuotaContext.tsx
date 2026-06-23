@@ -65,14 +65,14 @@ const QUOTA_LEVEL_LABELS: Record<QuotaLevel, string> = {
 };
 
 const defaultContextValue: QuotaContextValue = {
-  quotaLevel: 'above',
+  quotaLevel: 'below',
   quotaLevelData: null,
-  baseCommissionRate: 6,
+  baseCommissionRate: QUOTA_COMMISSION_RATES.below,
   quotaDisplayInfo: {
-    label: 'Above Quota',
-    color: getQuotaLevelColor('above'),
-    bgColor: getQuotaLevelBgColor('above'),
-    rate: 6,
+    label: QUOTA_LEVEL_LABELS.below,
+    color: getQuotaLevelColor('below'),
+    bgColor: getQuotaLevelBgColor('below'),
+    rate: QUOTA_COMMISSION_RATES.below,
   },
   isLoading: false,
   error: null,
@@ -89,7 +89,7 @@ interface QuotaProviderProps {
 export function QuotaProvider({children}: QuotaProviderProps) {
   const {user, isAuthenticated} = useAuth();
 
-  const [quotaLevel, setQuotaLevelState] = useState<QuotaLevel>('above');
+  const [quotaLevel, setQuotaLevelState] = useState<QuotaLevel>('below');
   const [quotaLevelData, setQuotaLevelData] = useState<QuotaLevelData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +117,7 @@ export function QuotaProvider({children}: QuotaProviderProps) {
       const result = await quotaApi.getCurrentLevel(user.username);
 
       if (result) {
-        const level = (result.quotaLevel as QuotaLevel) || 'above';
+        const level = (result.quotaLevel as QuotaLevel) || 'below';
         console.log(
           '[QUOTA] Quota level fetched:',
           level,

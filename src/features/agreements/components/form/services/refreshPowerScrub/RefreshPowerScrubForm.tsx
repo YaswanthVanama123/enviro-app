@@ -346,6 +346,14 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove,
         (s, a) => s + (oneTimeArea(a) ? c.baselineAreaTotals[a] : c.baselineAreaContractTotals[a]),
         0,
       );
+      const areas = AREA_KEYS.filter(a => nextForm[a].enabled && c.areaTotals[a] > 0).map(a => ({
+        key: a,
+        isActive: true,
+        frequency: nextForm[a].frequencyLabel || nextForm.frequency,
+        perVisit: c.areaTotals[a],
+        contractTotal: oneTimeArea(a) ? c.areaTotals[a] : c.areaContractTotals[a],
+        originalContractTotal: oneTimeArea(a) ? c.baselineAreaTotals[a] : c.baselineAreaContractTotals[a],
+      }));
       onChange({
         serviceId: 'refreshPowerScrub',
         displayName: 'Refresh Power Scrub',
@@ -367,6 +375,7 @@ export function RefreshPowerScrubForm({data, onChange, contractMonths, onRemove,
         monthlyRecurring: c.monthlyRecurring,
         contractTotal: ct,
         originalContractTotal: oct,
+        areas,
       });
     },
     [data, cfg, contractMonths, onChange],

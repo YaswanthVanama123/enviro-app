@@ -13,6 +13,7 @@ import {
   AccountTypeCache,
   AccountTypeCacheEntry,
   getFrequencyNumber,
+  expandServiceAreas,
   BACKEND_TO_FREQUENCY,
 } from './useAccountTypeDetection';
 
@@ -537,7 +538,7 @@ export function computeGlobalCommission(
     };
     const rows: Row[] = [];
 
-    Object.entries(services).forEach(
+    Object.entries(expandServiceAreas(services)).forEach(
       ([serviceName, serviceData]: [string, any]) => {
         if (!serviceData?.isActive) return;
         const freqNum = getFrequencyNumber(serviceData);
@@ -739,10 +740,7 @@ export function computeGlobalCommission(
           )
         : [];
     const tieredCommission = commissionTierBreakdown.reduce((s, t) => s + t.commission, 0);
-    const effectiveCommissionRate =
-      commissionTierBreakdown.length > 0 && totalCommissionableForTiers > 0
-        ? (tieredCommission / totalCommissionableForTiers) * 100
-        : baseQuotaRate * (agreementMultiplier / 100);
+    const effectiveCommissionRate = baseQuotaRate * (agreementMultiplier / 100);
 
     groups.forEach(g => {
       const visits = visitsPerYearOf(g.freqStr);
