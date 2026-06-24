@@ -341,7 +341,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         label="Pricing Mode"
         value={state.pricingMode}
         options={PRICING_MODE_OPTIONS}
-        onChange={v => update({pricingMode: v})}
+        onChange={v => update({pricingMode: v, includedItems: null})}
       />
       <FormDivider />
 
