@@ -387,6 +387,7 @@ export interface GlobalCommissionResult {
     adjustedAnnualRevenue: number;
     frequencyLabel: string;
     visitsPerYear: number;
+    commissionTiers: CommissionTier[];
     farTiers: {
       originalPerVisit: number;
       currentPerVisit: number;
@@ -421,6 +422,7 @@ export interface GlobalCommissionResult {
     perVisitCommission: number;
     weeklyCommission: number;
     annualCommission: number;
+    commissionTiers: CommissionTier[];
     farTiers: GlobalCommissionResult['services'][number]['farTiers'];
   }>;
 
@@ -581,6 +583,7 @@ export function computeGlobalCommission(
       pricingMultiplier: number;
       pricingTierLabel: string;
       priceRatio: number;
+      commissionTiers: CommissionTier[];
       farTiers: GlobalCommissionResult['services'][number]['farTiers'];
     };
     const groups = new Map<string, Group>();
@@ -602,6 +605,7 @@ export function computeGlobalCommission(
           pricingMultiplier: 1,
           pricingTierLabel: '',
           priceRatio: 1,
+          commissionTiers: [],
           farTiers: null,
         });
       }
@@ -645,20 +649,7 @@ export function computeGlobalCommission(
     groups.forEach(g => {
       totalQuotaCredit += g.annualCurrent * g.pricingMultiplier;
     });
-    const baseQuotaRate = progressiveQuotaCommissionRate(
-      priorQuotaCredit,
-      totalQuotaCredit,
-      rules.quotaTarget,
-      rules.quotaRates,
-      commissionRate,
-    );
 
-    const quotaTierBreakdown =
-      rules.quotaTarget > 0 && totalQuotaCredit > 0
-        ? computeQuotaTierPortions(priorQuotaCredit, totalQuotaCredit, rules.quotaTarget, rules.quotaRates)
-        : [];
-
-    let totalCommissionableForTiers = 0;
     groups.forEach(g => {
       const isGreenline = g.pricingTierLabel === 'Greenline (130%+)';
       const perFarGroupPrior = !isNewLocation
@@ -726,25 +717,31 @@ export function computeGlobalCommission(
       }
 
       g.commissionableAnnual = commissionableAnnual;
-      totalCommissionableForTiers += commissionableAnnual;
     });
 
-    const commissionTierBreakdown =
-      rules.quotaTarget > 0 && totalCommissionableForTiers > 0
-        ? computeCommissionTiers(
-            priorQuotaCredit,
-            totalCommissionableForTiers,
-            rules.quotaTarget,
-            rules.quotaRates,
-            agreementMultiplier,
-          )
-        : [];
-    const tieredCommission = commissionTierBreakdown.reduce((s, t) => s + t.commission, 0);
-    const effectiveCommissionRate = baseQuotaRate * (agreementMultiplier / 100);
+    const mult = agreementMultiplier / 100;
+    const tierAggBase: Record<'below' | 'above' | 'double', number> = { below: 0, above: 0, double: 0 };
+    const tierAggCommission: Record<'below' | 'above' | 'double', number> = { below: 0, above: 0, double: 0 };
+    const quotaAggCredit: Record<'below' | 'above' | 'double', number> = { below: 0, above: 0, double: 0 };
 
     groups.forEach(g => {
       const visits = visitsPerYearOf(g.freqStr);
-      g.groupCommission = g.commissionableAnnual * (effectiveCommissionRate / 100);
+
+      const groupCommissionTiers =
+        rules.quotaTarget > 0 && g.commissionableAnnual > 0
+          ? computeCommissionTiers(priorQuotaCredit, g.commissionableAnnual, rules.quotaTarget, rules.quotaRates, agreementMultiplier)
+          : [];
+      g.groupCommission = groupCommissionTiers.length
+        ? groupCommissionTiers.reduce((s, t) => s + t.commission, 0)
+        : g.commissionableAnnual * ((commissionRate * mult) / 100);
+
+      const groupQuotaCredit = g.annualCurrent * g.pricingMultiplier;
+      const groupQuotaPortions =
+        rules.quotaTarget > 0 && groupQuotaCredit > 0
+          ? computeQuotaTierPortions(priorQuotaCredit, groupQuotaCredit, rules.quotaTarget, rules.quotaRates)
+          : [];
+      groupCommissionTiers.forEach(t => { tierAggBase[t.level] += t.base; tierAggCommission[t.level] += t.commission; });
+      groupQuotaPortions.forEach(t => { quotaAggCredit[t.level] += t.quotaCredit; });
 
       const groupVisits = visits;
 
@@ -765,6 +762,7 @@ export function computeGlobalCommission(
         perVisitCommission: groupVisits > 0 ? g.groupCommission / groupVisits : 0,
         weeklyCommission: g.groupCommission / rules.weeksPerAnnualCommission,
         annualCommission: g.groupCommission,
+        commissionTiers: groupCommissionTiers,
         farTiers: g.farTiers,
       });
 
@@ -774,6 +772,11 @@ export function computeGlobalCommission(
         const rowCommissionable = g.commissionableAnnual * share;
         const rowPerVisit = groupVisits > 0 ? rowAnnualCommission / groupVisits : 0;
         const rowWeekly = rowAnnualCommission / rules.weeksPerAnnualCommission;
+        const rowCommissionTiers = groupCommissionTiers.map(t => ({
+          ...t,
+          base: t.base * share,
+          commission: t.commission * share,
+        }));
 
         totalAnnualCommission += rowAnnualCommission;
         totalPerVisitCommission += rowPerVisit;
@@ -797,10 +800,34 @@ export function computeGlobalCommission(
           adjustedAnnualRevenue: row.annualCurrent * g.pricingMultiplier,
           frequencyLabel: BACKEND_TO_FREQUENCY[row.freqNum] || 'Unknown',
           visitsPerYear: groupVisits,
+          commissionTiers: rowCommissionTiers,
           farTiers: g.farTiers,
         });
       });
     });
+
+    const tierMeta = [
+      { level: 'below' as const, label: 'Below Quota', rate: rules.quotaRates.below },
+      { level: 'above' as const, label: 'Above Quota', rate: rules.quotaRates.above },
+      { level: 'double' as const, label: 'Double Quota', rate: rules.quotaRates.double },
+    ];
+    const commissionTierBreakdown: CommissionTier[] = tierMeta.map(m => ({
+      level: m.level,
+      label: m.label,
+      rate: m.rate,
+      effectiveRate: m.rate * mult,
+      base: tierAggBase[m.level],
+      commission: tierAggCommission[m.level],
+    }));
+    const quotaTierBreakdown: QuotaTierPortion[] = tierMeta.map(m => ({
+      level: m.level,
+      label: m.label,
+      rate: m.rate,
+      quotaCredit: quotaAggCredit[m.level],
+      commission: quotaAggCredit[m.level] * (m.rate / 100),
+    }));
+    const effectiveCommissionRate =
+      totalCommissionableRevenue > 0 ? (totalAnnualCommission / totalCommissionableRevenue) * 100 : 0;
 
     return {
       totalPerVisitCommission,

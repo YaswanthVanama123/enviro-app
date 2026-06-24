@@ -100,6 +100,8 @@ export function GlobalCommissionSummary({
   });
 
   const displayGroups = global.groups.map(g => ({...g, serviceName: g.serviceNames.join(', ')}));
+  const quotaLevelRate =
+    global.commissionTierBreakdown.find(t => t.level === quotaLevel)?.rate ?? commissionRate;
 
   if (global.serviceCount === 0) {
     return null;
@@ -196,7 +198,7 @@ export function GlobalCommissionSummary({
               {backgroundColor: quotaConfig.bgColor},
             ]}>
             <Text style={[styles.quotaBadgeText, {color: quotaConfig.color}]}>
-              {quotaConfig.label} ({commissionRate}%)
+              {quotaConfig.label} ({quotaLevelRate}%)
             </Text>
           </View>
           {!global.hasDetectedServices && isCompanyMapped && (
@@ -415,7 +417,7 @@ export function GlobalCommissionSummary({
       )}
 
       <Text style={styles.rateNote}>
-        Commission rate: {commissionRate}% ({quotaConfig.label})
+        Commission rate: {quotaLevelRate}% ({quotaConfig.label})
       </Text>
     </View>
   );
