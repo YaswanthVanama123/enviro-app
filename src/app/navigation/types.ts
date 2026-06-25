@@ -26,6 +26,7 @@ export type RootStackParamList = {
     period: {start: string; end: string; label: string};
     isCurrent?: boolean;
   };
+  PayrollAgreements: undefined;
 };
 
 export type TabParamList = {

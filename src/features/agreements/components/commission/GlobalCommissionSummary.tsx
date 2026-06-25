@@ -54,6 +54,8 @@ interface GlobalCommissionSummaryProps {
   isRouteStarMapped?: boolean;
   error?: string | null;
   onDetect?: () => void;
+  addedToPayroll?: boolean;
+  payrollPeriodLabel?: string;
 }
 
 function DetailRow({label, value, bold, color}: {label: string; value: string; bold?: boolean; color?: string}) {
@@ -80,6 +82,8 @@ export function GlobalCommissionSummary({
   isRouteStarMapped = false,
   error = null,
   onDetect,
+  addedToPayroll = false,
+  payrollPeriodLabel,
 }: GlobalCommissionSummaryProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -187,6 +191,14 @@ export function GlobalCommissionSummary({
 
   return (
     <View style={styles.container}>
+      {addedToPayroll ? (
+        <View style={{backgroundColor: '#ede9fe', borderColor: '#c4b5fd', borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6}}>
+          <Ionicons name="lock-closed" size={14} color="#5b21b6" />
+          <Text style={{color: '#5b21b6', fontSize: FontSize.xs, fontWeight: '700', flex: 1}}>
+            This agreement is already in payroll{payrollPeriodLabel ? ` (${payrollPeriodLabel})` : ''}. Changing it now will not change the payroll amount.
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Ionicons name="cash-outline" size={16} color="#059669" />

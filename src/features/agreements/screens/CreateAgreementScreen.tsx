@@ -73,6 +73,7 @@ export function CreateAgreementScreen() {
     saveDraft,
     generate,
     allServicesOneTime,
+    payrollLock,
   } = useFormFilling(editAgreementId);
 
   const {
@@ -181,6 +182,8 @@ export function CreateAgreementScreen() {
               priorFarGreenline={priorFarGreenline}
               error={accountTypeError}
               onDetect={detectAccountTypes}
+              addedToPayroll={!!payrollLock?.addedToPayroll}
+              payrollPeriodLabel={payrollLock?.periodLabel}
             />
           </View>
         );

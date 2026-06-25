@@ -68,6 +68,8 @@ export interface SavedFileGroup {
   updatedBy?: string | null;
   startDate?: string | null;
   contractMonths?: number | null;
+  addedToPayroll?: boolean;
+  payrollPeriodLabel?: string | null;
 }
 
 export interface GroupedSavedFilesResult {

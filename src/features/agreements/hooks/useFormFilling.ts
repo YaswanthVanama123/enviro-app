@@ -169,6 +169,7 @@ export function useFormFilling(editAgreementId?: string) {
   // Commission/quota only count once the Bigin company is mapped to a RouteStar
   // customer. Bigin-connected-but-unmapped agreements must NOT be calculated.
   const [isRouteStarMapped, setIsRouteStarMapped] = useState<boolean>(false);
+  const [payrollLock, setPayrollLock] = useState<{addedToPayroll?: boolean; periodLabel?: string} | null>(null);
   const [isNewLocation, setIsNewLocation] = useState<boolean>(true);
   const [isLocationTypeAuto, setIsLocationTypeAuto] = useState<boolean>(false);
   useEffect(() => {
@@ -414,6 +415,7 @@ export function useFormFilling(editAgreementId?: string) {
           const ts = Date.now();
 
           next.savedId = doc._id ?? doc.id ?? editAgreementId!;
+          setPayrollLock(doc.payrollLock || null);
 
           if (doc.biginCompanyId) {
             next.biginCompanyId = doc.biginCompanyId;
@@ -1098,6 +1100,7 @@ export function useFormFilling(editAgreementId?: string) {
 
   return {
     form,
+    payrollLock,
     effectivePriorQuotaCredit,
     effectiveCommissionRules,
     isRouteStarMapped,

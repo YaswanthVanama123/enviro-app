@@ -263,6 +263,18 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('PayrollAgreements')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#ede9fe'}]}>
+                <Ionicons name="checkmark-done-outline" size={18} color="#6d28d9" />
+              </View>
+              <Text style={styles.menuRowText}>Payroll Agreements</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('BiginAudit')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#ecfdf5'}]}>

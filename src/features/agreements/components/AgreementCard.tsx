@@ -414,6 +414,14 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           </View>
           <View style={styles.cardInfo}>
             <Text style={styles.cardTitle} numberOfLines={1}>{agreement.agreementTitle}</Text>
+            {agreement.addedToPayroll ? (
+              <View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 3, backgroundColor: '#ede9fe', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, marginTop: 3}}>
+                <Ionicons name="lock-closed" size={10} color="#6d28d9" />
+                <Text style={{fontSize: 10, fontWeight: '700', color: '#6d28d9'}}>
+                  Added in payroll{agreement.payrollPeriodLabel ? ` · ${agreement.payrollPeriodLabel}` : ''}
+                </Text>
+              </View>
+            ) : null}
             <Text style={styles.cardMeta}>
               {agreement.fileCount} {agreement.fileCount === 1 ? 'file' : 'files'}{'  ·  '}{timeAgo(agreement.latestUpdate)}
             </Text>
