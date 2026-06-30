@@ -426,7 +426,7 @@ function CompactProductRow({
         <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
         <TextInput
           style={styles.compactInput}
-          value={displayNum(product.qty)}
+          value={String(product.qty)}
           onChangeText={t => onUpdate({qty: parseNum(t)})}
           keyboardType="numeric"
           placeholder="0"
@@ -502,7 +502,7 @@ function CompactDispenserRow({
         <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
         <TextInput
           style={styles.compactInput}
-          value={displayNum(product.qty)}
+          value={String(product.qty)}
           onChangeText={t => onUpdate({qty: parseNum(t)})}
           keyboardType="numeric"
           placeholder="0"

@@ -37,27 +37,28 @@ const C = {
 };
 
 interface NavItem {
-  name:      string;
-  label:     string;
-  icon:      string;
-  component: React.ComponentType<any>;
+  name:       string;
+  label:      string;
+  icon:       string;
+  iconActive: string;
+  component:  React.ComponentType<any>;
 }
 
 const ADMIN_NAV: NavItem[] = [
-  {name: 'Dashboard', label: 'Dashboard', icon: 'grid-outline',              component: AdminDashboardScreen},
-  {name: 'New',       label: 'New',       icon: 'add-circle-outline',        component: CreateAgreementScreen},
-  {name: 'Saved',     label: 'Saved',     icon: 'document-text-outline',     component: SavedAgreementsScreen},
-  {name: 'Approvals', label: 'Approvals', icon: 'checkmark-circle-outline',  component: ApprovalDocumentsScreen},
-  {name: 'Pricing',   label: 'Pricing',   icon: 'pricetag-outline',          component: PricingDetailsScreen},
-  {name: 'Admin',     label: 'Admin',     icon: 'shield-checkmark-outline',  component: AdminPanelScreen},
+  {name: 'Dashboard', label: 'Home',     icon: 'grid-outline',             iconActive: 'grid',             component: AdminDashboardScreen},
+  {name: 'New',       label: 'New',      icon: 'add-circle-outline',       iconActive: 'add-circle',       component: CreateAgreementScreen},
+  {name: 'Saved',     label: 'Saved',    icon: 'document-text-outline',    iconActive: 'document-text',    component: SavedAgreementsScreen},
+  {name: 'Approvals', label: 'Approve',  icon: 'checkmark-circle-outline', iconActive: 'checkmark-circle', component: ApprovalDocumentsScreen},
+  {name: 'Pricing',   label: 'Pricing',  icon: 'pricetag-outline',         iconActive: 'pricetag',         component: PricingDetailsScreen},
+  {name: 'Admin',     label: 'Admin',    icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark', component: AdminPanelScreen},
 ];
 
 const EMPLOYEE_NAV: NavItem[] = [
-  {name: 'Home',  label: 'Home',  icon: 'home-outline',                       component: HomeScreen},
-  {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 component: CreateAgreementScreen},
-  {name: 'Saved', label: 'Saved', icon: 'document-text-outline',              component: SavedAgreementsScreen},
-  {name: 'Trash', label: 'Trash', icon: 'trash-outline',                      component: TrashScreen},
-  {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', component: MoreScreen},
+  {name: 'Home',  label: 'Home',  icon: 'home-outline',                       iconActive: 'home',                       component: HomeScreen},
+  {name: 'New',   label: 'New',   icon: 'add-circle-outline',                 iconActive: 'add-circle',                 component: CreateAgreementScreen},
+  {name: 'Saved', label: 'Saved', icon: 'document-text-outline',              iconActive: 'document-text',              component: SavedAgreementsScreen},
+  {name: 'Trash', label: 'Trash', icon: 'trash-outline',                      iconActive: 'trash',                      component: TrashScreen},
+  {name: 'More',  label: 'More',  icon: 'ellipsis-horizontal-circle-outline', iconActive: 'ellipsis-horizontal-circle', component: MoreScreen},
 ];
 
 const PUBLIC_NAV: NavItem[] = EMPLOYEE_NAV;
@@ -109,11 +110,13 @@ function MobileNav() {
               ) : (
                 <>
                   <Ionicons
-                    name={item.icon}
-                    size={22}
+                    name={isActive ? item.iconActive : item.icon}
+                    size={23}
                     color={isActive ? C.primary : C.textMuted}
                   />
-                  <Text style={[mob.tabLabel, isActive && mob.tabLabelActive]}>
+                  <Text
+                    style={[mob.tabLabel, isActive && mob.tabLabelActive]}
+                    numberOfLines={1}>
                     {item.label}
                   </Text>
                 </>
@@ -165,15 +168,18 @@ const mob = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 2,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: C.textMuted,
-    marginTop: 2,
+    letterSpacing: 0.1,
   },
   tabLabelActive: {
     color: C.primary,
+    fontWeight: '700',
   },
   newBtnWrap: {
     alignItems: 'center',

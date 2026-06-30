@@ -42,10 +42,18 @@ export interface PayrollSettings {
   cycleDayOfWeek: number;
 }
 
+export interface ApprovalCutoff {
+  enabled: boolean;
+  dayOfWeek: number;
+  hour: number;
+  minute: number;
+}
+
 export interface AdminSettings {
   defaultApprovalTaskOwner: {id: string | null; name: string | null};
   approvalTaskSubject: string;
   payrollSettings?: PayrollSettings;
+  approvalCutoff?: ApprovalCutoff;
 }
 
 export interface AdminSettingsResponse {

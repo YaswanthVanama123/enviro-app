@@ -346,7 +346,7 @@
 					"-lc++",
 				);
 				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.enviromaster.EnviroApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enviromasternva.salesform;
 				PRODUCT_NAME = EnviroApp;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -382,7 +382,7 @@
 					"-lc++",
 				);
 				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.enviromaster.EnviroApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enviromasternva.salesform;
 				PRODUCT_NAME = EnviroApp;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;

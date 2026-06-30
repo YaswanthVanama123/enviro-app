@@ -72,6 +72,7 @@ export function CreateAgreementScreen() {
     updateServiceAgreement,
     saveDraft,
     generate,
+    reset,
     allServicesOneTime,
     payrollLock,
   } = useFormFilling(editAgreementId);
@@ -115,6 +116,17 @@ export function CreateAgreementScreen() {
     await saveDraft();
   };
 
+  // The create flow is rendered both as a stacked screen (edit mode) AND as the
+  // center "New" bottom tab. In the tab there's no stack to pop, so goBack()
+  // throws "GO_BACK was not handled" — fall back to resetting the form instead.
+  const goBackSafe = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      reset();
+    }
+  };
+
   const handleGenerate = async () => {
     setShowSaveModal(false);
     const {ok, agreementId, status} = await generate();
@@ -122,7 +134,7 @@ export function CreateAgreementScreen() {
       if (status === 'pending_approval' && agreementId) {
         zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
       }
-      navigation.goBack();
+      goBackSafe();
     }
   };
 
@@ -234,50 +246,77 @@ export function CreateAgreementScreen() {
           <Text style={styles.saveError}>{saveError}</Text>
         ) : null}
 
-        <View style={styles.bottomBtns}>
-          {!isFirst && (
-            <TouchableOpacity style={styles.backBtn} onPress={handlePrev}>
-              <Ionicons name="chevron-back" size={18} color={Colors.textSecondary} />
-              <Text style={styles.backBtnText}>Back</Text>
-            </TouchableOpacity>
-          )}
-
-          {step >= 3 && (
+        {isLast ? (
+          <>
+            <View style={styles.bottomBtns}>
+              {!isFirst && (
+                <TouchableOpacity style={styles.backBtn} onPress={handlePrev}>
+                  <Ionicons name="chevron-back" size={18} color={Colors.textSecondary} />
+                  <Text style={styles.backBtnText}>Back</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.draftBtnFlex, saving && styles.btnDisabled]}
+                onPress={handleSaveDraft}
+                disabled={saving}>
+                {saving ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <Ionicons name="save-outline" size={16} color={Colors.primary} />
+                )}
+                <Text style={styles.draftBtnText} numberOfLines={1}>
+                  {saving ? 'Saving…' : 'Save Draft'}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
-              style={[styles.draftBtn, saving && styles.btnDisabled]}
-              onPress={handleSaveDraft}
+              style={[styles.generateBtnFull, saving && styles.btnDisabled]}
+              onPress={() => setShowSaveModal(true)}
               disabled={saving}>
               {saving ? (
-                <ActivityIndicator size="small" color={Colors.primary} />
+                <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Ionicons name="save-outline" size={16} color={Colors.primary} />
+                <>
+                  <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                  <Text style={styles.nextBtnText}>Generate PDF</Text>
+                </>
               )}
-              <Text style={styles.draftBtnText}>
-                {saving ? 'Saving...' : 'Save as Draft'}
-              </Text>
             </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[styles.nextBtn, isLast && styles.generateBtn, saving && styles.btnDisabled]}
-            onPress={isLast ? () => setShowSaveModal(true) : handleNext}
-            disabled={saving}>
-            {saving && isLast ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.nextBtnText}>
-                  {isLast ? 'Save & Generate PDF' : 'Next'}
-                </Text>
-                <Ionicons
-                  name={isLast ? 'checkmark-circle' : 'chevron-forward'}
-                  size={18}
-                  color="#fff"
-                />
-              </>
+          </>
+        ) : (
+          <View style={styles.bottomBtns}>
+            {!isFirst && (
+              <TouchableOpacity style={styles.backBtn} onPress={handlePrev}>
+                <Ionicons name="chevron-back" size={18} color={Colors.textSecondary} />
+                <Text style={styles.backBtnText}>Back</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-        </View>
+
+            {step >= 3 && (
+              <TouchableOpacity
+                style={[styles.draftBtn, saving && styles.btnDisabled]}
+                onPress={handleSaveDraft}
+                disabled={saving}>
+                {saving ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <Ionicons name="save-outline" size={16} color={Colors.primary} />
+                )}
+                <Text style={styles.draftBtnText} numberOfLines={1}>
+                  {saving ? 'Saving…' : 'Save Draft'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.nextBtn, saving && styles.btnDisabled]}
+              onPress={handleNext}
+              disabled={saving}>
+              <Text style={styles.nextBtnText}>Next</Text>
+              <Ionicons name="chevron-forward" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   };
@@ -290,7 +329,7 @@ export function CreateAgreementScreen() {
         keyboardVerticalOffset={90}>
 
         <View style={styles.header}>
-          <TouchableOpacity style={styles.headerBack} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={styles.headerBack} onPress={goBackSafe}>
             <Ionicons name="close" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
@@ -462,6 +501,28 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
     color: Colors.primary,
+  },
+  draftBtnFlex: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  generateBtnFull: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.green ?? '#10b981',
+    marginTop: Spacing.sm,
   },
   nextBtn: {
     flex: 1,

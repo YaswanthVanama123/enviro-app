@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {agreementsApi} from '../../../services/api/endpoints/agreements.api';
+import {adminApi, type PayrollPeriod} from '../../../services/api/endpoints/admin.api';
 import {useAuth} from '../../admin/context/AdminAuthContext';
 
 interface CommissionBreakdown {
@@ -95,9 +96,11 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
 };
 
-type TimePeriod = 'all' | 'weekly' | '14days' | 'monthly' | 'quarterly' | 'annually' | 'custom';
+type TimePeriod = 'all' | 'weekly' | '14days' | 'monthly' | 'quarterly' | 'annually' | 'thisPayroll' | 'previousPayroll' | 'custom';
 
-const TIME_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
+type FilterMode = 'created' | 'payroll';
+
+const CREATED_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
   {key: 'all', label: 'All Time'},
   {key: 'weekly', label: 'This Week'},
   {key: '14days', label: '14 Days'},
@@ -106,6 +109,16 @@ const TIME_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
   {key: 'annually', label: 'This Year'},
   {key: 'custom', label: 'Custom'},
 ];
+
+const PAYROLL_PERIOD_OPTIONS: {key: TimePeriod; label: string}[] = [
+  {key: 'thisPayroll', label: 'This Payroll'},
+  {key: 'previousPayroll', label: 'Previous Payroll'},
+];
+
+interface PayrollPeriods {
+  current?: PayrollPeriod;
+  previous?: PayrollPeriod;
+}
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -174,6 +187,7 @@ function isWithinTimePeriod(
   period: TimePeriod,
   customStartDate: Date | null,
   customEndDate: Date | null,
+  payrollPeriods?: PayrollPeriods,
 ): boolean {
   if (period === 'all') return true;
   if (!dateStr) return false;
@@ -206,6 +220,14 @@ function isWithinTimePeriod(
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       return date >= startOfYear;
     }
+    case 'thisPayroll': {
+      if (!payrollPeriods?.current) return true;
+      return date >= new Date(payrollPeriods.current.start) && date <= new Date(payrollPeriods.current.end);
+    }
+    case 'previousPayroll': {
+      if (!payrollPeriods?.previous) return false;
+      return date >= new Date(payrollPeriods.previous.start) && date <= new Date(payrollPeriods.previous.end);
+    }
     case 'custom': {
       if (!customStartDate && !customEndDate) return true;
       const endOfDay = customEndDate
@@ -234,6 +256,8 @@ export function MyCommissionsScreen() {
   const [data, setData] = useState<CommissionsResponse | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
+  const [filterMode, setFilterMode] = useState<FilterMode>('created');
+  const [payrollPeriods, setPayrollPeriods] = useState<PayrollPeriods>({});
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -263,20 +287,29 @@ export function MyCommissionsScreen() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    adminApi
+      .getPayrollPeriods()
+      .then(res => {
+        if (res?.periods) setPayrollPeriods(res.periods);
+      })
+      .catch(() => {});
+  }, []);
+
   const timeFilteredCommissions = useMemo(() => {
     if (!data?.commissions) return [];
 
     return data.commissions.filter(c => {
       const dateToCheck = c.startDate || c.createdAt;
-      return isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate);
+      return isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate, payrollPeriods);
     });
-  }, [data?.commissions, timePeriod, customStartDate, customEndDate]);
+  }, [data?.commissions, timePeriod, customStartDate, customEndDate, payrollPeriods]);
 
   const filteredCommissions = useMemo(() => {
     if (!data?.commissions) return [];
 
     return data.commissions.filter(c => {
-      
+
       let statusMatch = true;
       if (statusFilter !== 'all') {
         if (statusFilter === 'approved') {
@@ -287,11 +320,11 @@ export function MyCommissionsScreen() {
       }
 
       const dateToCheck = c.startDate || c.createdAt;
-      const timeMatch = isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate);
+      const timeMatch = isWithinTimePeriod(dateToCheck, timePeriod, customStartDate, customEndDate, payrollPeriods);
 
       return statusMatch && timeMatch;
     });
-  }, [data?.commissions, statusFilter, timePeriod, customStartDate, customEndDate]);
+  }, [data?.commissions, statusFilter, timePeriod, customStartDate, customEndDate, payrollPeriods]);
 
   const filteredByStatus = useMemo(() => {
     const counts: Record<string, {count: number; commission: number}> = {
@@ -438,9 +471,24 @@ export function MyCommissionsScreen() {
 
         {}
         <View style={styles.timeFilterSection}>
+          <View style={styles.modeToggle}>
+            {(['created', 'payroll'] as FilterMode[]).map(mode => (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.modeBtn, filterMode === mode && styles.modeBtnActive]}
+                onPress={() => {
+                  setFilterMode(mode);
+                  setTimePeriod(mode === 'created' ? 'all' : 'thisPayroll');
+                }}>
+                <Text style={[styles.modeBtnText, filterMode === mode && styles.modeBtnTextActive]}>
+                  {mode === 'created' ? 'Created' : 'Payroll'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.timeFilterTabs}>
-              {TIME_PERIOD_OPTIONS.map(option => (
+              {(filterMode === 'created' ? CREATED_PERIOD_OPTIONS : PAYROLL_PERIOD_OPTIONS).map(option => (
                 <TouchableOpacity
                   key={option.key}
                   style={[styles.timeTab, timePeriod === option.key && styles.timeTabActive]}
@@ -851,6 +899,31 @@ const styles = StyleSheet.create({
   timeFilterSection: {
     paddingHorizontal: Spacing.lg,
     marginTop: Spacing.md,
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  modeBtn: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xs,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#fff',
+  },
+  modeBtnActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  modeBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  modeBtnTextActive: {
+    color: '#fff',
   },
   timeFilterTabs: {
     flexDirection: 'row',

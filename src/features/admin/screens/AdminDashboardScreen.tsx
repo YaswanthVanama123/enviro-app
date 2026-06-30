@@ -174,7 +174,7 @@ function SkeletonBlock({width, height}: {width: number | string; height: number}
 export function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const {user: _user} = useAdminAuth();
+  const {user} = useAdminAuth();
 
   const [dashData, setDashData] = useState<AdminDashboardData | null>(null);
   const [recent, setRecent] = useState<SavedFileGroup[]>([]);
@@ -234,12 +234,19 @@ export function AdminDashboardScreen() {
         }>
 
         <View style={styles.header}>
+          <View style={styles.headerAvatar}>
+            <Text style={styles.headerAvatarText}>
+              {(user?.fullName || user?.username || 'A')[0].toUpperCase()}
+            </Text>
+          </View>
           <View style={{flex: 1}}>
-            <Text style={styles.headerTitle}>Dashboard</Text>
-            <Text style={styles.headerSubtitle}>Overview of your documents</Text>
+            <Text style={styles.headerEyebrow}>DASHBOARD</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {user?.fullName || user?.username || 'Overview'}
+            </Text>
           </View>
           <View style={styles.headerBadge}>
-            <Ionicons name="shield-checkmark" size={14} color={Colors.primary} />
+            <Ionicons name="shield-checkmark" size={13} color={Colors.primary} />
             <Text style={styles.headerBadgeText}>Admin</Text>
           </View>
         </View>
@@ -337,13 +344,34 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  headerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerAvatarText: {
+    fontSize: FontSize.lg,
+    fontWeight: '800',
+    color: Colors.textWhite,
+  },
+  headerEyebrow: {
+    fontSize: FontSize.xxs,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 1,
   },
   headerTitle: {
-    fontSize: 26,
+    fontSize: FontSize.xxl,
     fontWeight: '800',
     color: Colors.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: FontSize.sm,
@@ -355,6 +383,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fbd5d5',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: Radius.full,

@@ -27,6 +27,7 @@ export type RootStackParamList = {
     isCurrent?: boolean;
   };
   PayrollAgreements: undefined;
+  AgreementActivity: undefined;
 };
 
 export type TabParamList = {

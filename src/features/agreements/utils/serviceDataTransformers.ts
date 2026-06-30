@@ -546,6 +546,46 @@ function transformSaniscrub(s: any): any {
   if (s.nonBathroomArea && out.nonBathroomSqFt === undefined) {
     out.nonBathroomSqFt = s.nonBathroomArea.qty ?? 0;
   }
+
+  // The RN SaniscrubForm binds to its own flat keys (qty/nonBathSqFt/rate/isDirty/
+  // useExactSqFt/nonBathFirstRate/nonBathAdditionalRate/minimumChargePerVisit).
+  // Map the web app's keys onto them so a web-created agreement prefills on mobile.
+  const fixtures = s.qty ?? out.fixtureCount ?? s.restroomFixtures?.qty;
+  if (fixtures !== undefined) {
+    out.qty = Number(fixtures) || 0;
+  }
+  const nonBath = s.nonBathSqFt ?? out.nonBathroomSqFt ?? s.nonBathroomArea?.qty;
+  if (nonBath !== undefined) {
+    out.nonBathSqFt = Number(nonBath) || 0;
+  }
+  const fixtureRate =
+    s.rate ??
+    (typeof s.restroomFixtures?.rate === 'number' ? s.restroomFixtures.rate : undefined) ??
+    out.fixtureRateMonthly;
+  if (fixtureRate !== undefined && Number.isFinite(Number(fixtureRate))) {
+    out.rate = Number(fixtureRate);
+  }
+  const minPerVisit = s.minimumChargePerVisit ?? out.minimumMonthly;
+  if (minPerVisit !== undefined) {
+    out.minimumChargePerVisit = Number(minPerVisit) || 0;
+  }
+  const isDirty = s.isDirty ?? out.isDirtyInstall;
+  if (isDirty !== undefined) {
+    out.isDirty = !!isDirty;
+  }
+  const useExact = s.useExactSqFt ?? out.useExactNonBathroomSqft;
+  if (useExact !== undefined) {
+    out.useExactSqFt = !!useExact;
+  }
+  const nbFirst = s.nonBathFirstRate ?? out.nonBathroomFirstUnitRate;
+  if (nbFirst !== undefined) {
+    out.nonBathFirstRate = Number(nbFirst) || 0;
+  }
+  const nbAdd = s.nonBathAdditionalRate ?? out.nonBathroomAdditionalUnitRate;
+  if (nbAdd !== undefined) {
+    out.nonBathAdditionalRate = Number(nbAdd) || 0;
+  }
+
   const cm = contractMonthsFrom(s);
   if (cm !== undefined) {
     out.contractMonths = cm;

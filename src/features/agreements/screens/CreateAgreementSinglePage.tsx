@@ -78,10 +78,21 @@ export function CreateAgreementSinglePage() {
     updateServiceAgreement,
     saveDraft,
     generate,
+    reset,
     allServicesOneTime,
   } = useFormFilling(editAgreementId);
 
   const {saving, saveError, savedId} = form;
+
+  // Rendered as a stacked screen AND as the center "New" tab. In the tab there's
+  // no stack to pop, so goBack() throws — fall back to resetting the form.
+  const goBackSafe = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      reset();
+    }
+  };
 
   const handleGenerate = async () => {
     setShowSaveModal(false);
@@ -90,7 +101,7 @@ export function CreateAgreementSinglePage() {
       if (status === 'pending_approval' && agreementId) {
         zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
       }
-      navigation.goBack();
+      goBackSafe();
     }
   };
 
@@ -99,7 +110,7 @@ export function CreateAgreementSinglePage() {
 
       {}
       <View style={ss.topBar}>
-        <TouchableOpacity style={ss.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={ss.backBtn} onPress={goBackSafe}>
           <Ionicons name="arrow-back" size={16} color={C.draftText} />
         </TouchableOpacity>
         <View style={ss.topBarText}>

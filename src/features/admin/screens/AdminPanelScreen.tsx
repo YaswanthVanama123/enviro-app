@@ -215,6 +215,18 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('AgreementActivity')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#fef3c7'}]}>
+                <Ionicons name="calendar-outline" size={18} color="#f59e0b" />
+              </View>
+              <Text style={styles.menuRowText}>Agreement Activity</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('EditHistory')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#f3e8ff'}]}>

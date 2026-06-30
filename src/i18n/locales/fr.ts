@@ -26,6 +26,8 @@ export const fr: TranslationShape = {
       'Créez, gérez et suivez facilement les contrats de service client. Optimisez votre flux de travail, suivez les commissions et atteignez votre quota, le tout dans une seule app.',
     getStarted: 'Commencer',
     login: 'Se connecter',
+    featuresHeading: 'Tout ce dont vous avez besoin',
+    featuresSubheading: 'Conçu pour les commerciaux sur le terrain',
     features: {
       agreements: {
         title: 'Gestion des contrats',

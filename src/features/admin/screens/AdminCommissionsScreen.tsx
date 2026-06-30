@@ -15,6 +15,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {agreementsApi} from '../../../services/api/endpoints/agreements.api';
+import {adminApi, type PayrollPeriod} from '../../../services/api/endpoints/admin.api';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -104,9 +105,11 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
 };
 
-type TimeFilterType = 'all' | 'thisWeek' | 'last14Days' | 'thisMonth' | 'thisQuarter' | 'thisYear' | 'dateRange';
+type TimeFilterType = 'all' | 'thisWeek' | 'last14Days' | 'thisMonth' | 'thisQuarter' | 'thisYear' | 'thisPayroll' | 'previousPayroll' | 'dateRange';
 
-const TIME_FILTER_OPTIONS: {key: TimeFilterType; label: string}[] = [
+type FilterMode = 'created' | 'payroll';
+
+const CREATED_FILTER_OPTIONS: {key: TimeFilterType; label: string}[] = [
   {key: 'all', label: 'All Time'},
   {key: 'thisWeek', label: 'This Week'},
   {key: 'last14Days', label: 'Last 14 Days'},
@@ -116,10 +119,21 @@ const TIME_FILTER_OPTIONS: {key: TimeFilterType; label: string}[] = [
   {key: 'dateRange', label: 'Date Range'},
 ];
 
+const PAYROLL_FILTER_OPTIONS: {key: TimeFilterType; label: string}[] = [
+  {key: 'thisPayroll', label: 'This Payroll'},
+  {key: 'previousPayroll', label: 'Previous Payroll'},
+];
+
+interface PayrollPeriods {
+  current?: PayrollPeriod;
+  previous?: PayrollPeriod;
+}
+
 function getDateRange(
   filter: TimeFilterType,
   customStart?: string,
   customEnd?: string,
+  payrollPeriods?: PayrollPeriods,
 ): {startDate?: string; endDate?: string} {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -171,6 +185,16 @@ function getDateRange(
         endDate: now.toISOString(),
       };
     }
+
+    case 'thisPayroll':
+      return payrollPeriods?.current
+        ? {startDate: payrollPeriods.current.start, endDate: payrollPeriods.current.end}
+        : {};
+
+    case 'previousPayroll':
+      return payrollPeriods?.previous
+        ? {startDate: payrollPeriods.previous.start, endDate: payrollPeriods.previous.end}
+        : {};
 
     case 'dateRange':
       if (customStart && customEnd) {
@@ -224,14 +248,25 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState<TimeFilterType>('all');
+  const [filterMode, setFilterMode] = useState<FilterMode>('created');
+  const [payrollPeriods, setPayrollPeriods] = useState<PayrollPeriods>({});
   const [customDateStart, setCustomDateStart] = useState<string>('');
   const [customDateEnd, setCustomDateEnd] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'start' | 'end'>('start');
 
   useEffect(() => {
+    adminApi
+      .getPayrollPeriods()
+      .then(res => {
+        if (res?.periods) setPayrollPeriods(res.periods);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetchEmployees();
-  }, [timeFilter, customDateStart, customDateEnd]);
+  }, [timeFilter, customDateStart, customDateEnd, payrollPeriods]);
 
   async function fetchEmployees(isRefresh = false) {
     try {
@@ -241,7 +276,7 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
         setLoading(true);
       }
       setError(null);
-      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd);
+      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd, payrollPeriods);
       const response = await agreementsApi.getAllEmployeesCommissions(dateRange);
       if (response?.success) {
         const emptyCounts = {draft: 0, saved: 0, pending_approval: 0, approved: 0, active: 0};
@@ -280,7 +315,7 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
       setEmployeeLoading(true);
       setError(null);
       setSelectedEmployee(username);
-      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd);
+      const dateRange = getDateRange(timeFilter, customDateStart, customDateEnd, payrollPeriods);
       const response = await agreementsApi.getEmployeeCommissions(username, dateRange);
       if (response?.success) {
         setEmployeeCommissions({
@@ -607,9 +642,24 @@ export function AdminCommissionsScreen({navigation}: {navigation?: any}) {
         }>
         {/* Time Filter Tabs */}
         <View style={styles.timeFilterSection}>
+          <View style={styles.modeToggle}>
+            {(['created', 'payroll'] as FilterMode[]).map(mode => (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.modeBtn, filterMode === mode && styles.modeBtnActive]}
+                onPress={() => {
+                  setFilterMode(mode);
+                  setTimeFilter(mode === 'created' ? 'all' : 'thisPayroll');
+                }}>
+                <Text style={[styles.modeBtnText, filterMode === mode && styles.modeBtnTextActive]}>
+                  {mode === 'created' ? 'Created' : 'Payroll'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.timeFilterTabs}>
-              {TIME_FILTER_OPTIONS.map(option => (
+              {(filterMode === 'created' ? CREATED_FILTER_OPTIONS : PAYROLL_FILTER_OPTIONS).map(option => (
                 <TouchableOpacity
                   key={option.key}
                   style={[
@@ -938,6 +988,31 @@ const styles = StyleSheet.create({
   },
   timeFilterSection: {
     marginBottom: Spacing.lg,
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  modeBtn: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#fff',
+  },
+  modeBtnActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  modeBtnText: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  modeBtnTextActive: {
+    color: '#fff',
   },
   timeFilterTabs: {
     flexDirection: 'row',

@@ -15,7 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
-import {adminApi, type PayrollSettings} from '../../../services/api/endpoints/admin.api';
+import {adminApi, type PayrollSettings, type ApprovalCutoff} from '../../../services/api/endpoints/admin.api';
 
 const CYCLE_TYPES = [
   {key: 'weekly', label: 'Weekly'},
@@ -45,7 +45,14 @@ export function PayrollSettingsScreen() {
   const [cycleType, setCycleType] = useState<'weekly' | 'biweekly' | 'monthly'>('biweekly');
   const [cycleDayOfWeek, setCycleDayOfWeek] = useState<number>(1);
 
+  const [cutoffEnabled, setCutoffEnabled] = useState<boolean>(true);
+  const [cutoffDayOfWeek, setCutoffDayOfWeek] = useState<number>(0);
+  const [cutoffHour, setCutoffHour] = useState<number>(0);
+  const [cutoffMinute, setCutoffMinute] = useState<number>(0);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const [originalSettings, setOriginalSettings] = useState<PayrollSettings | null>(null);
+  const [originalCutoff, setOriginalCutoff] = useState<ApprovalCutoff | null>(null);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -61,6 +68,12 @@ export function PayrollSettingsScreen() {
         setCycleDayOfWeek(ps.cycleDayOfWeek ?? 1);
         setOriginalSettings(ps);
       }
+      const ac = settings?.approvalCutoff || {enabled: true, dayOfWeek: 0, hour: 0, minute: 0};
+      setCutoffEnabled(ac.enabled !== false);
+      setCutoffDayOfWeek(ac.dayOfWeek ?? 0);
+      setCutoffHour(ac.hour ?? 0);
+      setCutoffMinute(ac.minute ?? 0);
+      setOriginalCutoff(ac);
     } catch (err: any) {
       setError(err.message || 'Failed to load settings');
     } finally {
@@ -87,8 +100,15 @@ export function PayrollSettingsScreen() {
     const cycleTypeChanged = cycleType !== (originalSettings.cycleType || 'biweekly');
     const cycleDayChanged = cycleDayOfWeek !== (originalSettings.cycleDayOfWeek ?? 1);
 
-    setHasChanges(startDateChanged || cycleTypeChanged || cycleDayChanged);
-  }, [startDate, cycleType, cycleDayOfWeek, originalSettings]);
+    const cutoffChanged =
+      !originalCutoff ||
+      cutoffEnabled !== (originalCutoff.enabled !== false) ||
+      cutoffDayOfWeek !== (originalCutoff.dayOfWeek ?? 0) ||
+      cutoffHour !== (originalCutoff.hour ?? 0) ||
+      cutoffMinute !== (originalCutoff.minute ?? 0);
+
+    setHasChanges(startDateChanged || cycleTypeChanged || cycleDayChanged || cutoffChanged);
+  }, [startDate, cycleType, cycleDayOfWeek, originalSettings, cutoffEnabled, cutoffDayOfWeek, cutoffHour, cutoffMinute, originalCutoff]);
 
   const handleSave = async () => {
     try {
@@ -102,14 +122,23 @@ export function PayrollSettingsScreen() {
           cycleType,
           cycleDayOfWeek,
         },
+        approvalCutoff: {
+          enabled: cutoffEnabled,
+          dayOfWeek: cutoffDayOfWeek,
+          hour: cutoffHour,
+          minute: cutoffMinute,
+        },
       });
 
       if (updated?.payrollSettings) {
         setOriginalSettings(updated.payrollSettings);
-        setHasChanges(false);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
       }
+      if (updated?.approvalCutoff) {
+        setOriginalCutoff(updated.approvalCutoff);
+      }
+      setHasChanges(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Failed to save settings');
     } finally {
@@ -136,6 +165,20 @@ export function PayrollSettingsScreen() {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const formatTime = (h: number, m: number): string => {
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+  };
+
+  const handleTimeChange = (event: any, selected?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selected) {
+      setCutoffHour(selected.getHours());
+      setCutoffMinute(selected.getMinutes());
+    }
   };
 
   if (loading) {
@@ -318,6 +361,74 @@ export function PayrollSettingsScreen() {
         )}
 
         {}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIcon, {backgroundColor: '#ede9fe'}]}>
+              <Ionicons name="time-outline" size={20} color="#7c3aed" />
+            </View>
+            <View style={{flex: 1}}>
+              <Text style={styles.sectionTitle}>Weekly Approval Cutoff</Text>
+              <Text style={styles.sectionSubtitle}>
+                After this weekly cutoff, completing an agreement counts toward the next payroll period. Default is midnight Sunday.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.toggleRow}
+            onPress={() => setCutoffEnabled(!cutoffEnabled)}>
+            <Text style={styles.toggleLabel}>
+              Roll completions to the next period after the cutoff
+            </Text>
+            <View style={[styles.toggle, cutoffEnabled && styles.toggleOn]}>
+              <View style={[styles.toggleKnob, cutoffEnabled && styles.toggleKnobOn]} />
+            </View>
+          </TouchableOpacity>
+
+          {cutoffEnabled && (
+            <>
+              <Text style={[styles.sectionSubtitle, {marginTop: Spacing.md, marginBottom: Spacing.xs}]}>
+                Cutoff day
+              </Text>
+              <View style={styles.dayOptions}>
+                {DAYS_OF_WEEK.map(day => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={[
+                      styles.dayOption,
+                      cutoffDayOfWeek === day.value && styles.dayOptionActive,
+                    ]}
+                    onPress={() => setCutoffDayOfWeek(day.value)}>
+                    <Text
+                      style={[
+                        styles.dayOptionText,
+                        cutoffDayOfWeek === day.value && styles.dayOptionTextActive,
+                      ]}>
+                      {day.label.slice(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.sectionSubtitle, {marginTop: Spacing.md, marginBottom: Spacing.xs}]}>
+                Cutoff time
+              </Text>
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowTimePicker(true)}>
+                <View style={styles.datePickerContent}>
+                  <Ionicons name="time" size={20} color={Colors.primary} />
+                  <Text style={styles.datePickerText}>
+                    {formatTime(cutoffHour, cutoffMinute)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
+        {}
         <TouchableOpacity
           style={[
             styles.saveBtn,
@@ -349,6 +460,15 @@ export function PayrollSettingsScreen() {
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={handleDateChange}
+        />
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={(() => { const d = new Date(); d.setHours(cutoffHour, cutoffMinute, 0, 0); return d; })()}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleTimeChange}
         />
       )}
     </SafeAreaView>
@@ -572,6 +692,38 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: Spacing.sm,
     fontStyle: 'italic',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  toggleLabel: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+  },
+  toggle: {
+    width: 46,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#d1d5db',
+    padding: 3,
+    justifyContent: 'center',
+  },
+  toggleOn: {
+    backgroundColor: Colors.primary,
+  },
+  toggleKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignSelf: 'flex-start',
+  },
+  toggleKnobOn: {
+    alignSelf: 'flex-end',
   },
   saveBtn: {
     flexDirection: 'row',

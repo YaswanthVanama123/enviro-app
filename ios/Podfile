@@ -39,5 +39,19 @@ target 'EnviroApp' do
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       end
     end
+
+    # fmt 11's consteval format-string checking fails to compile under Xcode 26 /
+    # newer Apple Clang, and base.h has no #ifndef guard so a build flag can't
+    # override it. Patch the header to force consteval off (constexpr/runtime checks).
+    fmt_base = File.join(__dir__, 'Pods', 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      contents = File.read(fmt_base)
+      anchor = "#endif\n#if FMT_USE_CONSTEVAL\n#  define FMT_CONSTEVAL consteval"
+      unless contents.include?('#undef FMT_USE_CONSTEVAL')
+        patched = contents.sub(anchor, "#endif\n#undef FMT_USE_CONSTEVAL\n#define FMT_USE_CONSTEVAL 0\n#if FMT_USE_CONSTEVAL\n#  define FMT_CONSTEVAL consteval")
+        File.write(fmt_base, patched)
+        Pod::UI.puts "Patched fmt base.h to disable consteval".green
+      end
+    end
   end
 end

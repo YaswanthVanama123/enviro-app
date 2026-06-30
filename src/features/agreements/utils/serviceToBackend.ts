@@ -78,9 +78,32 @@ function greaseTrap(d: any): any {
 function saniscrub(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  out.restroomFixtures = {label: 'Restroom Fixtures', type: 'calc', qty: n(d.fixtureCount), rate: n(d.perVisit)};
-  if (n(d.nonBathroomSqFt) > 0) {
-    out.nonBathroomArea = {label: 'Non-Bathroom Area', type: 'calc', qty: n(d.nonBathroomSqFt)};
+
+  // The RN form uses qty/nonBathSqFt/rate/isDirty/useExactSqFt; the web app reads
+  // fixtureCount/nonBathroomSqFt + structured restroomFixtures/nonBathroomArea.
+  // Emit BOTH so an agreement round-trips on mobile AND opens correctly on web.
+  const fixtures = n(d.fixtureCount ?? d.qty);
+  const nonBath = n(d.nonBathroomSqFt ?? d.nonBathSqFt);
+  const fixtureRate = n(d.rate ?? d.fixtureRateMonthly);
+
+  out.fixtureCount = fixtures;
+  out.nonBathroomSqFt = nonBath;
+  out.isDirtyInstall = !!(d.isDirtyInstall ?? d.isDirty);
+  out.useExactNonBathroomSqft = !!(d.useExactNonBathroomSqft ?? d.useExactSqFt);
+  out.nonBathroomFirstUnitRate = n(d.nonBathroomFirstUnitRate ?? d.nonBathFirstRate);
+  out.nonBathroomAdditionalUnitRate = n(d.nonBathroomAdditionalUnitRate ?? d.nonBathAdditionalRate);
+
+  if (fixtures > 0) {
+    out.restroomFixtures = {
+      label: 'Restroom Fixtures',
+      type: 'calc',
+      qty: fixtures,
+      rate: fixtureRate,
+      total: fixtures * fixtureRate,
+    };
+  }
+  if (nonBath > 0) {
+    out.nonBathroomArea = {label: 'Non-Bathroom Area', type: 'calc', qty: nonBath, unit: 'sq ft'};
   }
   withContractMonths(out, d);
   return out;

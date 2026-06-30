@@ -26,6 +26,8 @@ export const es: TranslationShape = {
       'Cree, gestione y controle acuerdos de servicio al cliente con facilidad. Optimice su flujo de trabajo, controle las comisiones y alcance su cuota, todo en una sola app.',
     getStarted: 'Comenzar',
     login: 'Iniciar sesión',
+    featuresHeading: 'Todo lo que necesitas',
+    featuresSubheading: 'Diseñado para vendedores en el campo',
     features: {
       agreements: {
         title: 'Gestión de acuerdos',

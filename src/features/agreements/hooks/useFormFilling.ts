@@ -338,7 +338,7 @@ export function useFormFilling(editAgreementId?: string) {
             next.smallProducts = catalogSmall.map((p: any, i: number) => ({
               id: `sp_${ts}_${i}`,
               displayName: p.name ?? '',
-              qty: 1,
+              qty: 0,
               unitPrice: p.basePrice?.amount ?? 0,
               frequency: p.frequency ?? 'monthly',
               costType: 'productCost' as const,
@@ -353,7 +353,7 @@ export function useFormFilling(editAgreementId?: string) {
             next.dispensers = catalogDispensers.map((d: any, i: number) => ({
               id: `dp_${ts}_${i}`,
               displayName: d.name ?? '',
-              qty: 1,
+              qty: 0,
               warrantyRate: d.warrantyPricePerUnit?.amount ?? 0,
               replacementRate: d.basePrice?.amount ?? 0,
               frequency: d.frequency ?? 'monthly',
@@ -896,7 +896,9 @@ export function useFormFilling(editAgreementId?: string) {
     // Build products in the EXACT web app structure so save/edit round-trips on
     // both apps: a merged `products` array (small w/ unitPrice + big w/ amount),
     // a `dispensers` array, plus raw `smallProducts`/`bigProducts` arrays.
-    const smallProducts = form.smallProducts.map(p => ({
+    // Only rows with a quantity > 0 are persisted/printed — zero-qty catalog rows
+    // are excluded from the saved payload and the PDF.
+    const smallProducts = form.smallProducts.filter(p => p.qty > 0).map(p => ({
       displayName: p.displayName,
       qty: p.qty,
       unitPrice: p.unitPrice,
@@ -905,7 +907,7 @@ export function useFormFilling(editAgreementId?: string) {
       total: p.qty * p.unitPrice,
       customFields: {},
     }));
-    const bigProducts = form.bigProducts.map(p => ({
+    const bigProducts = form.bigProducts.filter(p => p.qty > 0).map(p => ({
       displayName: p.displayName,
       qty: p.qty,
       amount: p.amount,
@@ -913,7 +915,7 @@ export function useFormFilling(editAgreementId?: string) {
       total: p.qty * p.amount,
       customFields: {},
     }));
-    const dispensers = form.dispensers.map(d => ({
+    const dispensers = form.dispensers.filter(d => d.qty > 0).map(d => ({
       displayName: d.displayName,
       qty: d.qty,
       warrantyRate: d.warrantyRate,

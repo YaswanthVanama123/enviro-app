@@ -24,6 +24,8 @@ export const en = {
       'Create, manage, and track customer service agreements with ease. Streamline your workflow, track commissions, and hit your quota — all in one app.',
     getStarted: 'Get Started',
     login: 'Log In',
+    featuresHeading: 'Everything you need',
+    featuresSubheading: 'Built for sales reps in the field',
     features: {
       agreements: {
         title: 'Agreement Management',

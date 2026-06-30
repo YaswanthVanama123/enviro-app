@@ -61,25 +61,15 @@ export const pdfApi = {
 
   async exportPricingCatalogPdf(): Promise<void> {
     const url = this.getPricingCatalogExportUrl();
-    let status = 200;
-    try {
-      const res = await fetch(url, {method: 'GET'});
-      status = res.status;
-      if (!res.ok) {
-        if (res.status === 429) {
-          const body = await res.json().catch(() => ({}));
-          const err = new Error(body.error || 'A PDF export is already in progress. Please wait and try again.');
-          (err as any).code = 'PUPPETEER_BUSY';
-          throw err;
-        }
-        throw new Error(`Export failed: ${res.status}`);
-      }
-    } catch (err: any) {
-      if (err.code === 'PUPPETEER_BUSY') {throw err;}
-      if (status !== 200) {throw err;}
-      throw err;
+    // The endpoint streams the PDF as an attachment and authenticates via the
+    // `?token=` query param, so just open it — the browser handles the download.
+    // (Don't pre-fetch: that would render the PDF twice and can trip the busy guard.)
+    const {Linking} = await import('react-native');
+    const canOpen = await Linking.canOpenURL(url).catch(() => false);
+    if (!canOpen) {
+      throw new Error('Unable to open the export link on this device.');
     }
-    await import('react-native').then(({Linking}) => Linking.openURL(url));
+    await Linking.openURL(url);
   },
 
   async saveAccountTypeCache(
