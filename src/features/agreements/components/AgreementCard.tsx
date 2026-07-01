@@ -422,36 +422,35 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
                 </Text>
               </View>
             ) : null}
-            <Text style={styles.cardMeta}>
+            <Text style={styles.cardMeta} numberOfLines={1}>
               {agreement.fileCount} {agreement.fileCount === 1 ? 'file' : 'files'}{'  ·  '}{timeAgo(agreement.latestUpdate)}
             </Text>
             {}
-            <View style={styles.creatorEditorRow}>
-              {createdBy && (
-                <View style={[styles.userInfoTag, {backgroundColor: '#dcfce7', borderColor: '#bbf7d0'}]}>
-                  <Ionicons name="person-add-outline" size={10} color="#16a34a" />
-                  <Text style={[styles.userInfoText, {color: '#16a34a'}]}>
-                    Created: {createdBy}
-                  </Text>
-                </View>
-              )}
-              {lastEditedBy && lastEditedBy !== createdBy && (
-                <View style={[styles.userInfoTag, {backgroundColor: '#dbeafe', borderColor: '#bfdbfe'}]}>
-                  <Ionicons name="create-outline" size={10} color="#2563eb" />
-                  <Text style={[styles.userInfoText, {color: '#2563eb'}]}>
-                    Edited: {lastEditedBy}{formattedEditTime ? ` • ${formattedEditTime}` : ''}
-                  </Text>
-                </View>
-              )}
-              {lastEditedBy && lastEditedBy === createdBy && formattedEditTime && (
-                <View style={[styles.userInfoTag, {backgroundColor: '#fef3c7', borderColor: '#fde68a'}]}>
-                  <Ionicons name="time-outline" size={10} color="#92400e" />
-                  <Text style={[styles.userInfoText, {color: '#92400e'}]}>
-                    Last Edit: {formattedEditTime}
-                  </Text>
-                </View>
-              )}
-            </View>
+            {(createdBy || lastEditedBy || formattedEditTime) && (
+              <View style={styles.metaLine}>
+                {createdBy && (
+                  <View style={styles.metaItem}>
+                    <Ionicons name="person-circle-outline" size={12} color="#16a34a" />
+                    <Text style={styles.metaItemText} numberOfLines={1}>{createdBy}</Text>
+                  </View>
+                )}
+                {(lastEditedBy && lastEditedBy !== createdBy
+                  ? `${lastEditedBy}${formattedEditTime ? ` · ${formattedEditTime}` : ''}`
+                  : formattedEditTime) ? (
+                  <>
+                    {createdBy && <Text style={styles.metaDot}>·</Text>}
+                    <View style={[styles.metaItem, styles.metaItemShrink]}>
+                      <Ionicons name="create-outline" size={12} color="#2563eb" />
+                      <Text style={styles.metaItemText} numberOfLines={1}>
+                        {lastEditedBy && lastEditedBy !== createdBy
+                          ? `${lastEditedBy}${formattedEditTime ? ` · ${formattedEditTime}` : ''}`
+                          : formattedEditTime}
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
+              </View>
+            )}
             {timeline ? (
               <View style={styles.timelineRow}>
                 <View style={[styles.timelineBadge, {backgroundColor: timeline.bg}]}>
@@ -718,10 +717,11 @@ const styles = StyleSheet.create({
   cardInfo: {flex: 1, minWidth: 0},
   cardTitle: {fontSize: FontSize.md, fontWeight: '700', color: Colors.textPrimary},
   cardMeta: {fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2},
-  creatorEditorRow: {flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 4},
-  userInfoTag: {flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.xs, borderWidth: 1, borderColor: Colors.borderLight},
-  userInfoText: {fontSize: 10, color: Colors.textSecondary},
-  userInfoLabel: {fontWeight: '600', color: Colors.textMuted},
+  metaLine: {flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4},
+  metaItem: {flexDirection: 'row', alignItems: 'center', gap: 3},
+  metaItemShrink: {flexShrink: 1},
+  metaItemText: {fontSize: 11, color: Colors.textSecondary, fontWeight: '500'},
+  metaDot: {fontSize: 11, color: Colors.textMuted},
   timelineRow: {flexDirection: 'row', alignItems: 'center', marginTop: Spacing.xs, gap: 4, flexWrap: 'wrap'},
   timelineBadge: {flexDirection: 'row', alignItems: 'center', borderRadius: Radius.full, paddingHorizontal: 7, paddingVertical: 3, gap: 4},
   timelineDot: {width: 6, height: 6, borderRadius: 3},

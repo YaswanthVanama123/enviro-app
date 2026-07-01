@@ -267,23 +267,43 @@ export function GlobalCommissionSummary({
         </View>
       )}
 
-      {/* New location */}
-      <TouchableOpacity
-        style={styles.newLoc}
-        activeOpacity={onNewLocationChange ? 0.7 : 1}
-        onPress={() => onNewLocationChange?.(!isNewLocation)}>
-        <Ionicons
-          name={isNewLocation ? 'checkbox' : 'square-outline'}
-          size={18}
-          color={isNewLocation ? Colors.primary : '#9ca3af'}
-        />
-        <View style={styles.infoTextFlex}>
-          <Text style={styles.newLocTitle}>This is a new location</Text>
-          <Text style={styles.newLocHint}>
-            Uncheck when converting an existing account (e.g. a Pit becoming an Anchor) — commission is then paid on the full value with no per-visit deduction.
-          </Text>
+      {/* Location type */}
+      <View style={styles.locBlock}>
+        <Text style={styles.locLabel}>Location type</Text>
+        <View style={styles.segment}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, isNewLocation && styles.segmentBtnActive]}
+            activeOpacity={onNewLocationChange ? 0.7 : 1}
+            onPress={() => onNewLocationChange?.(true)}>
+            <Ionicons
+              name="sparkles-outline"
+              size={14}
+              color={isNewLocation ? '#fff' : Colors.gray500}
+            />
+            <Text style={[styles.segmentText, isNewLocation && styles.segmentTextActive]}>
+              New Location
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, !isNewLocation && styles.segmentBtnActive]}
+            activeOpacity={onNewLocationChange ? 0.7 : 1}
+            onPress={() => onNewLocationChange?.(false)}>
+            <Ionicons
+              name="business-outline"
+              size={14}
+              color={!isNewLocation ? '#fff' : Colors.gray500}
+            />
+            <Text style={[styles.segmentText, !isNewLocation && styles.segmentTextActive]}>
+              Existing Location
+            </Text>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+        <Text style={styles.locHint}>
+          {isNewLocation
+            ? 'Brand-new account — per-visit deductions apply for Pit/Bread account types.'
+            : 'Converting an existing account (e.g. a Pit becoming an Anchor) — commission is paid on the full value with no per-visit deduction.'}
+        </Text>
+      </View>
 
       {/* Totals */}
       <View style={styles.totals}>
@@ -559,15 +579,51 @@ const styles = StyleSheet.create({
   errorBox: {padding: Spacing.sm, backgroundColor: '#fee2e2', borderRadius: Radius.sm, marginBottom: Spacing.sm},
   errorText: {fontSize: FontSize.xs, color: '#991b1b'},
   infoTextFlex: {flex: 1},
-  newLoc: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.xs,
+  locBlock: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
-  newLocTitle: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.gray800},
-  newLocHint: {fontSize: FontSize.xs, color: '#6b7280', lineHeight: 15, marginTop: 1},
+  locLabel: {
+    fontSize: FontSize.xs - 1,
+    fontWeight: '700',
+    color: Colors.gray500,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: Radius.md,
+    padding: 3,
+    gap: 3,
+  },
+  segmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: Radius.sm,
+  },
+  segmentBtnActive: {
+    backgroundColor: Colors.primary,
+  },
+  segmentText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.gray600,
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
+  locHint: {
+    fontSize: FontSize.xs,
+    color: '#6b7280',
+    lineHeight: 15,
+    marginTop: 6,
+  },
   totals: {flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, marginVertical: Spacing.sm},
   totalItem: {alignItems: 'flex-start'},
   totalLabel: {fontSize: FontSize.xs - 1, color: Colors.gray500, letterSpacing: 0.3},

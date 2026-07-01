@@ -399,6 +399,7 @@ export function Step4Review({form}: Step4ReviewProps) {
               showDetectButton={false}
               isCompanyMapped={true}
               isRouteStarMapped={true}
+              onNewLocationChange={setIsNewLocation}
               embedded
             />
           </View>

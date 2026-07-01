@@ -1107,6 +1107,7 @@ export function useFormFilling(editAgreementId?: string) {
     effectiveCommissionRules,
     isRouteStarMapped,
     isNewLocation,
+    setIsNewLocation,
     isLocationTypeAuto,
     priorFarRedline,
     priorFarGreenline,

@@ -44,6 +44,7 @@ export function CreateAgreementScreen() {
     effectiveCommissionRules,
     isRouteStarMapped,
     isNewLocation,
+    setIsNewLocation,
     priorFarRedline,
     priorFarGreenline,
     nextStep,
@@ -190,6 +191,7 @@ export function CreateAgreementScreen() {
               isCompanyMapped={isCompanyMapped}
               isRouteStarMapped={isRouteStarMapped}
               isNewLocation={isNewLocation}
+              onNewLocationChange={setIsNewLocation}
               priorFarRedline={priorFarRedline}
               priorFarGreenline={priorFarGreenline}
               error={accountTypeError}

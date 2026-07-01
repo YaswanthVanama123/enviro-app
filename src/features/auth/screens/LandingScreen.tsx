@@ -301,6 +301,7 @@ const styles = StyleSheet.create({
   featuresSection: {
     paddingHorizontal: Spacing.xl,
     marginTop: -Spacing.xl,
+    paddingTop: Spacing.xxl,
   },
   sectionEyebrow: {
     fontSize: FontSize.xxs,
