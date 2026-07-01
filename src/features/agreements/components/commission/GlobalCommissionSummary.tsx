@@ -307,10 +307,10 @@ export function GlobalCommissionSummary({
 
       {/* Totals */}
       <View style={styles.totals}>
-        <View style={styles.totalItem}>
+        {/* <View style={styles.totalItem}>
           <Text style={styles.totalLabel}>Weekly</Text>
           <Text style={styles.totalValue}>{fmtMoney2(totalWeekly)}</Text>
-        </View>
+        </View> */}
         <View style={styles.totalItem}>
           <Text style={styles.totalLabel}>Annual</Text>
           <Text style={styles.totalValue}>{global.formatted.totalAnnualCommission}</Text>
@@ -377,10 +377,10 @@ export function GlobalCommissionSummary({
                       <Text style={styles.serviceFreq}>{service.frequencyLabel}</Text>
                     </View>
                     <View style={styles.serviceCommissions}>
-                      <View style={styles.serviceCommItem}>
+                      {/* <View style={styles.serviceCommItem}>
                         <Text style={styles.serviceCommLabel}>Weekly</Text>
                         <Text style={styles.serviceCommValue}>{fmtMoney2(service.weeklyCommission)}</Text>
-                      </View>
+                      </View> */}
                       <View style={styles.serviceCommItem}>
                         <Text style={styles.serviceCommLabel}>Annual</Text>
                         <Text style={styles.serviceCommValue}>{fmtMoney2(service.annualCommission)}</Text>
@@ -474,7 +474,7 @@ export function GlobalCommissionSummary({
                       serviceTiers.map(tier => (
                         <Row
                           key={tier.level}
-                          label={`${QUOTA_LEVEL_CONFIG[tier.level].label} (${fmtMoney(tier.base)} × ${tier.effectiveRate.toFixed(2)}%):`}
+                          label={`${QUOTA_LEVEL_CONFIG[tier.level].label} (${fmtMoney(tier.quotaCredit ?? 0)} quota credit @ ${tier.effectiveRate.toFixed(2)}%):`}
                           value={fmtMoney(tier.commission)}
                           valueColor={QUOTA_TIER_COLORS[tier.level]}
                         />
