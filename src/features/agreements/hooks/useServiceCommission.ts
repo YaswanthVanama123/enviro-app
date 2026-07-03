@@ -356,6 +356,7 @@ export function useServiceCommission({
 export interface GlobalCommissionResult {
   
   totalPerVisitCommission: number;
+  totalWeeklyCommission: number;
   totalAnnualCommission: number;
   totalPerVisitRevenue: number;
   totalCommissionableRevenue: number;
@@ -430,6 +431,7 @@ export interface GlobalCommissionResult {
 
   formatted: {
     totalPerVisitCommission: string;
+    totalWeeklyCommission: string;
     totalAnnualCommission: string;
     totalPerVisitRevenue: string;
     totalCommissionableRevenue: string;
@@ -619,6 +621,7 @@ export function computeGlobalCommission(
     });
 
     let totalPerVisitCommission = 0;
+    let totalWeeklyCommission = 0;
     let totalAnnualCommission = 0;
     let totalPerVisitRevenue = 0;
     let totalCommissionableRevenue = 0;
@@ -808,6 +811,7 @@ export function computeGlobalCommission(
 
         totalAnnualCommission += rowAnnualCommission;
         totalPerVisitCommission += rowPerVisit;
+        totalWeeklyCommission += rowWeekly;
         totalPerVisitRevenue += row.annualCurrent;
         totalCommissionableRevenue += rowCommissionable;
 
@@ -859,6 +863,7 @@ export function computeGlobalCommission(
 
     return {
       totalPerVisitCommission,
+      totalWeeklyCommission,
       totalAnnualCommission,
       totalPerVisitRevenue,
       totalCommissionableRevenue,
@@ -880,6 +885,7 @@ export function computeGlobalCommission(
 
       formatted: {
         totalPerVisitCommission: formatCurrency(totalPerVisitCommission),
+        totalWeeklyCommission: formatCurrency(totalWeeklyCommission),
         totalAnnualCommission: formatCurrency(totalAnnualCommission),
         totalPerVisitRevenue: formatCurrency(totalPerVisitRevenue),
         totalCommissionableRevenue: formatCurrency(totalCommissionableRevenue),

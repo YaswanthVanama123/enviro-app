@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Linking,
-  Share,
   Modal,
   ActivityIndicator,
 } from 'react-native';
@@ -25,8 +24,17 @@ import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 import {ConfirmModal, InfoModal, OptionsModal} from '../../../shared/components/ui/AppModal';
+import {EmailComposerModal} from '../../../shared/components/ui/EmailComposerModal';
+import type {EmailDocumentType} from '../../../services/api/endpoints/email.api';
 import {BiginUploadModal} from './BiginUploadModal';
 import {BiginTaskModal} from './BiginTaskModal';
+
+const FILE_EMAIL_TYPE: Record<FileType, EmailDocumentType> = {
+  main_pdf: 'agreement',
+  version_pdf: 'version',
+  attached_pdf: 'manual-upload',
+  version_log: 'auto-detect',
+};
 
 interface TimelineStatus {
   label: string;
@@ -144,8 +152,10 @@ interface FileRowProps {
 }
 
 function FileRow({file, onDelete}: FileRowProps) {
+  const navigation = useNavigation<any>();
   const [showNoPdf, setShowNoPdf] = useState(false);
   const [showCannotOpen, setShowCannotOpen] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
 
   const iconCfg = FILE_ICON[file.fileType] ?? FILE_ICON.main_pdf;
   const tag = getFileTag(file);
@@ -167,18 +177,24 @@ function FileRow({file, onDelete}: FileRowProps) {
 
   const handleDelete = useCallback(() => onDelete(file), [file, onDelete]);
 
-  const handleView = useCallback(async () => {
+  const handleView = useCallback(() => {
     if (!fileUrl) {
       setShowNoPdf(true);
       return;
     }
-    const supported = await Linking.canOpenURL(fileUrl);
-    if (supported) {
-      await Linking.openURL(fileUrl);
-    } else {
-      setShowCannotOpen(true);
+    // version_log is plain text, not a PDF — open natively; PDFs use the in-app viewer.
+    if (file.fileType === 'version_log') {
+      Linking.openURL(fileUrl).catch(() => setShowCannotOpen(true));
+      return;
     }
-  }, [fileUrl]);
+    navigation.navigate('PdfViewer', {
+      url: fileUrl,
+      title: file.title || file.fileName,
+      documentId: file.id,
+      documentType: FILE_EMAIL_TYPE[file.fileType],
+      fileName: file.title || file.fileName,
+    });
+  }, [fileUrl, file, navigation]);
 
   const handleDownload = useCallback(async () => {
     if (!fileUrl) {
@@ -188,18 +204,13 @@ function FileRow({file, onDelete}: FileRowProps) {
     await Linking.openURL(fileUrl);
   }, [fileUrl]);
 
-  const handleEmail = useCallback(async () => {
-    const name = file.title || file.fileName;
-    if (fileUrl) {
-      await Share.share({
-        title: name,
-        message: `${name}\n${fileUrl}`,
-        url: fileUrl,
-      });
-    } else {
-      await Share.share({title: name, message: name});
+  const handleEmail = useCallback(() => {
+    if (!file.hasPdf) {
+      setShowNoPdf(true);
+      return;
     }
-  }, [file, fileUrl]);
+    setShowEmail(true);
+  }, [file]);
 
   return (
     <View style={styles.fileRow}>
@@ -284,6 +295,14 @@ function FileRow({file, onDelete}: FileRowProps) {
         title="Cannot Open File"
         subtitle="Unable to open this file on your device."
         onClose={() => setShowCannotOpen(false)}
+      />
+
+      <EmailComposerModal
+        visible={showEmail}
+        documentId={file.id}
+        documentType={FILE_EMAIL_TYPE[file.fileType]}
+        fileName={file.title || file.fileName}
+        onClose={() => setShowEmail(false)}
       />
     </View>
   );

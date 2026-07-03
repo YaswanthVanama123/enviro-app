@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Dimensions,
   Share,
+  Linking,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -158,6 +159,12 @@ export function PayrollScreen() {
     }
   };
 
+  const handleDownloadPdf = () => {
+    if (!currentPeriod) return;
+    const url = adminApi.getPayrollPdfUrl(currentPeriod.start, currentPeriod.end);
+    Linking.openURL(url).catch(() => {});
+  };
+
   const handleSharePayroll = async () => {
     if (!employees.length || !currentPeriod) return;
 
@@ -299,6 +306,12 @@ export function PayrollScreen() {
                     style={styles.actionBtn}
                     onPress={() => loadPayrollData(true)}>
                     <Ionicons name="refresh" size={16} color="#6366f1" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={handleDownloadPdf}
+                    disabled={!employees.length}>
+                    <Ionicons name="download-outline" size={16} color="#16a34a" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionBtn}

@@ -1,33 +1,53 @@
-import React from 'react';
-import {View, Text, TextInput, StyleSheet} from 'react-native';
-import {FormSection, FieldRow, FormDivider} from '../ui/FormUI';
+import React, {useMemo} from 'react';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {FormSection, FormDivider} from '../ui/FormUI';
 import {HeaderRow} from '../../../../../services/api/endpoints/form.api';
+import {
+  CustomerField,
+  headerRowsToFields,
+  fieldsToHeaderRows,
+  makeCustomField,
+} from '../../../utils/customerFields';
 import {Colors} from '../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
-
-const CUSTOMER_FIELDS: Array<{label: string; rowIdx: number; side: 'Left' | 'Right'; placeholder: string}> = [
-  {label: 'Customer Name',    rowIdx: 0, side: 'Left',  placeholder: 'Company / Customer Name'},
-  {label: 'Customer Contact', rowIdx: 0, side: 'Right', placeholder: 'Contact Person'},
-  {label: 'Customer Number',  rowIdx: 1, side: 'Left',  placeholder: 'Phone Number'},
-  {label: 'POC Email',        rowIdx: 1, side: 'Right', placeholder: 'point@company.com'},
-  {label: 'POC Name',         rowIdx: 2, side: 'Left',  placeholder: 'Point of Contact Name'},
-  {label: 'POC Phone',        rowIdx: 2, side: 'Right', placeholder: 'POC Direct Phone'},
-];
 
 interface Step1CustomerProps {
   headerTitle: string;
   onHeaderTitleChange: (v: string) => void;
   headerRows: HeaderRow[];
-  onRowChange: (idx: number, field: keyof HeaderRow, value: string) => void;
+  onHeaderRowsChange: (rows: HeaderRow[]) => void;
 }
 
 export function Step1Customer({
   headerTitle,
   onHeaderTitleChange,
   headerRows,
-  onRowChange,
+  onHeaderRowsChange,
 }: Step1CustomerProps) {
+  const fields = useMemo(() => headerRowsToFields(headerRows), [headerRows]);
+
+  const updateFields = (nextFields: CustomerField[]) => {
+    onHeaderRowsChange(fieldsToHeaderRows(nextFields));
+  };
+
+  const changeValue = (id: string, next: string) => {
+    updateFields(fields.map(f => (f.id === id ? {...f, value: next} : f)));
+  };
+
+  const changeLabel = (id: string, next: string) => {
+    updateFields(fields.map(f => (f.id === id ? {...f, label: next} : f)));
+  };
+
+  const addField = () => {
+    updateFields([...fields, makeCustomField(fields.length)]);
+  };
+
+  const removeField = (id: string) => {
+    updateFields(fields.filter(f => f.id !== id));
+  };
+
   return (
     <View>
       <FormSection icon="document-text-outline" title="Agreement Title">
@@ -48,32 +68,48 @@ export function Step1Customer({
       <FormDivider />
 
       <FormSection icon="person-outline" title="Customer Information">
-        {CUSTOMER_FIELDS.map(f => {
-          const row = headerRows[f.rowIdx] ?? {labelLeft: '', valueLeft: '', labelRight: '', valueRight: ''};
-          const valueKey = `value${f.side}` as keyof HeaderRow;
+        {fields.map(f => {
+          const isEmail = f.label.toUpperCase().includes('EMAIL');
+          const isPhone = f.label.toUpperCase().includes('PHONE') || f.label.toUpperCase().includes('NUMBER');
           return (
-            <View key={f.label} style={styles.fieldRow}>
-              <Text style={styles.label}>{f.label}</Text>
+            <View key={f.id} style={styles.fieldRow}>
+              {f.builtIn ? (
+                <Text style={styles.label}>{f.label.replace(/:$/, '')}</Text>
+              ) : (
+                <View style={styles.customLabelRow}>
+                  <TextInput
+                    style={styles.labelInput}
+                    value={f.label}
+                    onChangeText={v => changeLabel(f.id, v)}
+                    placeholder="FIELD LABEL:"
+                    placeholderTextColor={Colors.textMuted}
+                    autoCapitalize="characters"
+                    maxLength={26}
+                  />
+                  <TouchableOpacity style={styles.removeBtn} onPress={() => removeField(f.id)}>
+                    <Ionicons name="remove-circle" size={20} color={Colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              )}
               <TextInput
                 style={styles.input}
-                value={row[valueKey]}
-                onChangeText={v => onRowChange(f.rowIdx, valueKey, v)}
-                placeholder={f.placeholder}
+                value={f.value}
+                onChangeText={v => changeValue(f.id, v)}
+                placeholder={f.builtIn ? '' : 'Value'}
                 placeholderTextColor={Colors.textMuted}
-                autoCapitalize={f.label.includes('Email') ? 'none' : 'words'}
-                keyboardType={
-                  f.label.includes('Email')
-                    ? 'email-address'
-                    : f.label.includes('Number') || f.label.includes('Phone')
-                    ? 'phone-pad'
-                    : 'default'
-                }
+                autoCapitalize={isEmail ? 'none' : 'words'}
+                keyboardType={isEmail ? 'email-address' : isPhone ? 'phone-pad' : 'default'}
                 autoCorrect={false}
                 returnKeyType="next"
               />
             </View>
           );
         })}
+
+        <TouchableOpacity style={styles.addBtn} onPress={addField}>
+          <Ionicons name="add-circle-outline" size={18} color={Colors.primary} />
+          <Text style={styles.addBtnText}>Add Custom Field</Text>
+        </TouchableOpacity>
       </FormSection>
     </View>
   );
@@ -105,6 +141,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textSecondary,
   },
+  customLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  labelInput: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  removeBtn: {
+    padding: Spacing.xs,
+  },
   input: {
     backgroundColor: Colors.surface,
     borderWidth: 1.5,
@@ -114,5 +170,23 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     fontSize: FontSize.md,
     color: Colors.textPrimary,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+    borderRadius: Radius.md,
+  },
+  addBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.primary,
   },
 });

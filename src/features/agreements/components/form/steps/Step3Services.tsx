@@ -140,6 +140,71 @@ function renderServiceForm(
   }
 }
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function ServiceReferenceList({configs, catalog}: {configs?: any[]; catalog: ServiceMeta[]}) {
+  const rows =
+    configs && configs.length > 0
+      ? configs
+          .filter((c: any) => c.adminByDisplay !== false)
+          .map((c: any) => {
+            const meta = catalog.find(m => m.id === c.serviceId);
+            return {
+              id: c.serviceId,
+              label: c.label || meta?.label || c.serviceId,
+              icon: meta?.icon ?? 'ellipse-outline',
+              iconColor: meta?.iconColor ?? Colors.primary,
+              iconBg: meta?.iconBg ?? Colors.primaryLight,
+              isActive: c.isActive !== false,
+              description: c.description ? stripHtml(c.description) : '',
+            };
+          })
+      : catalog.map(m => ({
+          id: m.id,
+          label: m.label,
+          icon: m.icon,
+          iconColor: m.iconColor,
+          iconBg: m.iconBg,
+          isActive: true,
+          description: '',
+        }));
+
+  return (
+    <View style={refs.container}>
+      {rows.map(r => (
+        <View key={r.id} style={refs.card}>
+          <View style={refs.cardHeader}>
+            <View style={[refs.iconBox, {backgroundColor: r.iconBg}]}>
+              <Ionicons name={r.icon} size={16} color={r.iconColor} />
+            </View>
+            <View style={refs.titleWrap}>
+              <Text style={refs.title}>{r.label}</Text>
+              <Text style={refs.id}>{r.id}</Text>
+            </View>
+            <View style={[refs.badge, !r.isActive && refs.badgeOff]}>
+              <Text style={[refs.badgeText, !r.isActive && refs.badgeTextOff]}>
+                {r.isActive ? 'Active' : 'Inactive'}
+              </Text>
+            </View>
+          </View>
+          {r.description.length > 0 && (
+            <Text style={refs.desc} numberOfLines={4}>{r.description}</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function Step3Services({
   visibleServices,
   services,
@@ -154,7 +219,10 @@ export function Step3Services({
   const [showPicker, setShowPicker] = useState(false);
   const [activeServiceTab, setActiveServiceTab] = useState<string | null>(null);
 
-  const filteredServices = activeServiceTab && !visibleServices.includes(activeServiceTab)
+  const isReference = activeServiceTab === 'reference';
+  const filteredServices = isReference
+    ? []
+    : activeServiceTab && !visibleServices.includes(activeServiceTab)
     ? visibleServices
     : visibleServices.filter(sid => !activeServiceTab || sid === activeServiceTab);
 
@@ -201,10 +269,21 @@ export function Step3Services({
               </TouchableOpacity>
             );
           })}
+          {}
+          <TouchableOpacity
+            style={[stab.tab, stab.tabRef, isReference && stab.tabActive]}
+            onPress={() => setActiveServiceTab('reference')}
+            activeOpacity={0.8}>
+            <Text style={[stab.tabText, isReference && stab.tabTextActive]}>Services Reference</Text>
+          </TouchableOpacity>
         </ScrollView>
       )}
 
-      {visibleServices.length === 0 && (
+      {isReference && (
+        <ServiceReferenceList configs={serviceConfigsList} catalog={SERVICE_CATALOG} />
+      )}
+
+      {!isReference && visibleServices.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="construct-outline" size={40} color={Colors.textMuted} />
           <Text style={styles.emptyTitle}>No Services Added</Text>
@@ -212,21 +291,24 @@ export function Step3Services({
         </View>
       )}
 
-      {filteredServices.map(serviceId =>
-        renderServiceForm(
-          serviceId,
-          services[serviceId],
-          contractMonths,
-          pricingConfigs[serviceId] ?? null,
-          (d: any) => onUpdateService(serviceId, d),
-          () => onRemoveService(serviceId),
-        ),
-      )}
+      {!isReference &&
+        filteredServices.map(serviceId =>
+          renderServiceForm(
+            serviceId,
+            services[serviceId],
+            contractMonths,
+            pricingConfigs[serviceId] ?? null,
+            (d: any) => onUpdateService(serviceId, d),
+            () => onRemoveService(serviceId),
+          ),
+        )}
 
-      <TouchableOpacity style={styles.addBtn} onPress={() => setShowPicker(true)}>
-        <Ionicons name="add-circle" size={20} color={Colors.primary} />
-        <Text style={styles.addBtnText}>Add Service</Text>
-      </TouchableOpacity>
+      {!isReference && (
+        <TouchableOpacity style={styles.addBtn} onPress={() => setShowPicker(true)}>
+          <Ionicons name="add-circle" size={20} color={Colors.primary} />
+          <Text style={styles.addBtnText}>Add Service</Text>
+        </TouchableOpacity>
+      )}
 
       <ServicePickerModal
         visible={showPicker}
@@ -296,8 +378,65 @@ const stab = StyleSheet.create({
     paddingVertical: 8,
   },
   tabActive: {backgroundColor: '#c00000'},
+  tabRef: {borderStyle: 'dashed'},
   tabText: {fontSize: 13, fontWeight: '600', color: '#c00000'},
   tabTextActive: {color: '#ffffff'},
+});
+
+const refs = StyleSheet.create({
+  container: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    gap: Spacing.md,
+  },
+  card: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleWrap: {flex: 1},
+  title: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  id: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  badge: {
+    backgroundColor: Colors.greenLight,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+  },
+  badgeOff: {backgroundColor: Colors.gray200},
+  badgeText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.greenDark,
+  },
+  badgeTextOff: {color: Colors.gray600},
+  desc: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
 });
 
 const pm = StyleSheet.create({

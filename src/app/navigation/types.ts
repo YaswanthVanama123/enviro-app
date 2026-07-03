@@ -28,6 +28,15 @@ export type RootStackParamList = {
   };
   PayrollAgreements: undefined;
   AgreementActivity: undefined;
+  UserManagement: undefined;
+  EmailTemplate: undefined;
+  PdfViewer: {
+    url: string;
+    title?: string;
+    documentId?: string;
+    documentType?: 'agreement' | 'version' | 'manual-upload' | 'auto-detect';
+    fileName?: string;
+  };
 };
 
 export type TabParamList = {

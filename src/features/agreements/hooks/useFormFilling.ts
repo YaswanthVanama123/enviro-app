@@ -116,9 +116,9 @@ const INITIAL_STATE: FormState = {
   contractMonths: 36,
   startDate: '',
   tripCharge: 0,
-  tripChargeFrequency: 1,
+  tripChargeFrequency: 4,
   parkingCharge: 0,
-  parkingChargeFrequency: 1,
+  parkingChargeFrequency: 4,
   paymentOption: 'online',
   paymentNote: '',
   includeProductsTable: true,
@@ -644,6 +644,10 @@ export function useFormFilling(editAgreementId?: string) {
     });
   }, []);
 
+  const setHeaderRows = useCallback((headerRows: HeaderRow[]) => {
+    setForm(prev => ({...prev, headerRows}));
+  }, []);
+
   const addSmallProduct = useCallback(() => {
     const item: SmallProduct = {
       id: Date.now().toString(),
@@ -1116,6 +1120,7 @@ export function useFormFilling(editAgreementId?: string) {
     prevStep,
     setHeaderTitle,
     setHeaderRow,
+    setHeaderRows,
     addSmallProduct,
     removeSmallProduct,
     updateSmallProduct,

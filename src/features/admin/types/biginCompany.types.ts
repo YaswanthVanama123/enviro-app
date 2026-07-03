@@ -21,10 +21,23 @@ export interface BiginCompany {
   description: string | null;
   tags: string[];
   rawData: Record<string, unknown>;
+  isExistingLocation?: boolean;
+  locationTypeCheckedAt?: string | null;
   lastSyncedAt: string;
   syncSessionId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LocationTypeStatus {
+  isRunning: boolean;
+  total: number;
+  processed: number;
+  markedExisting: number;
+  failed: number;
+  startedAt: string | null;
+  finishedAt: string | null;
+  message: string;
 }
 
 export interface FetchStatus {

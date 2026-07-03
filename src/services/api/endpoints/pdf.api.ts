@@ -62,13 +62,11 @@ export const pdfApi = {
   async exportPricingCatalogPdf(): Promise<void> {
     const url = this.getPricingCatalogExportUrl();
     // The endpoint streams the PDF as an attachment and authenticates via the
-    // `?token=` query param, so just open it — the browser handles the download.
-    // (Don't pre-fetch: that would render the PDF twice and can trip the busy guard.)
+    // `?token=` query param, so just open it — the OS handles the download.
+    // (Don't pre-fetch: that would render the PDF twice and can trip the busy guard.
+    //  Don't use canOpenURL either: it returns false for https on iOS unless the
+    //  scheme is whitelisted, which would falsely block a valid link.)
     const {Linking} = await import('react-native');
-    const canOpen = await Linking.canOpenURL(url).catch(() => false);
-    if (!canOpen) {
-      throw new Error('Unable to open the export link on this device.');
-    }
     await Linking.openURL(url);
   },
 

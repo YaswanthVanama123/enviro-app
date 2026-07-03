@@ -1,4 +1,5 @@
 import {apiClient} from '../client';
+import {API_BASE_URL} from '../../../config';
 
 export interface DashboardStats {
   manualUploads: number;
@@ -22,11 +23,36 @@ export interface UserListItem {
   id: string;
   username: string;
   fullName?: string;
-  email?: string;
+  email?: string | null;
   role: 'admin' | 'employee';
   isActive: boolean;
   lastLoginAt?: string;
   createdAt?: string;
+  permissions?: {backupManagement: boolean; priceChanges: boolean};
+}
+
+export interface CreateAdminPayload {
+  username: string;
+  password: string;
+  email?: string;
+  permissions?: {backupManagement: boolean; priceChanges: boolean};
+  isActive?: boolean;
+}
+
+export interface CreateEmployeePayload {
+  username: string;
+  password: string;
+  fullName: string;
+  email?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateUserPayload {
+  username?: string;
+  fullName?: string;
+  email?: string;
+  isActive?: boolean;
+  permissions?: {backupManagement?: boolean; priceChanges?: boolean};
 }
 
 export interface UserListResponse {
@@ -155,15 +181,58 @@ export const adminApi = {
     role?: 'admin' | 'employee';
     limit?: number;
   }): Promise<UserListResponse | null> {
-    const queryParams = new URLSearchParams();
-    if (params?.role) queryParams.set('role', params.role);
-    if (params?.limit) queryParams.set('limit', params.limit.toString());
-
-    const queryString = queryParams.toString();
-    const url = queryString ? `/api/users?${queryString}` : '/api/users';
+    const parts: string[] = [];
+    if (params?.role) parts.push(`role=${encodeURIComponent(params.role)}`);
+    if (params?.limit) parts.push(`limit=${encodeURIComponent(String(params.limit))}`);
+    const url = parts.length ? `/api/users?${parts.join('&')}` : '/api/users';
 
     const res = await apiClient.get<UserListResponse>(url);
     return res.data ?? null;
+  },
+
+  async createAdmin(data: CreateAdminPayload): Promise<{ok: boolean; message?: string}> {
+    const res = await apiClient.post<{success: boolean}>('/api/users/admin', data);
+    if (res.error || !res.data?.success) return {ok: false, message: res.error};
+    return {ok: true};
+  },
+
+  async createEmployee(data: CreateEmployeePayload): Promise<{ok: boolean; message?: string}> {
+    const res = await apiClient.post<{success: boolean}>('/api/users/employee', data);
+    if (res.error || !res.data?.success) return {ok: false, message: res.error};
+    return {ok: true};
+  },
+
+  async updateUser(
+    type: 'admin' | 'employee',
+    id: string,
+    data: UpdateUserPayload,
+  ): Promise<{ok: boolean; message?: string}> {
+    const res = await apiClient.put<{success: boolean}>(`/api/users/${type}/${id}`, data);
+    if (res.error || !res.data?.success) return {ok: false, message: res.error};
+    return {ok: true};
+  },
+
+  async toggleUserStatus(
+    type: 'admin' | 'employee',
+    id: string,
+    isActive: boolean,
+  ): Promise<{ok: boolean; message?: string}> {
+    const res = await apiClient.patch<{success: boolean}>(`/api/users/${type}/${id}/status`, {isActive});
+    if (res.error || !res.data?.success) return {ok: false, message: res.error};
+    return {ok: true};
+  },
+
+  async resetUserPassword(
+    type: 'admin' | 'employee',
+    id: string,
+    newPassword: string,
+  ): Promise<{ok: boolean; message?: string}> {
+    const res = await apiClient.patch<{success: boolean}>(
+      `/api/users/${type}/${id}/reset-password`,
+      {newPassword},
+    );
+    if (res.error || !res.data?.success) return {ok: false, message: res.error};
+    return {ok: true};
   },
 
   async getSettings(): Promise<AdminSettings | null> {
@@ -208,5 +277,16 @@ export const adminApi = {
     const res = await apiClient.get<PayrollHistoryResponse>(`/api/payroll/history?limit=${limit}`);
     if (res.error || !res.data?.success) return null;
     return res.data;
+  },
+
+  // Authenticated download URL (token in query so browser/Linking can fetch it).
+  getPayrollPdfUrl(periodStart?: string, periodEnd?: string): string {
+    const base = API_BASE_URL.replace(/\/+$/, '');
+    const parts: string[] = [];
+    const token = apiClient.getToken();
+    if (token) parts.push(`token=${encodeURIComponent(token)}`);
+    if (periodStart) parts.push(`periodStart=${encodeURIComponent(periodStart)}`);
+    if (periodEnd) parts.push(`periodEnd=${encodeURIComponent(periodEnd)}`);
+    return `${base}/api/payroll/download-pdf${parts.length ? `?${parts.join('&')}` : ''}`;
   },
 };

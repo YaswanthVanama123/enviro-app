@@ -9,20 +9,33 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Linking,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import {
   agreementsApi,
   SavedFileGroup,
   SavedFileListItem,
   AgreementStatus,
   FileType,
+  getFileDownloadUrl,
 } from '../../../services/api/endpoints/agreements.api';
+import {apiClient} from '../../../services/api/client';
 import {ConfirmModal} from '../../../shared/components/ui/AppModal';
+import {EmailComposerModal} from '../../../shared/components/ui/EmailComposerModal';
+import type {EmailDocumentType} from '../../../services/api/endpoints/email.api';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
+
+const FILE_EMAIL_TYPE: Record<FileType, EmailDocumentType> = {
+  main_pdf: 'agreement',
+  version_pdf: 'version',
+  attached_pdf: 'manual-upload',
+  version_log: 'auto-detect',
+};
 
 function timeAgo(iso: string): string {
   if (!iso) {return '—';}
@@ -91,8 +104,27 @@ interface FileRowProps {
 }
 
 function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}: FileRowProps) {
+  const navigation = useNavigation<any>();
   const color = fileTypeColor(file.fileType);
   const label = fileTypeLabel(file.fileType, file.versionNumber);
+  const [showEmail, setShowEmail] = useState(false);
+  const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
+
+  const handleView = () => {
+    if (!fileUrl) return;
+    if (file.fileType === 'version_log') {
+      Linking.openURL(fileUrl).catch(() => {});
+      return;
+    }
+    navigation.navigate('PdfViewer', {
+      url: fileUrl,
+      title: file.title || file.fileName,
+      documentId: file.id,
+      documentType: FILE_EMAIL_TYPE[file.fileType],
+      fileName: file.title || file.fileName,
+    });
+  };
+
   return (
     <View style={styles.fileRow}>
       <View style={styles.fileIndentLine} />
@@ -119,6 +151,19 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
           <Text style={styles.fileUpdated}>{timeAgo(file.updatedAt)}</Text>
         </View>
         <StatusPill status={file.status} />
+        {file.hasPdf && (
+          <View style={styles.fileViewActions}>
+            <TouchableOpacity style={styles.fileViewBtn} onPress={handleView} hitSlop={{top: 4, bottom: 4, left: 4, right: 4}}>
+              <Ionicons name="eye-outline" size={13} color="#2563eb" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.fileViewBtn} onPress={() => fileUrl && Linking.openURL(fileUrl)} hitSlop={{top: 4, bottom: 4, left: 4, right: 4}}>
+              <Ionicons name="download-outline" size={13} color="#16a34a" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.fileViewBtn} onPress={() => setShowEmail(true)} hitSlop={{top: 4, bottom: 4, left: 4, right: 4}}>
+              <Ionicons name="mail-outline" size={13} color="#7c3aed" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {updating ? (
@@ -139,6 +184,14 @@ function FileRow({file, selected, onToggleSelect, onApprove, onReturn, updating}
           </TouchableOpacity>
         </View>
       )}
+
+      <EmailComposerModal
+        visible={showEmail}
+        documentId={file.id}
+        documentType={FILE_EMAIL_TYPE[file.fileType]}
+        fileName={file.title || file.fileName}
+        onClose={() => setShowEmail(false)}
+      />
     </View>
   );
 }
@@ -894,6 +947,21 @@ const styles = StyleSheet.create({
     gap: 4,
     flexShrink: 0,
     marginTop: 2,
+  },
+  fileViewActions: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
+  },
+  fileViewBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   fileActionBtn: {
     width: 28,

@@ -9,6 +9,7 @@ import {AdminLoginScreen} from '../../features/auth/screens/AdminLoginScreen';
 import {AdminPanelScreen} from '../../features/admin/screens/AdminPanelScreen';
 import {ServiceAgreementScreen} from '../../features/admin/screens/ServiceAgreementScreen';
 import {TrashScreen} from '../../features/agreements/screens/TrashScreen';
+import {PdfViewerScreen} from '../../features/agreements/screens/PdfViewerScreen';
 import {EditAgreementScreen} from '../../features/agreements/screens/EditAgreementScreen';
 import {MyCommissionsScreen} from '../../features/commissions/screens/MyCommissionsScreen';
 import {AdminCommissionsScreen} from '../../features/admin/screens/AdminCommissionsScreen';
@@ -27,6 +28,8 @@ import {PayrollScreen} from '../../features/admin/screens/PayrollScreen';
 import {PayrollPeriodDetailScreen} from '../../features/admin/screens/PayrollPeriodDetailScreen';
 import {PayrollAgreementsScreen} from '../../features/admin/screens/PayrollAgreementsScreen';
 import {AgreementActivityScreen} from '../../features/admin/screens/AgreementActivityScreen';
+import {UserManagementScreen} from '../../features/admin/screens/UserManagementScreen';
+import {EmailTemplateScreen} from '../../features/admin/screens/EmailTemplateScreen';
 import {useAuth} from '../../features/admin/context/AdminAuthContext';
 import {Colors} from '../../theme';
 import type {RootStackParamList} from './types';
@@ -59,6 +62,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Agreement" component={ServiceAgreementScreen} />
             <Stack.Screen name="EditAgreement" component={EditAgreementScreen} />
             <Stack.Screen name="Trash" component={TrashScreen} />
+            <Stack.Screen name="PdfViewer" component={PdfViewerScreen} />
             <Stack.Screen name="MyInsideSales" component={MyInsideSalesScreen} />
 
             {isAdmin ? (
@@ -80,6 +84,8 @@ export default function AppNavigator() {
                 <Stack.Screen name="PayrollPeriodDetail" component={PayrollPeriodDetailScreen} />
                 <Stack.Screen name="PayrollAgreements" component={PayrollAgreementsScreen} />
                 <Stack.Screen name="AgreementActivity" component={AgreementActivityScreen} />
+                <Stack.Screen name="UserManagement" component={UserManagementScreen} />
+                <Stack.Screen name="EmailTemplate" component={EmailTemplateScreen} />
               </>
             ) : (
               /* Employee-only — personal commission & quota views */

@@ -129,7 +129,7 @@ export function getFreqMultiplier(frequency: string): number {
   const map: Record<string, number> = {
     weekly: 4.33, biweekly: 2.165, twicePerMonth: 2.0, monthly: 1.0,
     everyFourWeeks: 1.0833,
-    bimonthly: 0.5, quarterly: 0.33, biannual: 0.17, annual: 1 / 12,
+    bimonthly: 0.5, quarterly: 0.333, biannual: 0.167, annual: 1 / 12,
   };
   return map[frequency] ?? 1.0;
 }

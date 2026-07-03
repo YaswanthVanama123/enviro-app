@@ -18,9 +18,17 @@ import {
   ZohoCompany,
   ZohoUser,
 } from '../../../services/api/endpoints/agreements.api';
+import {adminApi} from '../../../services/api/endpoints/admin.api';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
+
+const SE_MODULES = [
+  {value: 'Accounts', label: 'Company'},
+  {value: 'Pipelines', label: 'Pipeline'},
+  {value: 'Contacts', label: 'Contact'},
+  {value: 'Products', label: 'Product'},
+];
 
 interface BiginTaskModalProps {
   visible: boolean;
@@ -48,6 +56,8 @@ export function BiginTaskModal({
   const [selectedOwner, setSelectedOwner] = useState<ZohoUser | null>(null);
   const [ownerSearch, setOwnerSearch] = useState('');
   const [ownerDropOpen, setOwnerDropOpen] = useState(false);
+  const [seModule, setSeModule] = useState('Pipelines');
+  const [moduleDropOpen, setModuleDropOpen] = useState(false);
 
   const [companies, setCompanies] = useState<ZohoCompany[]>([]);
   const [companySearch, setCompanySearch] = useState('');
@@ -79,6 +89,8 @@ export function BiginTaskModal({
     setSelectedOwner(null);
     setOwnerSearch('');
     setOwnerDropOpen(false);
+    setSeModule('Pipelines');
+    setModuleDropOpen(false);
     setTaskName('');
     setDueDate('');
     setDescription('');
@@ -99,9 +111,21 @@ export function BiginTaskModal({
     Promise.allSettled([
       zohoApi.getStatus(agreementId),
       zohoApi.getUsers(),
-    ]).then(([statusRes, usersRes]) => {
+      adminApi.getSettings(),
+    ]).then(([statusRes, usersRes, settingsRes]) => {
+      let loadedUsers: ZohoUser[] = [];
       if (usersRes.status === 'fulfilled') {
-        setUsers(usersRes.value);
+        loadedUsers = usersRes.value;
+        setUsers(loadedUsers);
+      }
+      if (settingsRes.status === 'fulfilled' && settingsRes.value) {
+        const defOwner = settingsRes.value.defaultApprovalTaskOwner;
+        if (defOwner?.id) {
+          const match = loadedUsers.find(u => u.id === defOwner.id);
+          setSelectedOwner(
+            match || {id: defOwner.id, name: defOwner.name || '', email: ''},
+          );
+        }
       }
       if (statusRes.status === 'fulfilled' && statusRes.value) {
         const s = statusRes.value;
@@ -170,6 +194,10 @@ export function BiginTaskModal({
         return;
       }
     }
+    if (reminder && !dueDate && reminderWhen !== 'On due date') {
+      setErrorMsg('A Due Date is required when using a day-based reminder.');
+      return;
+    }
     if (reminder && dueDate) {
       const base = new Date(dueDate);
       if (reminderWhen === 'A day before due date') {base.setDate(base.getDate() - 1);}
@@ -193,6 +221,7 @@ export function BiginTaskModal({
         status: (markCompleted ? 'Completed' : 'Not Started') as 'Completed' | 'Not Started',
         description: description.trim() || undefined,
         ownerId: selectedOwner?.id || undefined,
+        seModule: linkedDeal ? 'Pipelines' : seModule || undefined,
         reminder: reminder || undefined,
         reminderWhen: reminder ? reminderWhen : undefined,
         reminderTime: reminder ? reminderTime : undefined,
@@ -297,7 +326,7 @@ export function BiginTaskModal({
           <View style={styles.listBox}>
             {filteredCompanies.length === 0 && !loadingCompanies ? (
               <Text style={styles.emptyText}>
-                {companySearch.trim() ? 'No companies match your search' : 'No companies found'}
+                No companies found
               </Text>
             ) : (
               <FlatList
@@ -461,7 +490,7 @@ export function BiginTaskModal({
                 />
               </View>
               {repeatUntil && dueDate && new Date(repeatUntil) <= new Date(dueDate) && (
-                <Text style={styles.inlineError}>'Until' must be after the Due Date.</Text>
+                <Text style={styles.inlineError}>'Until' date must be greater than the Due Date.</Text>
               )}
             </View>
           )}
@@ -516,14 +545,64 @@ export function BiginTaskModal({
 
           {}
           <Text style={[styles.fieldLabel, {marginTop: Spacing.sm}]}>Related To</Text>
+          <TouchableOpacity
+            style={[styles.pickerBtn, !!linkedDeal && {opacity: 0.6}]}
+            onPress={() => !linkedDeal && setModuleDropOpen(v => !v)}
+            activeOpacity={linkedDeal ? 1 : 0.8}>
+            <Text style={styles.pickerBtnText}>
+              {linkedDeal
+                ? 'Pipeline'
+                : SE_MODULES.find(m => m.value === seModule)?.label ?? 'Pipeline'}
+            </Text>
+            {!linkedDeal && (
+              <Ionicons
+                name={moduleDropOpen ? 'chevron-up' : 'chevron-down'}
+                size={13}
+                color={Colors.textMuted}
+              />
+            )}
+          </TouchableOpacity>
+          {moduleDropOpen && !linkedDeal && (
+            <View style={styles.inlineDropdown}>
+              {SE_MODULES.map(m => (
+                <TouchableOpacity
+                  key={m.value}
+                  style={[styles.inlineDropdownItem, seModule === m.value && styles.inlineDropdownItemSelected]}
+                  onPress={() => {
+                    setSeModule(m.value);
+                    setModuleDropOpen(false);
+                  }}>
+                  <Text
+                    style={[
+                      styles.inlineDropdownText,
+                      seModule === m.value && styles.inlineDropdownTextSelected,
+                    ]}>
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
           <View style={styles.relatedToBox}>
             <Ionicons name="business-outline" size={14} color={Colors.textMuted} />
             <View style={{flex: 1}}>
               {linkedDeal && linkedCompany && (
                 <Text style={styles.relatedToSub} numberOfLines={1}>{linkedCompany.name}</Text>
               )}
-              <Text style={styles.relatedToMain} numberOfLines={1}>{relatedToName}</Text>
+              <Text style={styles.relatedToMain} numberOfLines={1}>
+                {relatedToName || 'No company linked'}
+              </Text>
             </View>
+            {!linkedDeal && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedCompany(null);
+                  setStep('select-company');
+                }}
+                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                <Ionicons name="close-circle-outline" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {}

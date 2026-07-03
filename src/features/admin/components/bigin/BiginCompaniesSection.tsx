@@ -19,6 +19,7 @@ import {
   BiginCompany,
   FetchStatus,
   CompanyStats,
+  LocationTypeStatus,
   formatCompanyDate,
   formatAddress,
 } from '../../types/biginCompany.types';
@@ -34,6 +35,8 @@ export function BiginCompaniesSection() {
   const [cityFilter, setCityFilter] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [ownerFilter, setOwnerFilter] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('');
+  const [ltStatus, setLtStatus] = useState<LocationTypeStatus | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<BiginCompany | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({
@@ -55,6 +58,7 @@ export function BiginCompaniesSection() {
         city: cityFilter || undefined,
         state: stateFilter || undefined,
         owner: ownerFilter || undefined,
+        industry: industryFilter || undefined,
         limit: pagination.limit,
         skip,
       });
@@ -75,7 +79,7 @@ export function BiginCompaniesSection() {
       setLoading(false);
       setRefreshing(false);
     },
-    [searchTerm, cityFilter, stateFilter, ownerFilter, pagination.limit, pagination.skip],
+    [searchTerm, cityFilter, stateFilter, ownerFilter, industryFilter, pagination.limit, pagination.skip],
   );
 
   const loadStats = useCallback(async () => {
@@ -96,7 +100,34 @@ export function BiginCompaniesSection() {
     loadCompanies(true);
     loadStats();
     loadFetchStatus();
+    biginCompanyApi.getLocationTypeStatus().then(setLtStatus);
   }, []);
+
+  useEffect(() => {
+    if (!ltStatus?.isRunning) {
+      return;
+    }
+    const interval = setInterval(async () => {
+      const s = await biginCompanyApi.getLocationTypeStatus();
+      setLtStatus(s);
+      if (s && !s.isRunning) {
+        clearInterval(interval);
+        loadCompanies(true);
+        loadStats();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [ltStatus?.isRunning]);
+
+  const handleDetectLocationTypes = async () => {
+    const result = await biginCompanyApi.refreshLocationTypes();
+    if (result?.data) {
+      setLtStatus(result.data);
+    } else {
+      const s = await biginCompanyApi.getLocationTypeStatus();
+      setLtStatus(s);
+    }
+  };
 
   useEffect(() => {
     if (fetchStatus?.isRunning) {
@@ -137,6 +168,7 @@ export function BiginCompaniesSection() {
     setCityFilter('');
     setStateFilter('');
     setOwnerFilter('');
+    setIndustryFilter('');
     setShowFilters(false);
     loadCompanies(true);
   };
@@ -232,28 +264,44 @@ export function BiginCompaniesSection() {
           <Text style={styles.title}>Bigin Companies</Text>
           <Text style={styles.subtitle}>View and sync companies from Zoho Bigin</Text>
         </View>
-        <TouchableOpacity
-          style={[
-            styles.fetchBtn,
-            fetchStatus?.isRunning && styles.fetchBtnRunning,
-          ]}
-          onPress={handleFetch}
-          disabled={fetchStatus?.isRunning}
-          activeOpacity={0.8}>
-          {fetchStatus?.isRunning ? (
-            <>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[
+              styles.fetchBtn,
+              fetchStatus?.isRunning && styles.fetchBtnRunning,
+            ]}
+            onPress={handleFetch}
+            disabled={fetchStatus?.isRunning}
+            activeOpacity={0.8}>
+            {fetchStatus?.isRunning ? (
+              <>
+                <ActivityIndicator size="small" color="#fff" />
+                <Text style={styles.fetchBtnText}>
+                  {fetchStatus.progress}%
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="sync-outline" size={16} color="#fff" />
+                <Text style={styles.fetchBtnText}>Fetch</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.detectBtn, ltStatus?.isRunning && styles.detectBtnRunning]}
+            onPress={handleDetectLocationTypes}
+            disabled={!!ltStatus?.isRunning}
+            activeOpacity={0.8}>
+            {ltStatus?.isRunning ? (
               <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.fetchBtnText}>
-                {fetchStatus.progress}%
-              </Text>
-            </>
-          ) : (
-            <>
-              <Ionicons name="sync-outline" size={16} color="#fff" />
-              <Text style={styles.fetchBtnText}>Fetch</Text>
-            </>
-          )}
-        </TouchableOpacity>
+            ) : (
+              <Ionicons name="git-branch-outline" size={16} color="#fff" />
+            )}
+            <Text style={styles.fetchBtnText}>
+              {ltStatus?.isRunning ? 'Detecting…' : 'Detect'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {}
@@ -330,6 +378,36 @@ export function BiginCompaniesSection() {
       )}
 
       {}
+      {ltStatus && (ltStatus.isRunning || ltStatus.finishedAt) && (
+        <View style={styles.ltStatusBox}>
+          <View style={styles.ltStatusRow}>
+            <Text style={styles.ltStatusMsg} numberOfLines={1}>
+              {ltStatus.message || 'Detecting new vs existing locations…'}
+            </Text>
+            <Text style={styles.ltStatusMeta}>
+              {ltStatus.processed}/{ltStatus.total}
+              {ltStatus.total
+                ? ` (${Math.round((ltStatus.processed / ltStatus.total) * 100)}%)`
+                : ''}
+              {` · ${ltStatus.markedExisting} existing`}
+              {ltStatus.failed ? ` · ${ltStatus.failed} failed` : ''}
+            </Text>
+          </View>
+          <View style={styles.ltProgressBar}>
+            <View
+              style={[
+                styles.ltProgressFill,
+                {
+                  width: `${ltStatus.total ? Math.round((ltStatus.processed / ltStatus.total) * 100) : 0}%`,
+                  backgroundColor: ltStatus.isRunning ? '#2563eb' : '#059669',
+                },
+              ]}
+            />
+          </View>
+        </View>
+      )}
+
+      {}
       <View style={styles.searchRow}>
         <View style={styles.searchInputWrap}>
           <Ionicons
@@ -363,7 +441,7 @@ export function BiginCompaniesSection() {
       </View>
 
       {}
-      {(cityFilter || stateFilter || ownerFilter) && (
+      {(cityFilter || stateFilter || ownerFilter || industryFilter) && (
         <View style={styles.activeFilters}>
           <Text style={styles.activeFiltersLabel}>Filters:</Text>
           {cityFilter && (
@@ -386,6 +464,14 @@ export function BiginCompaniesSection() {
             <View style={styles.filterChip}>
               <Text style={styles.filterChipText}>{ownerFilter}</Text>
               <TouchableOpacity onPress={() => { setOwnerFilter(''); loadCompanies(true); }}>
+                <Ionicons name="close-circle" size={14} color="#6366f1" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {industryFilter && (
+            <View style={styles.filterChip}>
+              <Text style={styles.filterChipText}>{industryFilter}</Text>
+              <TouchableOpacity onPress={() => { setIndustryFilter(''); loadCompanies(true); }}>
                 <Ionicons name="close-circle" size={14} color="#6366f1" />
               </TouchableOpacity>
             </View>
@@ -464,6 +550,20 @@ export function BiginCompaniesSection() {
                 <Text style={styles.detailValue}>{selectedCompany.owner || '-'}</Text>
               </View>
               <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Owner Email</Text>
+                <Text style={styles.detailValue}>{selectedCompany.ownerEmail || '-'}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>New Location</Text>
+                <Text style={styles.detailValue}>
+                  {selectedCompany.isExistingLocation === undefined
+                    ? '-'
+                    : selectedCompany.isExistingLocation
+                    ? 'False'
+                    : 'True'}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Address</Text>
                 <Text style={styles.detailValue}>{formatAddress(selectedCompany)}</Text>
               </View>
@@ -489,6 +589,15 @@ export function BiginCompaniesSection() {
                 <Text style={styles.detailLabel}>Created At</Text>
                 <Text style={styles.detailValue}>{formatCompanyDate(selectedCompany.createdAt)}</Text>
               </View>
+              {selectedCompany.rawData &&
+                Object.keys(selectedCompany.rawData).length > 0 && (
+                  <View style={styles.rawDataSection}>
+                    <Text style={styles.detailLabel}>Raw Data</Text>
+                    <Text style={[styles.detailValue, styles.monoText, styles.rawDataText]}>
+                      {JSON.stringify(selectedCompany.rawData, null, 2)}
+                    </Text>
+                  </View>
+                )}
             </ScrollView>
           )}
         </View>
@@ -561,6 +670,23 @@ export function BiginCompaniesSection() {
               ))}
             </View>
 
+            <Text style={styles.filterSectionTitle}>Industry</Text>
+            <View style={styles.filterOptions}>
+              <TouchableOpacity
+                style={[styles.filterOption, !industryFilter && styles.filterOptionSelected]}
+                onPress={() => setIndustryFilter('')}>
+                <Text style={[styles.filterOptionText, !industryFilter && styles.filterOptionTextSelected]}>All Industries</Text>
+              </TouchableOpacity>
+              {stats?.industries?.map(industry => (
+                <TouchableOpacity
+                  key={industry}
+                  style={[styles.filterOption, industryFilter === industry && styles.filterOptionSelected]}
+                  onPress={() => setIndustryFilter(industry)}>
+                  <Text style={[styles.filterOptionText, industryFilter === industry && styles.filterOptionTextSelected]}>{industry}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <View style={styles.filterActions}>
               <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters}>
                 <Text style={styles.clearFiltersBtnText}>Clear All</Text>
@@ -608,6 +734,69 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0891b2',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  detectBtnRunning: {
+    backgroundColor: '#64748b',
+  },
+  ltStatusBox: {
+    marginHorizontal: 12,
+    marginBottom: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    backgroundColor: '#f9fafb',
+  },
+  ltStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 8,
+  },
+  ltStatusMsg: {
+    flex: 1,
+    fontSize: 12,
+    color: '#475569',
+  },
+  ltStatusMeta: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  ltProgressBar: {
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    height: 8,
+    overflow: 'hidden',
+  },
+  ltProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  rawDataSection: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    gap: 6,
+  },
+  rawDataText: {
+    fontSize: 11,
+    color: '#475569',
   },
   fetchBtnRunning: {
     backgroundColor: '#059669',

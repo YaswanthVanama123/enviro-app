@@ -4,7 +4,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {MainTab, MAIN_TABS} from '../../utils/pricing.utils';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
-import {FontSize} from '../../../../theme/typography';
 
 interface PricingTabBarProps {
   active: MainTab;
@@ -16,22 +15,25 @@ export function PricingTabBar({active, onSelect}: PricingTabBarProps) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={styles.mainTabBar}
-      contentContainerStyle={styles.mainTabBarContent}>
+      style={styles.bar}
+      contentContainerStyle={styles.barContent}>
       {MAIN_TABS.map(tab => {
         const isActive = tab.key === active;
         return (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.mainTab, isActive && styles.mainTabActive]}
+            style={[styles.tab, isActive && styles.tabActive]}
             onPress={() => onSelect(tab.key)}
-            activeOpacity={0.7}>
+            activeOpacity={0.8}>
             <Ionicons
               name={tab.icon}
               size={15}
-              color={isActive ? Colors.primary : Colors.textMuted}
+              color={isActive ? '#fff' : Colors.textMuted}
             />
-            <Text style={[styles.mainTabText, isActive && styles.mainTabTextActive]}>
+            <Text
+              style={[styles.tabText, isActive && styles.tabTextActive]}
+              allowFontScaling={false}
+              numberOfLines={1}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -42,33 +44,41 @@ export function PricingTabBar({active, onSelect}: PricingTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  mainTabBar: {
+  bar: {
+    height: 56,
+    flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: Colors.surface,
-    maxHeight: 46,
   },
-  mainTabBarContent: {
+  barContent: {
     paddingHorizontal: Spacing.md,
-    gap: 4,
+    gap: 8,
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 10,
   },
-  mainTab: {
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    justifyContent: 'center',
+    gap: 6,
+    height: 36,
+    paddingHorizontal: 14,
     borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
   },
-  mainTabActive: {
-    backgroundColor: Colors.primaryLight,
+  tabActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  mainTabText: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
+  tabText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: Colors.textMuted,
+    includeFontPadding: false,
   },
-  mainTabTextActive: {
-    color: Colors.primary,
+  tabTextActive: {
+    color: '#fff',
   },
 });

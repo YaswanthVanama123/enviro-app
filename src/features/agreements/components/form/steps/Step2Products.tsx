@@ -4,7 +4,7 @@ import {
   Modal, FlatList, ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {SmallProduct, Dispenser} from '../../../hooks/useFormFilling';
+import {SmallProduct, Dispenser, BigProduct} from '../../../hooks/useFormFilling';
 import {Colors} from '../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
@@ -13,7 +13,7 @@ import {formatCurrency} from '../../../../../shared/utils/format.utils';
 const PROD_FREQ = [
   {value: 'daily',     label: 'Daily',   short: 'Daily'},
   {value: 'weekly',    label: 'Weekly',   short: 'Wkly'},
-  {value: 'biweekly',  label: 'Bi-Wk',   short: 'Bi-Wk'},
+  {value: 'bi-weekly', label: 'Bi-Wk',   short: 'Bi-Wk'},
   {value: 'monthly',   label: 'Monthly',  short: 'Mthly'},
   {value: 'quarterly', label: 'Qtrly',    short: 'Qtrly'},
   {value: 'yearly',    label: 'Yearly',   short: 'Yrly'},
@@ -36,12 +36,16 @@ interface CatalogItemFlat {
 interface Step2ProductsProps {
   smallProducts: SmallProduct[];
   dispensers: Dispenser[];
+  bigProducts: BigProduct[];
   onAddSmallProduct: () => void;
   onRemoveSmallProduct: (id: string) => void;
   onUpdateSmallProduct: (id: string, data: Partial<SmallProduct>) => void;
   onAddDispenser: () => void;
   onRemoveDispenser: (id: string) => void;
   onUpdateDispenser: (id: string, data: Partial<Dispenser>) => void;
+  onAddBigProduct: () => void;
+  onRemoveBigProduct: (id: string) => void;
+  onUpdateBigProduct: (id: string, data: Partial<BigProduct>) => void;
   productCatalog?: any;
   includeProductsTable: boolean;
   onIncludeProductsTableChange: (v: boolean) => void;
@@ -563,15 +567,83 @@ function CompactDispenserRow({
   );
 }
 
+function CompactBigProductRow({
+  product, isExpanded, onToggle, catalogItems, onUpdate, onRemove, onOpenCatalog,
+}: {
+  product: BigProduct;
+  isExpanded: boolean;
+  onToggle: () => void;
+  catalogItems: CatalogItemFlat[];
+  onUpdate: (d: Partial<BigProduct>) => void;
+  onRemove: () => void;
+  onOpenCatalog: () => void;
+}) {
+  const total = product.qty * product.amount;
+  return (
+    <View style={[styles.compactCard, isExpanded && styles.compactCardExpanded]}>
+      <TouchableOpacity style={styles.compactRow} onPress={onToggle} activeOpacity={0.7}>
+        <Text style={styles.compactName} numberOfLines={1}>{product.displayName || '—'}</Text>
+        <TextInput
+          style={styles.compactInput}
+          value={String(product.qty)}
+          onChangeText={t => onUpdate({qty: parseNum(t)})}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
+        />
+        <TextInput
+          style={[styles.compactInput, styles.compactInputWide]}
+          value={displayNum(product.amount)}
+          onChangeText={t => onUpdate({amount: parseNum(t)})}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={Colors.textMuted}
+        />
+        <View style={[styles.freqLabel, styles.freqLabelActive]}>
+          <Text style={[styles.freqLabelText, styles.freqLabelTextActive]} numberOfLines={1}>
+            {freqShort(product.frequency)}
+          </Text>
+        </View>
+        <Text style={styles.compactTotal}>{formatCurrency(total)}</Text>
+        <TouchableOpacity onPress={onRemove} hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+          <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
+      </TouchableOpacity>
+
+      {isExpanded && (
+        <View style={[styles.expandPanel, {zIndex: 100}]}>
+          <View style={[styles.expandNameRow, {zIndex: 101}]}>
+            <AutocompleteInput
+              value={product.displayName}
+              onChangeText={t => onUpdate({displayName: t})}
+              onSelectItem={item => onUpdate({displayName: item.name, amount: item.basePrice})}
+              catalogItems={catalogItems}
+              placeholder="Search chemical/product name..."
+            />
+            <TouchableOpacity style={styles.catalogBtn} onPress={onOpenCatalog}>
+              <Ionicons name="list-outline" size={15} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <FreqChips value={product.frequency} onChange={v => onUpdate({frequency: v})} />
+        </View>
+      )}
+    </View>
+  );
+}
+
 export function Step2Products({
   smallProducts,
   dispensers,
+  bigProducts,
   onAddSmallProduct,
   onRemoveSmallProduct,
   onUpdateSmallProduct,
   onAddDispenser,
   onRemoveDispenser,
   onUpdateDispenser,
+  onAddBigProduct,
+  onRemoveBigProduct,
+  onUpdateBigProduct,
   productCatalog,
   includeProductsTable,
   onIncludeProductsTableChange,
@@ -681,6 +753,37 @@ export function Step2Products({
                     warrantyRate: item.warrantyRate,
                     replacementRate: item.replacementRate,
                   });
+                })}
+              />
+            ))}
+          </>
+        )}
+      </View>
+
+      {}
+      <View style={styles.section}>
+        <SectionHeader
+          icon="flask-outline"
+          title="Big Products (Chemical)"
+          count={bigProducts.length}
+          onAdd={onAddBigProduct}
+        />
+        {bigProducts.length === 0 ? (
+          <Text style={styles.emptyText}>No big products added — tap Add to start</Text>
+        ) : (
+          <>
+            <TableColHeader priceLabel="Rate" />
+            {bigProducts.map(p => (
+              <CompactBigProductRow
+                key={p.id}
+                product={p}
+                isExpanded={expandedId === p.id}
+                onToggle={() => toggleExpand(p.id)}
+                catalogItems={allCatalogItems}
+                onUpdate={upd => onUpdateBigProduct(p.id, upd)}
+                onRemove={() => onRemoveBigProduct(p.id)}
+                onOpenCatalog={() => openPicker(item => {
+                  onUpdateBigProduct(p.id, {displayName: item.name, amount: item.basePrice});
                 })}
               />
             ))}

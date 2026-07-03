@@ -14,6 +14,11 @@ import {Step3Services}         from '../components/form/steps/Step3Services';
 import {Step5Agreement}        from '../components/form/steps/Step5Agreement';
 import {Step4Review}           from '../components/form/steps/Step4Review';
 import {formatCurrency} from '../../../shared/utils/format.utils';
+import {
+  headerRowsToFields,
+  fieldsToHeaderRows,
+  makeCustomField,
+} from '../utils/customerFields';
 
 const C = {
   primary:     '#c00000',   
@@ -441,7 +446,7 @@ export function CreateAgreementDesktop() {
 
   const {
     form,
-    setHeaderTitle, setHeaderRow,
+    setHeaderTitle, setHeaderRows,
     addSmallProduct, removeSmallProduct, updateSmallProduct,
     addDispenser,    removeDispenser,    updateDispenser,
     setContractMonths, setStartDate,
@@ -456,6 +461,14 @@ export function CreateAgreementDesktop() {
 
   const {saving, saveError, savedId} = form;
   const rows = form.headerRows ?? [];
+  const customerFields = headerRowsToFields(rows);
+  const setFields = (next: typeof customerFields) => setHeaderRows(fieldsToHeaderRows(next));
+  const changeFieldValue = (id: string, v: string) =>
+    setFields(customerFields.map(fd => (fd.id === id ? {...fd, value: v} : fd)));
+  const changeFieldLabel = (id: string, v: string) =>
+    setFields(customerFields.map(fd => (fd.id === id ? {...fd, label: v} : fd)));
+  const addCustomerField = () => setFields([...customerFields, makeCustomField(customerFields.length)]);
+  const removeCustomerField = (id: string) => setFields(customerFields.filter(fd => fd.id !== id));
 
   const allCatalogProducts: any[] = (form.productCatalog?.families ?? []).flatMap((f: any) => f.products ?? []);
   const productsRefList  = allCatalogProducts.filter(p => p.familyKey !== 'dispensers');
@@ -530,64 +543,47 @@ export function CreateAgreementDesktop() {
             </View>
 
             {}
-            <TouchableOpacity style={ss.addFieldBtn}>
+            <TouchableOpacity style={ss.addFieldBtn} onPress={addCustomerField}>
               <Text style={ss.addFieldText}>+ Add field</Text>
             </TouchableOpacity>
           </View>
 
           {}
           <View style={ss.customerGrid}>
-            <View style={ss.customerCol}>
-              <RLabel text="Customer Name" />
-              <UInput
-                value={rows[0]?.valueLeft ?? ''}
-                onChange={v => setHeaderRow(0, 'valueLeft', v)}
-                placeholder="Company / Customer Name"
-              />
-            </View>
-            <View style={ss.customerCol}>
-              <RLabel text="Customer Contact" />
-              <UInput
-                value={rows[0]?.valueRight ?? ''}
-                onChange={v => setHeaderRow(0, 'valueRight', v)}
-                placeholder="Contact Person"
-              />
-            </View>
-            <View style={ss.customerCol}>
-              <RLabel text="Customer Number" />
-              <UInput
-                value={rows[1]?.valueLeft ?? ''}
-                onChange={v => setHeaderRow(1, 'valueLeft', v)}
-                placeholder="Phone Number"
-                keyboard="phone-pad"
-              />
-            </View>
-            <View style={ss.customerCol}>
-              <RLabel text="POC Email" />
-              <UInput
-                value={rows[1]?.valueRight ?? ''}
-                onChange={v => setHeaderRow(1, 'valueRight', v)}
-                placeholder="point@company.com"
-                keyboard="email-address"
-              />
-            </View>
-            <View style={ss.customerCol}>
-              <RLabel text="POC Name" />
-              <UInput
-                value={rows[2]?.valueLeft ?? ''}
-                onChange={v => setHeaderRow(2, 'valueLeft', v)}
-                placeholder="Point of Contact"
-              />
-            </View>
-            <View style={ss.customerCol}>
-              <RLabel text="POC Phone" />
-              <UInput
-                value={rows[2]?.valueRight ?? ''}
-                onChange={v => setHeaderRow(2, 'valueRight', v)}
-                placeholder="POC Direct Phone"
-                keyboard="phone-pad"
-              />
-            </View>
+            {customerFields.map(fd => (
+              <View key={fd.id} style={ss.customerCol}>
+                {fd.builtIn ? (
+                  <RLabel text={fd.label.replace(/:$/, '')} />
+                ) : (
+                  <View style={ss.customFieldLabelRow}>
+                    <TextInput
+                      style={ss.customFieldLabelInput}
+                      value={fd.label}
+                      onChangeText={v => changeFieldLabel(fd.id, v)}
+                      placeholder="FIELD LABEL:"
+                      placeholderTextColor={C.textMutedLt}
+                      autoCapitalize="characters"
+                      maxLength={26}
+                    />
+                    <TouchableOpacity onPress={() => removeCustomerField(fd.id)}>
+                      <Ionicons name="remove-circle" size={20} color={C.primary} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                <UInput
+                  value={fd.value}
+                  onChange={v => changeFieldValue(fd.id, v)}
+                  placeholder={fd.builtIn ? '' : 'Value'}
+                  keyboard={
+                    fd.label.toUpperCase().includes('EMAIL')
+                      ? 'email-address'
+                      : fd.label.toUpperCase().includes('PHONE') || fd.label.toUpperCase().includes('NUMBER')
+                      ? 'phone-pad'
+                      : 'default'
+                  }
+                />
+              </View>
+            ))}
           </View>
         </View>
 
@@ -932,6 +928,18 @@ const ss = StyleSheet.create({
 
   customerGrid: {flexDirection: 'row', flexWrap: 'wrap', gap: 16},
   customerCol: {flex: 1, minWidth: 240, marginBottom: 4},
+  customFieldLabelRow: {flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4},
+  customFieldLabelInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.textMuted,
+  },
 
   tabRow: {flexDirection: 'row', gap: 8, paddingVertical: 2},
 

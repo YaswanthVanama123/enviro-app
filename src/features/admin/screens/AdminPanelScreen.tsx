@@ -227,6 +227,30 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('UserManagement')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#e0e7ff'}]}>
+                <Ionicons name="people-circle-outline" size={18} color="#4f46e5" />
+              </View>
+              <Text style={styles.menuRowText}>User Management</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('EmailTemplate')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#dcfce7'}]}>
+                <Ionicons name="mail-outline" size={18} color="#16a34a" />
+              </View>
+              <Text style={styles.menuRowText}>Email Template</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('EditHistory')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#f3e8ff'}]}>

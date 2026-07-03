@@ -276,7 +276,7 @@ export function MyInsideSalesScreen() {
                             isMatched && styles.statusBadgeTextSuccess,
                             hasBiginId && !isMatched && styles.statusBadgeTextNeutral,
                           ]}>
-                            {!hasBiginId ? 'Not Uploaded' : isMatched ? 'In Audit' : 'Not in Audit'}
+                            {!hasBiginId ? 'Not Uploaded' : isMatched ? 'Found in Audit' : 'Not in Audit'}
                           </Text>
                         </View>
                         <Text style={styles.agreementDate}>{formatDate(agreement.createdAt)}</Text>

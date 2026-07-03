@@ -118,32 +118,40 @@ export function PricingTablesSection() {
   return (
     <View style={styles.sectionShell}>
       <View style={styles.subTabToggle}>
-        <TouchableOpacity
-          style={[styles.subTabBtn, subTab === 'products' && styles.subTabBtnActive]}
-          onPress={() => handleSubTab('products')}
-          activeOpacity={0.7}>
-          <Ionicons
-            name="cube-outline"
-            size={13}
-            color={subTab === 'products' ? Colors.primary : Colors.textMuted}
-          />
-          <Text style={[styles.subTabBtnText, subTab === 'products' && styles.subTabBtnTextActive]}>
-            Products
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.subTabBtn, subTab === 'services' && styles.subTabBtnActive]}
-          onPress={() => handleSubTab('services')}
-          activeOpacity={0.7}>
-          <Ionicons
-            name="settings-outline"
-            size={13}
-            color={subTab === 'services' ? Colors.primary : Colors.textMuted}
-          />
-          <Text style={[styles.subTabBtnText, subTab === 'services' && styles.subTabBtnTextActive]}>
-            Services
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.subTabTrack}>
+          <TouchableOpacity
+            style={[styles.subTabBtn, subTab === 'products' && styles.subTabBtnActive]}
+            onPress={() => handleSubTab('products')}
+            activeOpacity={0.8}>
+            <Ionicons
+              name="cube-outline"
+              size={14}
+              color={subTab === 'products' ? '#fff' : Colors.textMuted}
+            />
+            <Text
+              style={[styles.subTabBtnText, subTab === 'products' && styles.subTabBtnTextActive]}
+              allowFontScaling={false}
+              numberOfLines={1}>
+              Products
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.subTabBtn, subTab === 'services' && styles.subTabBtnActive]}
+            onPress={() => handleSubTab('services')}
+            activeOpacity={0.8}>
+            <Ionicons
+              name="settings-outline"
+              size={14}
+              color={subTab === 'services' ? '#fff' : Colors.textMuted}
+            />
+            <Text
+              style={[styles.subTabBtnText, subTab === 'services' && styles.subTabBtnTextActive]}
+              allowFontScaling={false}
+              numberOfLines={1}>
+              Services
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {subTab === 'products' && (
@@ -174,7 +182,10 @@ export function PricingTablesSection() {
                     style={[styles.familyTab, f.key === activeFamily && styles.familyTabActive]}
                     onPress={() => setActiveFamily(f.key)}
                     activeOpacity={0.7}>
-                    <Text style={[styles.familyTabText, f.key === activeFamily && styles.familyTabTextActive]}>
+                    <Text
+                      style={[styles.familyTabText, f.key === activeFamily && styles.familyTabTextActive]}
+                      allowFontScaling={false}
+                      numberOfLines={1}>
                       {f.label}
                     </Text>
                   </TouchableOpacity>
@@ -308,36 +319,50 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 6,
-    gap: 8,
+    paddingVertical: 10,
+  },
+  subTabTrack: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: Colors.gray100,
+    borderRadius: Radius.full,
+    padding: 3,
+    gap: 3,
   },
   subTabBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    justifyContent: 'center',
+    gap: 6,
+    height: 34,
     borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: 'transparent',
   },
   subTabBtnActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary + '40',
+    backgroundColor: Colors.primary,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    shadowOffset: {width: 0, height: 1},
+    elevation: 2,
   },
   subTabBtnText: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
     color: Colors.textMuted,
+    includeFontPadding: false,
   },
   subTabBtnTextActive: {
-    color: Colors.primary,
+    color: '#fff',
   },
   familyTabBarSkeleton: {
     height: 42,
     backgroundColor: '#e5e7eb',
   },
   familyTabBar: {
+    height: 52,
+    flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -349,22 +374,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   familyTab: {
+    height: 34,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
     borderRadius: Radius.full,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   familyTabActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   familyTabText: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.textMuted,
+    includeFontPadding: false,
   },
   familyTabTextActive: {
     color: '#fff',

@@ -1,15 +1,27 @@
 import React, {useState, useCallback} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Linking} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
 import {
   SavedFileGroup,
   SavedFileListItem,
   FileType,
+  getFileDownloadUrl,
 } from '../../../services/api/endpoints/agreements.api';
+import {apiClient} from '../../../services/api/client';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 import {ConfirmModal} from '../../../shared/components/ui/AppModal';
+import {EmailComposerModal} from '../../../shared/components/ui/EmailComposerModal';
+import type {EmailDocumentType} from '../../../services/api/endpoints/email.api';
+
+const FILE_EMAIL_TYPE: Record<FileType, EmailDocumentType> = {
+  main_pdf: 'agreement',
+  version_pdf: 'version',
+  attached_pdf: 'manual-upload',
+  version_log: 'auto-detect',
+};
 
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) {return '—';}
@@ -44,8 +56,26 @@ interface TrashFileRowProps {
 }
 
 function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
+  const navigation = useNavigation<any>();
   const typeColors = FILE_TYPE_COLORS[file.fileType] ?? FILE_TYPE_COLORS.main_pdf;
   const typeLabel = FILE_TYPE_LABEL[file.fileType] ?? file.fileType;
+  const [showEmail, setShowEmail] = useState(false);
+  const fileUrl = getFileDownloadUrl(file, apiClient.getToken());
+
+  const handleView = () => {
+    if (!fileUrl) return;
+    if (file.fileType === 'version_log') {
+      Linking.openURL(fileUrl).catch(() => {});
+      return;
+    }
+    navigation.navigate('PdfViewer', {
+      url: fileUrl,
+      title: file.title || file.fileName,
+      documentId: file.id,
+      documentType: FILE_EMAIL_TYPE[file.fileType],
+      fileName: file.title || file.fileName,
+    });
+  };
 
   return (
     <View style={styles.fileRow}>
@@ -61,6 +91,23 @@ function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
         ) : null}
       </View>
 
+      {file.hasPdf && (
+        <>
+          <TouchableOpacity
+            style={[styles.fileIconBtn, styles.fileIconBtnNeutral]}
+            onPress={handleView}
+            hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
+            <Ionicons name="eye-outline" size={14} color="#2563eb" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.fileIconBtn, styles.fileIconBtnNeutral]}
+            onPress={() => setShowEmail(true)}
+            hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
+            <Ionicons name="mail-outline" size={13} color="#7c3aed" />
+          </TouchableOpacity>
+        </>
+      )}
+
       <TouchableOpacity
         style={[styles.fileIconBtn, styles.fileIconBtnGreen]}
         onPress={() => onRestore(file)}
@@ -73,6 +120,14 @@ function TrashFileRow({file, onRestore, onPermanentDelete}: TrashFileRowProps) {
         hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
         <Ionicons name="trash-outline" size={13} color="#ef4444" />
       </TouchableOpacity>
+
+      <EmailComposerModal
+        visible={showEmail}
+        documentId={file.id}
+        documentType={FILE_EMAIL_TYPE[file.fileType]}
+        fileName={file.title || file.fileName}
+        onClose={() => setShowEmail(false)}
+      />
     </View>
   );
 }
@@ -390,6 +445,10 @@ const styles = StyleSheet.create({
   fileIconBtnRed: {
     borderColor: '#fecaca',
     backgroundColor: '#fff5f5',
+  },
+  fileIconBtnNeutral: {
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f8fafc',
   },
   fileRowDivider: {
     height: 1,

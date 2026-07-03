@@ -17,6 +17,7 @@ const FREQ_MULT: Record<string, number> = {
   daily:          30,
   weekly:         4.33,
   biweekly:       2,
+  'bi-weekly':    2,
   monthly:        1,
   everyFourWeeks: 1.0833,
   quarterly:      1 / 3,

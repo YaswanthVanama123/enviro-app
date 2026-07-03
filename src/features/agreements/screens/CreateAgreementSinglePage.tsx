@@ -55,13 +55,16 @@ export function CreateAgreementSinglePage() {
   const {
     form,
     setHeaderTitle,
-    setHeaderRow,
+    setHeaderRows,
     addSmallProduct,
     removeSmallProduct,
     updateSmallProduct,
     addDispenser,
     removeDispenser,
     updateDispenser,
+    addBigProduct,
+    removeBigProduct,
+    updateBigProduct,
     setContractMonths,
     setStartDate,
     setTripCharge,
@@ -139,7 +142,7 @@ export function CreateAgreementSinglePage() {
           headerTitle={form.headerTitle}
           onHeaderTitleChange={setHeaderTitle}
           headerRows={form.headerRows}
-          onRowChange={setHeaderRow}
+          onHeaderRowsChange={setHeaderRows}
         />
 
         <SectionDivider />
@@ -149,12 +152,16 @@ export function CreateAgreementSinglePage() {
         <Step2Products
           smallProducts={form.smallProducts}
           dispensers={form.dispensers}
+          bigProducts={form.bigProducts}
           onAddSmallProduct={addSmallProduct}
           onRemoveSmallProduct={removeSmallProduct}
           onUpdateSmallProduct={updateSmallProduct}
           onAddDispenser={addDispenser}
           onRemoveDispenser={removeDispenser}
           onUpdateDispenser={updateDispenser}
+          onAddBigProduct={addBigProduct}
+          onRemoveBigProduct={removeBigProduct}
+          onUpdateBigProduct={updateBigProduct}
           productCatalog={form.productCatalog}
           includeProductsTable={form.includeProductsTable}
           onIncludeProductsTableChange={setIncludeProductsTable}
@@ -173,6 +180,7 @@ export function CreateAgreementSinglePage() {
           onAddService={addService}
           onRemoveService={removeService}
           onUpdateService={updateService}
+          showServiceTabs
         />
 
         <SectionDivider />
