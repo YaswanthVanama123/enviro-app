@@ -157,14 +157,16 @@ interface DropdownRowProps {
   value: string;
   options: {value: string; label: string}[];
   onChange: (v: string) => void;
+  subtitle?: string;
 }
 
-export function DropdownRow({label, value, options, onChange}: DropdownRowProps) {
+export function DropdownRow({label, value, options, onChange, subtitle}: DropdownRowProps) {
   const [open, setOpen] = React.useState(false);
   const current = options.find(o => o.value === value);
   return (
     <View style={ss.fieldGroup}>
       <Text style={ss.fieldLabel}>{label}</Text>
+      {subtitle ? <Text style={ss.fieldSubtitleWin}>{subtitle}</Text> : null}
       <View style={ss.dropdownWrap}>
         {}
         <TouchableOpacity
@@ -378,6 +380,12 @@ const ss = StyleSheet.create({
     fontWeight: '600',
     color:      C.label,
     fontFamily: 'Arial',
+  },
+  fieldSubtitleWin: {
+    fontSize:   11,
+    color:      '#6b7280',
+    fontFamily: 'Arial',
+    marginTop:  -2,
   },
   required: {
     color: C.primary,

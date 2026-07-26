@@ -133,12 +133,14 @@ export function CreateAgreementScreen() {
 
   const handleGenerate = async () => {
     setShowSaveModal(false);
-    const {ok, agreementId, status} = await generate();
+    const {ok, agreementId, status, title} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
-        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+        zohoApi.createAutoApprovalTask(agreementId, title).catch(() => {});
       }
-      goBackSafe();
+      // The generated PDF lives in the Saved PDFs list — land the user there.
+      reset();
+      (navigation as any).navigate('Saved');
     }
   };
 
@@ -242,7 +244,20 @@ export function CreateAgreementScreen() {
           />
         );
       case 6:
-        return <Step4Review form={form} />;
+        return (
+          <Step4Review
+            form={form}
+            accountTypeCache={accountTypeCache}
+            priorQuotaCredit={effectivePriorQuotaCredit}
+            rulesOverride={effectiveCommissionRules}
+            isCompanyMapped={isCompanyMapped}
+            isRouteStarMapped={isRouteStarMapped}
+            isNewLocation={isNewLocation}
+            onNewLocationChange={setIsNewLocation}
+            priorFarRedline={priorFarRedline}
+            priorFarGreenline={priorFarGreenline}
+          />
+        );
     }
   };
 

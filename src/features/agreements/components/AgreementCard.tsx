@@ -7,6 +7,7 @@ import {
   Linking,
   Modal,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import DocumentPicker, {types} from 'react-native-document-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -497,7 +498,11 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           />
         </TouchableOpacity>
 
-        <View style={styles.cardActions}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.cardActionsScroll}
+          contentContainerStyle={styles.cardActions}>
           <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
             <Ionicons name="create-outline" size={13} color="#fff" />
             <Text style={styles.editBtnText}>Edit</Text>
@@ -507,7 +512,7 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             style={styles.beginBtn}
             onPress={handleBegin}>
             <Ionicons name="play-circle-outline" size={13} color="#fff" />
-            <Text style={styles.beginBtnText}>Begin</Text>
+            <Text style={styles.beginBtnText}>Bigin</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -528,7 +533,7 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             <Ionicons name="trash-outline" size={13} color={Colors.primary} />
             <Text style={styles.deleteCardBtnText}>Delete</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
 
       {expanded && (
@@ -758,6 +763,10 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
 
+  cardActionsScroll: {
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -765,8 +774,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.md,
     gap: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
   },
   cardActionIconBtn: {
     width: 30,

@@ -446,6 +446,13 @@ export function CreateAgreementDesktop() {
 
   const {
     form,
+    effectivePriorQuotaCredit,
+    effectiveCommissionRules,
+    isRouteStarMapped,
+    isNewLocation,
+    setIsNewLocation,
+    priorFarRedline,
+    priorFarGreenline,
     setHeaderTitle, setHeaderRows,
     addSmallProduct, removeSmallProduct, updateSmallProduct,
     addDispenser,    removeDispenser,    updateDispenser,
@@ -481,12 +488,13 @@ export function CreateAgreementDesktop() {
 
   const handleGenerate = async () => {
     setShowSaveModal(false);
-    const {ok, agreementId, status} = await generate();
+    const {ok, agreementId, status, title} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
-        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+        zohoApi.createAutoApprovalTask(agreementId, title).catch(() => {});
       }
-      goBack();
+      // The generated PDF lives in the Saved PDFs list — land the user there.
+      (navigation as any).navigate('Saved');
     }
   };
 
@@ -810,7 +818,18 @@ export function CreateAgreementDesktop() {
         <View style={ss.gap} />
 
         {}
-        <Step4Review form={form} />
+        <Step4Review
+          form={form}
+          accountTypeCache={form.accountTypeCache || {}}
+          priorQuotaCredit={effectivePriorQuotaCredit}
+          rulesOverride={effectiveCommissionRules}
+          isCompanyMapped={!!form.biginCompanyId}
+          isRouteStarMapped={isRouteStarMapped}
+          isNewLocation={isNewLocation}
+          onNewLocationChange={setIsNewLocation}
+          priorFarRedline={priorFarRedline}
+          priorFarGreenline={priorFarGreenline}
+        />
 
         <View style={{height: 24}} />
         </>)}

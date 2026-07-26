@@ -1,4 +1,4 @@
-export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference' | 'commissions' | 'quota' | 'customers' | 'audit' | 'companies' | 'mapping';
+export type MainTab = 'pricing' | 'services' | 'catalog' | 'backup' | 'reference' | 'commissions' | 'quota' | 'customers' | 'audit' | 'companies' | 'mapping' | 'accountType' | 'locationFar' | 'insideSales';
 
 export type ServiceSubTab = 'unit' | 'minimums' | 'multipliers' | 'frequencies';
 
@@ -10,6 +10,10 @@ export interface ConfigField {
   description: string;
   value: string;
   category: ServiceSubTab;
+  path: string[];
+  rawValue: unknown;
+  editable: boolean;
+  group?: string;
 }
 
 export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
@@ -24,6 +28,9 @@ export const MAIN_TABS: {key: MainTab; label: string; icon: string}[] = [
   {key: 'audit',       label: 'Audit History',      icon: 'time-outline'},
   {key: 'companies',   label: 'Bigin Companies',    icon: 'business-outline'},
   {key: 'mapping',     label: 'Company Mapping',    icon: 'link-outline'},
+  {key: 'accountType', label: 'Account Type',       icon: 'car-outline'},
+  {key: 'locationFar', label: 'Location FAR',       icon: 'trending-up-outline'},
+  {key: 'insideSales', label: 'Inside Sales',       icon: 'shield-checkmark-outline'},
 ];
 
 export const SERVICE_SUBTABS: {key: ServiceSubTab; label: string; icon: string}[] = [
@@ -144,65 +151,36 @@ export function camelToLabel(key: string): string {
     .trim();
 }
 
+const COUNT_HINTS = ['count', 'qty', 'quantity', 'drains', 'traps', 'months', 'weeks', 'days', 'visits', 'gallons'];
+const CURRENCY_HINTS = [
+  'price', 'charge', 'cost', 'fee', 'minimum', 'rate', 'base', 'additional', 'amount',
+  'perdrain', 'pertrap', 'perpod', 'perunit', 'persqft', 'install',
+];
+
 export function formatConfigValue(key: string, val: any): string {
   if (val === null || val === undefined) {return '—';}
   if (typeof val === 'boolean') {return val ? 'Yes' : 'No';}
   if (typeof val === 'number') {
     const lk = key.toLowerCase();
-    if (lk.includes('price') || lk.includes('charge') || lk.includes('cost') ||
-        lk.includes('fee') || lk.includes('minimum') || lk.includes('rate') ||
-        lk.includes('base') || lk.includes('additional') || lk.includes('amount')) {
-      return '$' + Number(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    }
-    if (lk.includes('sqft') || lk.includes('sq_ft') || lk.includes('unit') && lk.includes('sq')) {
-      return `${val.toFixed ? val.toFixed(2) : val} sq ft`;
+    if (COUNT_HINTS.some(h => lk.includes(h))) {
+      return String(val);
     }
     if (lk.includes('multiplier') || lk.includes('factor')) {
       return `${val.toFixed ? val.toFixed(2) : val} ×`;
+    }
+    if (lk.includes('pct') || lk.includes('percent')) {
+      return `${val}%`;
+    }
+    if (lk.includes('sqft') || lk.includes('sq_ft')) {
+      return `${val.toFixed ? val.toFixed(2) : val} sq ft`;
+    }
+    if (CURRENCY_HINTS.some(h => lk.includes(h))) {
+      return '$' + Number(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     return String(val);
   }
   if (typeof val === 'string') {return val || '—';}
   return JSON.stringify(val);
-}
-
-export function flattenConfig(obj: any, serviceId?: string): Array<{label: string; value: string}> {
-  if (serviceId === 'pureJanitorial') {
-    const pr = obj?.productionRates ?? {};
-    const ds = obj?.defaultSupplies ?? {};
-    return [
-      ...Object.entries(pr).map(([k, v]) => ({
-        label: `${k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1')} (Production Rate)`,
-        value: `${v} sq ft/hr`,
-      })),
-      {label: 'Cost Per Labor Hour',  value: `$${obj?.costPerHour    ?? 20}/hr`},
-      {label: 'Labor Tax %',          value: `${obj?.laborTaxPct     ?? 15}%`},
-      {label: 'Gross Profit %',       value: `${obj?.grossProfitPct  ?? 33}%`},
-      {label: 'Supplies - Vacuums',           value: `$${ds.vacuums          ?? 100}/yr`},
-      {label: 'Supplies - Mops',              value: `$${ds.mops             ?? 500}/yr`},
-      {label: 'Supplies - Mop Buckets',       value: `$${ds.mopBuckets       ?? 200}/yr`},
-      {label: 'Supplies - Dust Mops',         value: `$${ds.dustMops         ?? 300}/yr`},
-      {label: 'Supplies - Microfiber',        value: `$${ds.microfiber       ?? 0}/yr`},
-      {label: 'Supplies - Cleaning Products', value: `$${ds.cleaningProducts ?? 0}/yr`},
-      {label: 'Supplies - Consumables',       value: `$${ds.consumables      ?? 0}/yr`},
-      {label: 'Supplies - Miscellaneous',     value: `$${ds.miscellaneous    ?? 0}/yr`},
-    ];
-  }
-  if (!obj || typeof obj !== 'object') {return [];}
-  const rows: Array<{label: string; value: string}> = [];
-  for (const [k, v] of Object.entries(obj)) {
-    if (k.startsWith('_') || typeof v === 'function') {continue;}
-    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      for (const [k2, v2] of Object.entries(v as object)) {
-        if (typeof v2 !== 'object' && typeof v2 !== 'function') {
-          rows.push({label: camelToLabel(k2), value: formatConfigValue(k2, v2)});
-        }
-      }
-    } else if (!Array.isArray(v)) {
-      rows.push({label: camelToLabel(k), value: formatConfigValue(k, v)});
-    }
-  }
-  return rows;
 }
 
 export function categorizeField(key: string): ServiceSubTab {
@@ -234,36 +212,87 @@ export function getFieldDescription(key: string): string {
   return '';
 }
 
+export function setConfigValue(config: any, path: string[], value: number): any {
+  const next = config && typeof config === 'object' ? JSON.parse(JSON.stringify(config)) : {};
+  let cursor = next;
+  for (let i = 0; i < path.length - 1; i++) {
+    const seg = path[i];
+    if (!cursor[seg] || typeof cursor[seg] !== 'object') {
+      cursor[seg] = {};
+    }
+    cursor = cursor[seg];
+  }
+  cursor[path[path.length - 1]] = value;
+  return next;
+}
+
+function janitorialField(
+  path: string[],
+  label: string,
+  description: string,
+  rawValue: number,
+  value: string,
+  category: ServiceSubTab,
+  group: string,
+): ConfigField {
+  return {
+    key: path.join('.'),
+    label,
+    description,
+    value,
+    category,
+    path,
+    rawValue,
+    editable: true,
+    group,
+  };
+}
+
 export function extractConfigFields(config: any, serviceId?: string): ConfigField[] {
   if (serviceId === 'pureJanitorial') {
     const pr = config?.productionRates ?? {};
     const ds = config?.defaultSupplies ?? {};
     return [
-      
-      ...Object.entries(pr).map(([k, v]) => ({
-        key: `pr_${k}`,
-        label: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1'),
-        description: `Production rate for ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}`,
-        value: `${v} sq ft/hr`,
-        category: 'unit' as const,
-      })),
-      
-      {key: 'costPerHour',    label: 'Cost Per Labor Hour', description: 'Admin-configured baseline labor cost per hour. Default: $20',                                      value: `$${config?.costPerHour    ?? 20}/hr`, category: 'minimums'},
-      {key: 'laborTaxPct',    label: 'Labor Tax %',         description: 'Payroll tax and benefits % on top of base labor. Default: 15%',                                   value: `${config?.laborTaxPct     ?? 15}%`,   category: 'minimums'},
-      {key: 'grossProfitPct', label: 'Gross Profit %',      description: 'Target gross profit margin. Contract Value = Total Cost ÷ (1 − GP%). Default: 33%',              value: `${config?.grossProfitPct  ?? 33}%`,   category: 'minimums'},
-      
-      {key: 'sup_vacuums',          label: 'Supplies - Vacuums',           description: 'Default annual cost for vacuum equipment. Default: $100',       value: `$${ds.vacuums          ?? 100}/yr`, category: 'multipliers'},
-      {key: 'sup_mops',             label: 'Supplies - Mops',              description: 'Default annual cost for mops. Default: $500',                   value: `$${ds.mops             ?? 500}/yr`, category: 'multipliers'},
-      {key: 'sup_mopBuckets',       label: 'Supplies - Mop Buckets',       description: 'Default annual cost for mop buckets. Default: $200',            value: `$${ds.mopBuckets       ?? 200}/yr`, category: 'multipliers'},
-      {key: 'sup_dustMops',         label: 'Supplies - Dust Mops',         description: 'Default annual cost for dust mops. Default: $300',              value: `$${ds.dustMops         ?? 300}/yr`, category: 'multipliers'},
-      {key: 'sup_microfiber',       label: 'Supplies - Microfiber',        description: 'Default annual cost for microfiber cloths. Default: $0',        value: `$${ds.microfiber       ?? 0}/yr`,   category: 'multipliers'},
-      {key: 'sup_cleaningProducts', label: 'Supplies - Cleaning Products', description: 'Default annual cost for cleaning products. Default: $0',        value: `$${ds.cleaningProducts ?? 0}/yr`,   category: 'multipliers'},
-      {key: 'sup_consumables',      label: 'Supplies - Consumables',       description: 'Default annual cost for consumables. Default: $0',              value: `$${ds.consumables      ?? 0}/yr`,   category: 'multipliers'},
-      {key: 'sup_miscellaneous',    label: 'Supplies - Miscellaneous',     description: 'Default annual cost for miscellaneous supplies. Default: $0',   value: `$${ds.miscellaneous    ?? 0}/yr`,   category: 'multipliers'},
+      ...Object.entries(pr).map(([k, v]) =>
+        janitorialField(
+          ['productionRates', k],
+          k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1'),
+          `Production rate for ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}`,
+          Number(v) || 0,
+          `${v} sq ft/hr`,
+          'unit',
+          'Production Rates',
+        ),
+      ),
+      janitorialField(['costPerHour'], 'Cost Per Labor Hour', 'Admin-configured baseline labor cost per hour. Default: $20', config?.costPerHour ?? 20, `$${config?.costPerHour ?? 20}/hr`, 'minimums', 'Labor'),
+      janitorialField(['laborTaxPct'], 'Labor Tax %', 'Payroll tax and benefits % on top of base labor. Default: 15%', config?.laborTaxPct ?? 15, `${config?.laborTaxPct ?? 15}%`, 'minimums', 'Labor'),
+      janitorialField(['grossProfitPct'], 'Gross Profit %', 'Target gross profit margin. Contract Value = Total Cost ÷ (1 − GP%). Default: 33%', config?.grossProfitPct ?? 33, `${config?.grossProfitPct ?? 33}%`, 'minimums', 'Labor'),
+      janitorialField(['defaultSupplies', 'vacuums'], 'Supplies - Vacuums', 'Default annual cost for vacuum equipment. Default: $100', ds.vacuums ?? 100, `$${ds.vacuums ?? 100}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'mops'], 'Supplies - Mops', 'Default annual cost for mops. Default: $500', ds.mops ?? 500, `$${ds.mops ?? 500}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'mopBuckets'], 'Supplies - Mop Buckets', 'Default annual cost for mop buckets. Default: $200', ds.mopBuckets ?? 200, `$${ds.mopBuckets ?? 200}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'dustMops'], 'Supplies - Dust Mops', 'Default annual cost for dust mops. Default: $300', ds.dustMops ?? 300, `$${ds.dustMops ?? 300}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'microfiber'], 'Supplies - Microfiber', 'Default annual cost for microfiber cloths. Default: $0', ds.microfiber ?? 0, `$${ds.microfiber ?? 0}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'cleaningProducts'], 'Supplies - Cleaning Products', 'Default annual cost for cleaning products. Default: $0', ds.cleaningProducts ?? 0, `$${ds.cleaningProducts ?? 0}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'consumables'], 'Supplies - Consumables', 'Default annual cost for consumables. Default: $0', ds.consumables ?? 0, `$${ds.consumables ?? 0}/yr`, 'multipliers', 'Supplies'),
+      janitorialField(['defaultSupplies', 'miscellaneous'], 'Supplies - Miscellaneous', 'Default annual cost for miscellaneous supplies. Default: $0', ds.miscellaneous ?? 0, `$${ds.miscellaneous ?? 0}/yr`, 'multipliers', 'Supplies'),
     ];
   }
   if (!config || typeof config !== 'object') {return [];}
   const result: ConfigField[] = [];
+
+  const push = (path: string[], key: string, val: any, category: ServiceSubTab, group?: string) => {
+    result.push({
+      key: path.join('.'),
+      label: camelToLabel(key),
+      description: getFieldDescription(key),
+      value: formatConfigValue(key, val),
+      category,
+      path,
+      rawValue: val,
+      editable: typeof val === 'number',
+      group,
+    });
+  };
 
   const hasNested = Object.keys(config).some(k => k in NESTED_CATEGORY && typeof config[k] === 'object' && config[k] !== null);
 
@@ -273,7 +302,7 @@ export function extractConfigFields(config: any, serviceId?: string): ConfigFiel
       if (!category || typeof catVal !== 'object' || catVal === null) {continue;}
       for (const [fk, fv] of Object.entries(catVal as object)) {
         if (fk.startsWith('_') || typeof fv === 'function' || typeof fv === 'object') {continue;}
-        result.push({key: fk, label: camelToLabel(fk), description: getFieldDescription(fk), value: formatConfigValue(fk, fv), category});
+        push([catKey, fk], fk, fv, category, camelToLabel(catKey));
       }
     }
   } else {
@@ -282,11 +311,11 @@ export function extractConfigFields(config: any, serviceId?: string): ConfigFiel
       if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
         for (const [k2, v2] of Object.entries(v as object)) {
           if (typeof v2 !== 'object' && typeof v2 !== 'function') {
-            result.push({key: k2, label: camelToLabel(k2), description: getFieldDescription(k2), value: formatConfigValue(k2, v2), category: categorizeField(k2)});
+            push([k, k2], k2, v2, categorizeField(k2), camelToLabel(k));
           }
         }
       } else if (!Array.isArray(v)) {
-        result.push({key: k, label: camelToLabel(k), description: getFieldDescription(k), value: formatConfigValue(k, v), category: categorizeField(k)});
+        push([k], k, v, categorizeField(k));
       }
     }
   }

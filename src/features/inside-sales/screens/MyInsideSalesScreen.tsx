@@ -9,12 +9,26 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  FlatList,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors, Spacing, Radius, FontSize} from '../../../theme';
 import {biginAuditApi} from '../../../services/api/endpoints/biginAudit.api';
+import {adminApi} from '../../../services/api/endpoints/admin.api';
 import {useAuth} from '../../admin/context/AdminAuthContext';
+
+interface EmployeeOption {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+interface MyInsideSalesScreenProps {
+  adminMode?: boolean;
+  embedded?: boolean;
+}
 
 interface InsideSalesResult {
   salespersonName: string;
@@ -55,19 +69,57 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function MyInsideSalesScreen() {
+export function MyInsideSalesScreen({adminMode = false, embedded = false}: MyInsideSalesScreenProps = {}) {
   const {user} = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!adminMode);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InsideSalesResult | null>(null);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(adminMode);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!adminMode) {return;}
+    let cancelled = false;
+    adminApi
+      .listUsers({role: 'employee', limit: 200})
+      .then(res => {
+        if (cancelled) {return;}
+        const rows = (res?.users ?? []) as any[];
+        setEmployees(
+          rows
+            .filter(u => u.role === 'employee')
+            .map(u => ({
+              id: u.id ?? u._id,
+              name: u.fullName || u.username,
+              email: u.email ?? null,
+            })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {setError('Failed to load employees');}
+      })
+      .finally(() => {
+        if (!cancelled) {setLoadingEmployees(false);}
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminMode]);
+
   const checkEligibility = useCallback(async (isRefresh = false) => {
-    const salespersonName = user?.fullName || user?.username;
+    const salespersonName = adminMode
+      ? selectedEmployee?.name
+      : user?.fullName || user?.username;
 
     if (!salespersonName) {
-      setError('User not logged in');
+      if (!adminMode) {
+        setError('User not logged in');
+      }
       setLoading(false);
       return;
     }
@@ -96,26 +148,36 @@ export function MyInsideSalesScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?.fullName, user?.username]);
+  }, [adminMode, selectedEmployee?.name, user?.fullName, user?.username]);
 
   useEffect(() => {
+    if (adminMode && !selectedEmployee) {return;}
     checkEligibility();
-  }, [checkEligibility]);
+  }, [adminMode, selectedEmployee, checkEligibility]);
 
-  if (loading) {
-    return (
+  const Wrapper = ({children}: {children: React.ReactNode}) =>
+    embedded ? (
+      <View style={styles.container}>{children}</View>
+    ) : (
       <SafeAreaView style={styles.container} edges={['top']}>
+        {children}
+      </SafeAreaView>
+    );
+
+  if (loading && !adminMode) {
+    return (
+      <Wrapper>
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Checking your Inside Sales status...</Text>
         </View>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
-  if (error) {
+  if (error && !adminMode) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Wrapper>
         <View style={styles.error}>
           <Ionicons name="alert-circle-outline" size={48} color="#dc2626" />
           <Text style={styles.errorTitle}>Error</Text>
@@ -124,7 +186,7 @@ export function MyInsideSalesScreen() {
             <Text style={styles.retryBtnText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </Wrapper>
     );
   }
 
@@ -135,7 +197,7 @@ export function MyInsideSalesScreen() {
   const statusBorderColor = result?.isInsideSales ? '#fcd34d' : '#86efac';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Wrapper>
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -153,13 +215,54 @@ export function MyInsideSalesScreen() {
               <Ionicons name="analytics" size={24} color={Colors.primary} />
             </View>
             <View style={styles.titleContent}>
-              <Text style={styles.title}>Inside Sales Status</Text>
+              <Text style={styles.title}>
+                {adminMode ? 'Inside Sales Eligibility Check' : 'Inside Sales Status'}
+              </Text>
               <Text style={styles.subtitle}>
                 Based on Lisa Rothwell's audit history
               </Text>
             </View>
           </View>
         </View>
+
+        {adminMode && (
+          <View style={styles.pickerBlock}>
+            <Text style={styles.pickerLabel}>Employee</Text>
+            <TouchableOpacity
+              style={styles.pickerBox}
+              onPress={() => setPickerOpen(true)}
+              disabled={loadingEmployees}
+              activeOpacity={0.7}>
+              {loadingEmployees ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : (
+                <Ionicons name="person-outline" size={16} color={Colors.textMuted} />
+              )}
+              <Text
+                style={[styles.pickerText, !selectedEmployee && styles.pickerPlaceholder]}
+                numberOfLines={1}>
+                {loadingEmployees
+                  ? 'Loading employees…'
+                  : selectedEmployee?.name ?? `Select an employee (${employees.length})`}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
+            </TouchableOpacity>
+            {error ? <Text style={styles.pickerError}>{error}</Text> : null}
+            {loading && selectedEmployee ? (
+              <View style={styles.pickerLoadingRow}>
+                <ActivityIndicator size="small" color={Colors.primary} />
+                <Text style={styles.pickerLoadingText}>
+                  Checking {selectedEmployee.name}…
+                </Text>
+              </View>
+            ) : null}
+            {!selectedEmployee && !loadingEmployees ? (
+              <Text style={styles.pickerHint}>
+                Pick an employee to check whether their agreements appear in the Bigin audit history.
+              </Text>
+            ) : null}
+          </View>
+        )}
 
         {result && (
           <>
@@ -330,7 +433,55 @@ export function MyInsideSalesScreen() {
 
         <View style={{height: 100}} />
       </ScrollView>
-    </SafeAreaView>
+
+      {adminMode && (
+        <Modal
+          visible={pickerOpen}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setPickerOpen(false)}>
+          <View style={styles.container}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Employee</Text>
+              <TouchableOpacity
+                onPress={() => setPickerOpen(false)}
+                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                <Ionicons name="close" size={22} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={employees}
+              keyExtractor={e => e.id}
+              renderItem={({item}) => (
+                <TouchableOpacity
+                  style={[
+                    styles.modalRow,
+                    selectedEmployee?.id === item.id && styles.modalRowActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedEmployee(item);
+                    setResult(null);
+                    setError(null);
+                    setPickerOpen(false);
+                  }}
+                  activeOpacity={0.7}>
+                  <Text style={styles.modalRowName}>{item.name}</Text>
+                  {item.email ? (
+                    <Text style={styles.modalRowMeta}>{item.email}</Text>
+                  ) : null}
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={styles.modalSeparator} />}
+              ListEmptyComponent={
+                <View style={styles.modalEmpty}>
+                  <Text style={styles.modalEmptyText}>No employees found.</Text>
+                </View>
+              }
+            />
+          </View>
+        </Modal>
+      )}
+    </Wrapper>
   );
 }
 
@@ -642,6 +793,101 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: '#1e40af',
     lineHeight: 20,
+  },
+  pickerBlock: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    gap: 6,
+  },
+  pickerLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  pickerBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+  },
+  pickerText: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  pickerPlaceholder: {
+    color: Colors.textMuted,
+    fontWeight: '400',
+  },
+  pickerError: {
+    fontSize: FontSize.xs,
+    color: '#dc2626',
+  },
+  pickerHint: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    lineHeight: 17,
+  },
+  pickerLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 4,
+  },
+  pickerLoadingText: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  modalRow: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 13,
+    backgroundColor: Colors.surface,
+  },
+  modalRowActive: {
+    backgroundColor: '#fef2f2',
+  },
+  modalRowName: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  modalRowMeta: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  modalSeparator: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+  },
+  modalEmpty: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  modalEmptyText: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
   },
 });
 

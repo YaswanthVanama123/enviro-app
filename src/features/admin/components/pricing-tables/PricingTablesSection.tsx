@@ -1,7 +1,7 @@
 import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, FlatList,
-  RefreshControl, StyleSheet, Modal, TextInput, ActivityIndicator,
+  RefreshControl, StyleSheet,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../../../services/api/endpoints/pricing.api';
 import {ProductRow} from './ProductRow';
 import {ServicesPricingSubView} from './ServicesPricingSubView';
+import {EditValueModal} from '../pricing-shared/EditValueModal';
 import {SkeletonRow} from '../pricing-shared/SkeletonRow';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
@@ -110,6 +111,12 @@ export function PricingTablesSection() {
       setEditError(result.error ?? 'Failed to save. Please try again.');
     }
   }, [editTarget, editPrice, catalog]);
+
+  const handleConfigUpdated = useCallback((updated: ServiceConfig) => {
+    setServiceConfigs(prev =>
+      prev.map(c => ((c._id ?? c.serviceId) === (updated._id ?? updated.serviceId) ? updated : c)),
+    );
+  }, []);
 
   const families = catalog?.families ?? [];
   const currentFamily = families.find(f => f.key === activeFamily);
@@ -230,83 +237,23 @@ export function PricingTablesSection() {
           loading={servicesLoading}
           refreshing={servicesRefreshing}
           onRefresh={() => fetchServices(true)}
+          onConfigUpdated={handleConfigUpdated}
         />
       )}
 
-      <Modal
+      <EditValueModal
         visible={editTarget !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => !editSaving && setEditTarget(null)}>
-        <TouchableOpacity
-          style={modalStyles.overlay}
-          activeOpacity={1}
-          onPress={() => !editSaving && setEditTarget(null)}>
-          <TouchableOpacity activeOpacity={1} style={modalStyles.card} onPress={() => {}}>
-            <View style={modalStyles.header}>
-              <View style={modalStyles.headerIconBox}>
-                <Ionicons name="pencil" size={16} color="#1d4ed8" />
-              </View>
-              <View style={{flex: 1}}>
-                <Text style={modalStyles.title}>Edit Base Price</Text>
-                <Text style={modalStyles.sub} numberOfLines={1}>{editTarget?.name}</Text>
-              </View>
-              {!editSaving && (
-                <TouchableOpacity onPress={() => setEditTarget(null)} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-                  <Ionicons name="close" size={20} color="#9ca3af" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View style={modalStyles.body}>
-              {editSuccess ? (
-                <View style={modalStyles.successBox}>
-                  <Ionicons name="checkmark-circle" size={36} color="#16a34a" />
-                  <Text style={modalStyles.successText}>Price updated!</Text>
-                </View>
-              ) : (
-                <>
-                  <Text style={modalStyles.label}>
-                    Base Price{editTarget?.basePrice?.uom ? ` (per ${editTarget.basePrice.uom})` : ''}
-                  </Text>
-                  <View style={modalStyles.inputRow}>
-                    <Text style={modalStyles.currencySign}>$</Text>
-                    <TextInput
-                      style={modalStyles.input}
-                      value={editPrice}
-                      onChangeText={t => { setEditPrice(t); setEditError(''); }}
-                      keyboardType="decimal-pad"
-                      placeholder="0.00"
-                      placeholderTextColor="#9ca3af"
-                      autoFocus
-                      selectTextOnFocus
-                    />
-                  </View>
-                  {editError ? (
-                    <Text style={modalStyles.errorText}>{editError}</Text>
-                  ) : null}
-                  <View style={modalStyles.actions}>
-                    <TouchableOpacity
-                      style={modalStyles.cancelBtn}
-                      onPress={() => setEditTarget(null)}
-                      disabled={editSaving}>
-                      <Text style={modalStyles.cancelBtnText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[modalStyles.saveBtn, editSaving && {opacity: 0.6}]}
-                      onPress={handleSaveBase}
-                      disabled={editSaving}>
-                      {editSaving
-                        ? <ActivityIndicator size="small" color="#fff" />
-                        : <Text style={modalStyles.saveBtnText}>Save</Text>}
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+        title="Edit Base Price"
+        subtitle={editTarget?.name}
+        fieldLabel={`Base Price${editTarget?.basePrice?.uom ? ` (per ${editTarget.basePrice.uom})` : ''}`}
+        value={editPrice}
+        onChangeValue={t => { setEditPrice(t); setEditError(''); }}
+        saving={editSaving}
+        error={editError}
+        success={editSuccess}
+        onCancel={() => setEditTarget(null)}
+        onSave={handleSaveBase}
+      />
     </View>
   );
 }
@@ -443,132 +390,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: FontSize.sm,
     fontWeight: '700',
-  },
-});
-
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
-  },
-  card: {
-    width: '100%',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.md,
-    backgroundColor: '#dbeafe',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  title: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  sub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 1,
-  },
-  body: {
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  label: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 4,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#3b82f6',
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.md,
-    overflow: 'hidden',
-  },
-  currencySign: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: '#16a34a',
-    marginRight: 4,
-  },
-  input: {
-    flex: 1,
-    fontSize: FontSize.xl,
-    fontWeight: '700',
-    color: '#16a34a',
-    paddingVertical: Spacing.md,
-    padding: 0,
-  },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: '#ef4444',
-    marginTop: 2,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  cancelBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: '#f8fafc',
-  },
-  cancelBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  saveBtn: {
-    flex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: Radius.lg,
-    backgroundColor: '#1d4ed8',
-  },
-  saveBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  successBox: {
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  successText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: '#16a34a',
   },
 });

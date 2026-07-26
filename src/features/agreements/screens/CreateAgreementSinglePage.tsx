@@ -54,6 +54,13 @@ export function CreateAgreementSinglePage() {
 
   const {
     form,
+    effectivePriorQuotaCredit,
+    effectiveCommissionRules,
+    isRouteStarMapped,
+    isNewLocation,
+    setIsNewLocation,
+    priorFarRedline,
+    priorFarGreenline,
     setHeaderTitle,
     setHeaderRows,
     addSmallProduct,
@@ -99,12 +106,14 @@ export function CreateAgreementSinglePage() {
 
   const handleGenerate = async () => {
     setShowSaveModal(false);
-    const {ok, agreementId, status} = await generate();
+    const {ok, agreementId, status, title} = await generate();
     if (ok) {
       if (status === 'pending_approval' && agreementId) {
-        zohoApi.createAutoApprovalTask(agreementId, form.headerTitle || 'Agreement').catch(() => {});
+        zohoApi.createAutoApprovalTask(agreementId, title).catch(() => {});
       }
-      goBackSafe();
+      // The generated PDF lives in the Saved PDFs list — land the user there.
+      reset();
+      (navigation as any).navigate('Saved');
     }
   };
 
@@ -223,7 +232,18 @@ export function CreateAgreementSinglePage() {
 
         {}
         <SectionHeader {...SECTIONS[5]} />
-        <Step4Review form={form} />
+        <Step4Review
+          form={form}
+          accountTypeCache={form.accountTypeCache || {}}
+          priorQuotaCredit={effectivePriorQuotaCredit}
+          rulesOverride={effectiveCommissionRules}
+          isCompanyMapped={!!form.biginCompanyId}
+          isRouteStarMapped={isRouteStarMapped}
+          isNewLocation={isNewLocation}
+          onNewLocationChange={setIsNewLocation}
+          priorFarRedline={priorFarRedline}
+          priorFarGreenline={priorFarGreenline}
+        />
 
         <View style={ss.scrollPad} />
       </ScrollView>

@@ -37,6 +37,12 @@ const DEFAULT_INCLUDED_ITEMS = [
   'Soap service (free)',
 ];
 
+const FACILITY_FREQUENCY_OPTIONS = [
+  {label: 'Weekly', value: 'weekly'},
+  {label: 'Bi-Weekly', value: 'biweekly'},
+  {label: 'Monthly', value: 'monthly'},
+];
+
 const LOCATION_OPTIONS = [
   {label: 'Inside Beltway', value: 'insideBeltway'},
   {label: 'Outside Beltway', value: 'outsideBeltway'},
@@ -269,8 +275,35 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
   const isVisitBased = mode === 'perVisit';
   const isGreenline = fixtureCount > 0 && quote.contractTotal > (quote.originalContractTotal ?? 0) * 1.3;
 
-  const includedItems: string[] = data?.includedItems ?? DEFAULT_INCLUDED_ITEMS;
+  const includedItems: string[] = data?.includedItems ?? quote.included ?? DEFAULT_INCLUDED_ITEMS;
   const isCustomized = Array.isArray(data?.includedItems);
+
+  const facilityFreq = FACILITY_FREQUENCY_OPTIONS.some(
+    o => o.value === state.facilityComponentsFrequency,
+  )
+    ? state.facilityComponentsFrequency
+    : 'weekly';
+
+  const soapDispensers = state.sinks;
+  const luxuryUpgradeQty = state.luxuryUpgradeQty ?? soapDispensers;
+  const luxuryUpgradeWeekly =
+    state.soapType === 'luxury' && luxuryUpgradeQty > 0
+      ? luxuryUpgradeQty * state.luxuryUpgradePerDispenser
+      : 0;
+  const extraSoapRatePerGallon =
+    state.soapType === 'luxury' ? state.excessLuxurySoapRate : state.excessStandardSoapRate;
+  const extraSoapWeekly = Math.max(0, state.excessSoapGallonsPerWeek) * extraSoapRatePerGallon;
+  const suggestedWarrantyDispensers = Math.ceil(state.sinks * 1.5);
+  const facilityComponentsRaw =
+    (state.addUrinalComponents
+      ? state.urinalScreensQty * state.urinalScreenMonthly +
+        state.urinalMatsQty * state.urinalMatMonthly
+      : 0) +
+    (state.addMaleToiletComponents
+      ? state.toiletClipsQty * state.toiletClipsMonthly +
+        state.seatCoverDispensersQty * state.seatCoverDispenserMonthly
+      : 0) +
+    (state.addFemaleToiletComponents ? state.sanipodsQty * state.sanipodServiceMonthly : 0);
 
   const update = useCallback(
     (fields: Record<string, any>) => {
@@ -346,7 +379,7 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
       <FormDivider />
 
       <DropdownRow
-        label="Service Frequency"
+        label="Main Service Frequency"
         value={freq}
         options={FREQUENCY_OPTIONS}
         onChange={v => update({mainServiceFrequency: v})}
@@ -445,101 +478,51 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
         onChange={v => update({soapType: v})}
       />
       {state.soapType === 'luxury' && (
-        <NumberRow
-          label="Luxury Upgrade / Dispenser / Week"
-          value={state.luxuryUpgradePerDispenser}
-          onChange={v => update({luxuryUpgradePerDispenser: v})}
-          prefix="$"
-          decimals={2}
-        />
-      )}
-      <NumberRow
-        label="Excess Soap Gallons / Week"
-        value={state.excessSoapGallonsPerWeek}
-        onChange={v => update({excessSoapGallonsPerWeek: v})}
-        decimals={1}
-      />
-      <FormDivider />
-
-      {!isAllInclusive && (
         <>
-          <ToggleRow
-            label="Add Microfiber Mopping"
-            value={state.addMicrofiberMopping}
-            onChange={v => update({addMicrofiberMopping: v})}
-            subtitle={`$${state.microfiberMoppingPerBathroom}/bathroom/week`}
+          <CalcRow
+            label="Luxury Upgrade"
+            qty={luxuryUpgradeQty}
+            onQtyChange={v => update({luxuryUpgradeQty: v})}
+            rate={state.luxuryUpgradePerDispenser}
+            onRateChange={v => update({luxuryUpgradePerDispenser: v})}
+            total={luxuryUpgradeWeekly}
           />
-          {state.addMicrofiberMopping && (
-            <>
-              <NumberRow
-                label="Bathrooms"
-                value={state.microfiberBathrooms}
-                onChange={v => update({microfiberBathrooms: v})}
-                decimals={0}
-              />
-              <NumberRow
-                label="Rate / Bathroom / Week"
-                value={state.microfiberMoppingPerBathroom}
-                onChange={v => update({microfiberMoppingPerBathroom: v})}
-                prefix="$"
-                decimals={2}
-              />
-            </>
-          )}
-          <FormDivider />
+          <Text style={s.hintText}>
+            Defaults to the number of sinks ({state.sinks}). Override to change the dispenser count.
+          </Text>
         </>
       )}
-
-      {!isAllInclusive && (
-        <>
-          <NumberRow
-            label="Warranty Dispensers"
-            value={state.warrantyDispensers}
-            onChange={v => update({warrantyDispensers: v})}
-            decimals={0}
-          />
-          {state.warrantyDispensers > 0 && (
-            <NumberRow
-              label="Warranty Fee / Dispenser / Week"
-              value={state.warrantyFeePerDispenserPerWeek}
-              onChange={v => update({warrantyFeePerDispenserPerWeek: v})}
-              prefix="$"
-              decimals={2}
-            />
-          )}
-        </>
-      )}
-
-      <NumberRow
-        label="Estimated Paper Spend / Week"
-        value={state.estimatedPaperSpendPerWeek}
-        onChange={v => update({estimatedPaperSpendPerWeek: v})}
-        prefix="$"
-        decimals={2}
+      <CalcRow
+        label="Extra Soap"
+        qty={state.excessSoapGallonsPerWeek}
+        onQtyChange={v => update({excessSoapGallonsPerWeek: v})}
+        rate={extraSoapRatePerGallon}
+        onRateChange={v =>
+          update(
+            state.soapType === 'luxury'
+              ? {excessLuxurySoapRate: v}
+              : {excessStandardSoapRate: v},
+          )
+        }
+        total={extraSoapWeekly}
       />
-      {state.estimatedPaperSpendPerWeek > 0 && (
-        <NumberRow
-          label="Paper Credit / Fixture / Week"
-          value={state.paperCreditPerFixture}
-          onChange={v => update({paperCreditPerFixture: v})}
-          prefix="$"
-          decimals={2}
-        />
-      )}
       <FormDivider />
 
       {!isAllInclusive && (state.urinals > 0 || state.maleToilets > 0 || state.femaleToilets > 0) && (
         <>
           <View style={fc.header}>
             <Ionicons name="construct-outline" size={14} color={Colors.textMuted} />
-            <Text style={fc.headerText}>FACILITY COMPONENTS</Text>
+            <Text style={fc.headerText}>FACILITY COMPONENTS (Monthly Charges)</Text>
           </View>
-          <DropdownRow
-            label="Facility Frequency"
-            value={state.facilityComponentsFrequency}
-            options={FREQUENCY_OPTIONS}
-            onChange={v => update({facilityComponentsFrequency: v})}
-          />
+          {!isOneTime && (
+            <DropdownRow
+              label="Facility Components Frequency"
+              value={facilityFreq}
+              options={FACILITY_FREQUENCY_OPTIONS}
+              onChange={v => update({facilityComponentsFrequency: v})}
+              subtitle="Independent of main service frequency"
+            />
+          )}
         </>
       )}
       {!isAllInclusive && state.urinals > 0 && (
@@ -622,13 +605,114 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
           )}
         </>
       )}
+      {!isAllInclusive && facilityComponentsRaw > 0 && (
+        <View style={s.readOnlyRow}>
+          <Text style={s.readOnlyLabel}>
+            Total Facility Components
+            {!isOneTime ? ` (at ${facilityFreq} frequency)` : ''}
+          </Text>
+          <Text style={s.readOnlyValue}>${facilityComponentsRaw.toFixed(2)}</Text>
+        </View>
+      )}
       {!isAllInclusive && quote.facilityComponentsMonthly > 0 && (
-        <DollarRow label="Facility Monthly Total" value={quote.facilityComponentsMonthly} />
+        <DollarRow label="Facility Component Monthly Total" value={quote.facilityComponentsMonthly} />
+      )}
+      <FormDivider />
+      <View style={fc.header}>
+        <Ionicons name="water-outline" size={14} color={Colors.textMuted} />
+        <Text style={fc.headerText}>MICROFIBER MOPPING</Text>
+      </View>
+      {isAllInclusive ? (
+        <View style={s.readOnlyRow}>
+          <Text style={s.readOnlyLabel}>Microfiber Mopping</Text>
+          <Text style={s.readOnlyValue}>Included in All-Inclusive bundle</Text>
+        </View>
+      ) : (
+        <>
+          <ToggleRow
+            label="Microfiber Mopping"
+            value={state.addMicrofiberMopping}
+            onChange={v => update({addMicrofiberMopping: v})}
+            subtitle="Include"
+          />
+          {state.addMicrofiberMopping && (
+            <CalcRow
+              label="Bathrooms"
+              qty={state.microfiberBathrooms}
+              onQtyChange={v => update({microfiberBathrooms: v})}
+              rate={state.microfiberMoppingPerBathroom}
+              onRateChange={v => update({microfiberMoppingPerBathroom: v})}
+              total={state.microfiberBathrooms * state.microfiberMoppingPerBathroom}
+            />
+          )}
+        </>
       )}
       <FormDivider />
 
+      {!isAllInclusive && (
+        <>
+          <NumberRow
+            label="Warranty"
+            value={state.warrantyDispensers}
+            onChange={v => update({warrantyDispensers: v})}
+            decimals={0}
+          />
+          <Text style={s.hintText}>
+            Suggested: {suggestedWarrantyDispensers} dispensers (soap + air freshener)
+          </Text>
+          {state.warrantyDispensers > 0 && (
+            <NumberRow
+              label="Warranty Fee / Dispenser / Week"
+              value={state.warrantyFeePerDispenserPerWeek}
+              onChange={v => update({warrantyFeePerDispenserPerWeek: v})}
+              prefix="$"
+              decimals={2}
+            />
+          )}
+        </>
+      )}
+
+      <View style={fc.header}>
+        <Ionicons name="document-outline" size={14} color={Colors.textMuted} />
+        <Text style={fc.headerText}>PAPER</Text>
+      </View>
+      <NumberRow
+        label="Estimated Paper Spend / Week"
+        value={state.estimatedPaperSpendPerWeek}
+        onChange={v => update({estimatedPaperSpendPerWeek: v})}
+        prefix="$"
+        decimals={2}
+      />
+      {state.estimatedPaperSpendPerWeek > 0 && (
+        <NumberRow
+          label="Paper Credit / Fixture / Week"
+          value={state.paperCreditPerFixture}
+          onChange={v => update({paperCreditPerFixture: v})}
+          prefix="$"
+          decimals={2}
+        />
+      )}
+      <FormDivider />
+
+
+      <IncludedItemsEditor
+        items={includedItems}
+        isCustomized={isCustomized}
+        onChange={items => onChange({...data, includedItems: items})}
+        onReset={() => {
+          const {includedItems: _removed, ...rest} = data ?? {};
+          onChange({serviceId: 'saniclean', displayName: 'SaniClean', isActive: true, contractMonths, ...rest});
+        }}
+      />
+
       {fixtureCount > 0 && (
         <>
+          <FormDivider />
+          <View style={fc.header}>
+            <Ionicons name="calculator-outline" size={14} color={Colors.textMuted} />
+            <Text style={fc.headerText}>PRICE BREAKDOWN</Text>
+          </View>
+
           <DollarRow label={weeklyLabel} value={quote.weeklyTotal} />
 
           <View style={s.badgeRow}>
@@ -653,25 +737,13 @@ export function SanicleanForm({data, onChange, contractMonths, onRemove, pricing
           )}
         </>
       )}
-
-      <IncludedItemsEditor
-        items={includedItems}
-        isCustomized={isCustomized}
-        onChange={items => onChange({...data, includedItems: items})}
-        onReset={() => {
-          const {includedItems: _removed, ...rest} = data ?? {};
-          onChange({serviceId: 'saniclean', displayName: 'SaniClean', isActive: true, contractMonths, ...rest});
-        }}
-      />
     </ServiceCard>
   );
 }
 
 const inc = StyleSheet.create({
   container: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
     gap: Spacing.xs,
@@ -680,7 +752,8 @@ const inc = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    marginBottom: Spacing.xs,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   headerText: {
     flex: 1,
@@ -759,6 +832,33 @@ const inc = StyleSheet.create({
 });
 
 const s = StyleSheet.create({
+  hintText: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    marginTop: -4,
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  readOnlyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  readOnlyLabel: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  readOnlyValue: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'right',
+  },
   badgeRow: {paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm},
   badge: {alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6},
   greenBadge: {backgroundColor: '#e8f5e9'},

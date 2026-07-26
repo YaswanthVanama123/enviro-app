@@ -10,45 +10,112 @@ import {FREQUENCY_LABELS, type FrequencyKey} from '../../../shared/constants/fre
 function freqObj(key: any) {
   const k = typeof key === 'string' ? key : key?.frequencyKey ?? key?.value ?? 'weekly';
   const label = FREQUENCY_LABELS[k as FrequencyKey] ?? String(k);
-  return {isDisplay: true, label: 'Frequency', type: 'text', value: label, frequencyKey: k};
+  return {isDisplay: true, orderNo: 1, label: 'Frequency', type: 'text', value: label, frequencyKey: k};
 }
 
 const n = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
-function withContractMonths(out: any, data: any) {
-  const months = n(data.contractMonths) || undefined;
-  if (months) {
-    out.totals = {...(out.totals ?? {}), contract: {...(out.totals?.contract ?? {}), months}};
+const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+
+const VISIT_FREQUENCIES = new Set([
+  'bimonthly',
+  'quarterly',
+  'biannual',
+  'annual',
+  'everyFourWeeks',
+]);
+
+function freqKeyOf(data: any): string {
+  const f = data.frequency ?? data.mainServiceFrequency ?? data.serviceFrequency;
+  if (typeof f === 'string') {
+    return f;
   }
+  return f?.frequencyKey ?? f?.value ?? 'weekly';
+}
+
+function dollar(orderNo: number, label: string, amount: number, extra?: any) {
+  return {isDisplay: true, orderNo, label, type: 'dollar', amount: round2(amount), ...extra};
+}
+
+function buildTotals(out: any, data: any, perVisitLabel = 'Per Visit Total') {
+  const key = freqKeyOf(data);
+  const months = n(data.contractMonths) || undefined;
+  const contractTotal = n(data.contractTotal);
+  const perVisit = n(data.perVisit);
+  const monthlyRecurring = n(data.monthlyRecurring);
+  const firstMonth = n(
+    data.firstMonthPrice ?? data.firstMonthTotal ?? data.firstMonth ?? monthlyRecurring,
+  );
+  const firstVisit = n(
+    data.firstVisit ?? data.firstVisitPrice ?? data.firstVisitTotalRated ?? perVisit,
+  );
+
+  const totals: any = {...(out.totals ?? {})};
+
+  if (key === 'oneTime') {
+    totals.totalPrice = dollar(30, 'Total Price', contractTotal);
+    out.totals = totals;
+    return;
+  }
+
+  if (VISIT_FREQUENCIES.has(key)) {
+    if (key === 'everyFourWeeks') {
+      totals.firstVisit = dollar(31, 'First Visit Total', firstVisit);
+    }
+    totals.recurringVisit = dollar(32, 'Recurring Visit Total', perVisit, {gap: 'normal'});
+  } else {
+    totals.perVisit = dollar(30, perVisitLabel, perVisit);
+    totals.firstMonth = dollar(31, 'First Month Total', firstMonth);
+    totals.monthlyRecurring = dollar(32, 'Monthly Recurring', monthlyRecurring, {gap: 'normal'});
+  }
+
+  totals.contract = {
+    isDisplay: true,
+    orderNo: 37,
+    label: 'Contract Total',
+    type: 'dollar',
+    amount: round2(contractTotal),
+    ...(months ? {months} : {}),
+  };
+  out.totals = totals;
 }
 
 function sanipod(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  out.service = {label: 'SaniPods', type: 'calc', qty: n(d.podQuantity), rate: n(d.perVisit) / (n(d.podQuantity) || 1), total: n(d.perVisit)};
+  out.service = {isDisplay: true, orderNo: 10, label: 'SaniPods', type: 'calc', qty: n(d.podQuantity), rate: n(d.perVisit) / (n(d.podQuantity) || 1), total: n(d.perVisit)};
   if (n(d.extraBagsPerWeek) > 0) {
-    out.extraBags = {qty: n(d.extraBagsPerWeek), rate: n(d.extraBagPrice), recurring: d.extraBagsRecurring !== false};
+    out.extraBags = {
+      isDisplay: true,
+      orderNo: 11,
+      label: d.extraBagsRecurring !== false ? 'Extra Bags (Weekly)' : 'Extra Bags (One-time)',
+      type: 'calc',
+      qty: n(d.extraBagsPerWeek),
+      rate: n(d.extraBagPrice),
+      total: round2(n(d.extraBagsPerWeek) * n(d.extraBagPrice)),
+      recurring: d.extraBagsRecurring !== false,
+    };
   }
   if (d.isNewInstall && n(d.installQuantity) > 0) {
-    out.installation = {qty: n(d.installQuantity), rate: n(d.installRatePerPod), total: n(d.installCost)};
+    out.installation = {isDisplay: true, orderNo: 12, label: 'Installation', type: 'calc', qty: n(d.installQuantity), rate: n(d.installRatePerPod), total: n(d.installCost)};
   }
-  withContractMonths(out, d);
+  buildTotals(out, d);
   return out;
 }
 
 function stripWax(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  out.service = {label: 'Floor Area', type: 'calc', qty: n(d.floorAreaSqFt), rate: n(d.ratePerSqFt), total: n(d.perVisit), unit: 'sq ft'};
-  withContractMonths(out, d);
+  out.service = {isDisplay: true, orderNo: 10, label: 'Floor Area', type: 'calc', qty: n(d.floorAreaSqFt), rate: n(d.ratePerSqFt), total: n(d.perVisit), unit: 'sq ft'};
+  buildTotals(out, d);
   return out;
 }
 
 function carpet(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  out.service = {label: 'Floor Area', type: 'calc', qty: n(d.areaSqFt), rate: n(d.firstUnitRate), total: n(d.perVisit), unit: 'sq ft'};
-  withContractMonths(out, d);
+  out.service = {isDisplay: true, orderNo: 10, label: 'Floor Area', type: 'calc', qty: n(d.areaSqFt), rate: n(d.firstUnitRate), total: n(d.perVisit), unit: 'sq ft'};
+  buildTotals(out, d);
   return out;
 }
 
@@ -57,21 +124,23 @@ function electrostatic(d: any): any {
   out.frequency = freqObj(d.frequency);
   const byRoom = d.pricingMethod !== 'bySqFt';
   out.service = {
+    isDisplay: true,
+    orderNo: 10,
     label: byRoom ? 'Rooms' : 'Square Feet',
     type: 'calc',
     qty: byRoom ? n(d.roomCount) : n(d.squareFeet),
     rate: byRoom ? n(d.ratePerRoom) : n(d.ratePerThousandSqFt),
     total: n(d.perVisit),
   };
-  withContractMonths(out, d);
+  buildTotals(out, d);
   return out;
 }
 
 function greaseTrap(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  out.service = {label: 'Grease Traps', type: 'calc', qty: n(d.numberOfTraps), rate: n(d.perTrapWeeklyRate), total: n(d.perVisit)};
-  withContractMonths(out, d);
+  out.service = {isDisplay: true, orderNo: 10, label: 'Grease Traps', type: 'calc', qty: n(d.numberOfTraps), rate: n(d.perTrapWeeklyRate), total: n(d.perVisit)};
+  buildTotals(out, d);
   return out;
 }
 
@@ -95,44 +164,89 @@ function saniscrub(d: any): any {
 
   if (fixtures > 0) {
     out.restroomFixtures = {
+      isDisplay: true,
+      orderNo: 10,
       label: 'Restroom Fixtures',
       type: 'calc',
       qty: fixtures,
       rate: fixtureRate,
-      total: fixtures * fixtureRate,
+      total: round2(fixtures * fixtureRate),
     };
   }
   if (nonBath > 0) {
-    out.nonBathroomArea = {label: 'Non-Bathroom Area', type: 'calc', qty: nonBath, unit: 'sq ft'};
+    out.nonBathroomArea = {isDisplay: true, orderNo: 11, label: 'Non-Bathroom Area', type: 'calc', qty: nonBath, unit: 'sq ft'};
   }
-  withContractMonths(out, d);
+  buildTotals(out, d);
   return out;
 }
 
 function saniclean(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.mainServiceFrequency ?? d.frequency);
+  const isAllInclusive = d.pricingMode === 'all_inclusive';
+  const isOutside = d.location === 'outsideBeltway';
+  const fixtureRate = isAllInclusive
+    ? n(d.allInclusiveWeeklyRatePerFixture)
+    : isOutside
+    ? n(d.outsideBeltwayRatePerFixture)
+    : n(d.insideBeltwayRatePerFixture);
+  out.pricingMode = {
+    isDisplay: true,
+    orderNo: 2,
+    label: 'Pricing Mode',
+    type: 'text',
+    value: isAllInclusive ? 'All Inclusive' : 'Per Item Charge',
+  };
+  out.location = {
+    isDisplay: true,
+    orderNo: 3,
+    label: 'Location',
+    type: 'text',
+    value: isOutside ? 'Outside Beltway' : 'Inside Beltway',
+  };
   out.fixtureBreakdown = [
     {label: 'Sinks', qty: n(d.sinks)},
     {label: 'Urinals', qty: n(d.urinals)},
     {label: 'Male Toilets', qty: n(d.maleToilets)},
     {label: 'Female Toilets', qty: n(d.femaleToilets)},
-  ];
-  withContractMonths(out, d);
+  ]
+    .filter(row => row.qty > 0)
+    .map((row, i) => ({
+      ...row,
+      isDisplay: true,
+      orderNo: 10 + i,
+      type: 'calc',
+      rate: fixtureRate,
+      total: round2(row.qty * fixtureRate),
+    }));
+  buildTotals(out, d, 'Weekly Service Total');
   return out;
 }
 
 function microfiber(d: any): any {
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
+  const bathroomRate = n(d.customIncludedBathroomRate ?? d.includedBathroomRate);
+  const hugeRate = n(d.customHugeBathroomRatePerSqFt ?? d.hugeBathroomRatePerSqFt);
+  const extraRate = n(d.customExtraAreaRatePerUnit ?? d.extraAreaRatePerUnit);
+  const standaloneRate = n(d.customStandaloneRatePerUnit ?? d.standaloneRatePerUnit);
+  const chemicalRate = n(d.customDailyChemicalPerGallon ?? d.dailyChemicalPerGallon);
   out.serviceBreakdown = [
-    {label: 'Bathrooms', qty: n(d.bathroomCount)},
-    {label: 'Huge Bathrooms', qty: n(d.hugeBathroomSqFt)},
-    {label: 'Extra Area', qty: n(d.extraAreaSqFt)},
-    {label: 'Standalone Service', qty: n(d.standaloneSqFt)},
-    {label: 'Chemical Supply', qty: n(d.chemicalGallons)},
-  ];
-  withContractMonths(out, d);
+    {label: 'Bathrooms', qty: n(d.bathroomCount), rate: bathroomRate},
+    {label: 'Huge Bathrooms', qty: n(d.hugeBathroomSqFt), rate: hugeRate, unit: 'sq ft'},
+    {label: 'Extra Area', qty: n(d.extraAreaSqFt), rate: extraRate, unit: 'sq ft'},
+    {label: 'Standalone Service', qty: n(d.standaloneSqFt), rate: standaloneRate, unit: 'sq ft'},
+    {label: 'Chemical Supply', qty: n(d.chemicalGallons), rate: chemicalRate, unit: 'gallons'},
+  ]
+    .filter(row => row.qty > 0)
+    .map((row, i) => ({
+      ...row,
+      isDisplay: true,
+      orderNo: 10 + i,
+      type: 'calc',
+      total: round2(row.qty * row.rate),
+    }));
+  buildTotals(out, d);
   return out;
 }
 
@@ -143,26 +257,63 @@ function rpmWindows(d: any): any {
     {label: 'Small Windows', qty: n(d.smallQty), rate: n(d.smallWindowRate)},
     {label: 'Medium Windows', qty: n(d.mediumQty), rate: n(d.mediumWindowRate)},
     {label: 'Large Windows', qty: n(d.largeQty), rate: n(d.largeWindowRate)},
-  ];
+  ]
+    .filter(row => row.qty > 0)
+    .map((row, i) => ({
+      ...row,
+      isDisplay: true,
+      orderNo: 10 + i,
+      type: 'calc',
+      total: round2(row.qty * row.rate),
+    }));
   if (d.selectedRateCategory) {
-    out.rateCategory = {value: d.selectedRateCategory === 'greenRate' ? 'Green Rate' : 'Red Rate'};
+    out.rateCategory = {
+      isDisplay: true,
+      orderNo: 2,
+      label: 'Rate Category',
+      type: 'text',
+      value: d.selectedRateCategory === 'greenRate' ? 'Green Rate' : 'Red Rate',
+    };
   }
-  withContractMonths(out, d);
+  buildTotals(out, d);
   return out;
 }
 
 function foamingDrain(d: any): any {
-  // Web reads foaming drain entirely from flat fields — just add a frequency object.
   const out: any = {...d};
   out.frequency = freqObj(d.frequency);
-  withContractMonths(out, d);
+  out.drainBreakdown = [
+    {label: 'Standard Drains', qty: n(d.standardDrainCount), rate: n(d.standardDrainRate)},
+    {label: 'Grease Trap Drains', qty: n(d.greaseTrapCount), rate: n(d.greaseWeeklyRate)},
+    {label: 'Green Drains', qty: n(d.greenDrainCount), rate: n(d.greenWeeklyRate)},
+  ]
+    .filter(row => row.qty > 0)
+    .map((row, i) => ({
+      ...row,
+      isDisplay: true,
+      orderNo: 10 + i,
+      total: round2(row.qty * row.rate),
+    }));
+  if (n(d.installation) > 0) {
+    out.installationFee = {
+      isDisplay: true,
+      orderNo: 20,
+      label: 'Installation Total',
+      type: 'dollar',
+      amount: round2(n(d.installation)),
+    };
+  }
+  buildTotals(out, d);
   return out;
 }
 
 function refreshPowerScrub(d: any): any {
   // Already stored with flat area objects + hourlyRate/minimumVisit/frequency.
   const out: any = {...d};
-  withContractMonths(out, d);
+  const months = n(d.contractMonths) || undefined;
+  if (months) {
+    out.totals = {...(out.totals ?? {}), contract: {...(out.totals?.contract ?? {}), months}};
+  }
   return out;
 }
 

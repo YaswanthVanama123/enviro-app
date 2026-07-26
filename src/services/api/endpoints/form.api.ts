@@ -60,6 +60,7 @@ export interface ServiceAgreementData {
 export interface FormPayload {
   headerTitle: string;
   headerRows: HeaderRow[];
+  customerName?: string;
   products: {
     products?: any[];
     smallProducts: any[];

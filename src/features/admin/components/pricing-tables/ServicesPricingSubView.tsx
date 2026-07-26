@@ -2,7 +2,10 @@ import React, {useState, useEffect} from 'react';
 import {View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl, StyleSheet} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {ServiceConfig} from '../../../../services/api/endpoints/pricing.api';
-import {flattenConfig} from '../../utils/pricing.utils';
+import {extractConfigFields} from '../../utils/pricing.utils';
+import {useConfigFieldEditor} from '../../hooks/useConfigFieldEditor';
+import {EditValueModal} from '../pricing-shared/EditValueModal';
+import {PricingFieldRow} from '../pricing-shared/PricingFieldRow';
 import {ServiceDetailsModal} from './ServiceDetailsModal';
 import {SkeletonRow} from '../pricing-shared/SkeletonRow';
 import {Colors} from '../../../../theme/colors';
@@ -14,6 +17,7 @@ interface ServicesPricingSubViewProps {
   loading: boolean;
   onRefresh: () => void;
   refreshing: boolean;
+  onConfigUpdated?: (updated: ServiceConfig) => void;
 }
 
 export function ServicesPricingSubView({
@@ -21,6 +25,7 @@ export function ServicesPricingSubView({
   loading,
   onRefresh,
   refreshing,
+  onConfigUpdated,
 }: ServicesPricingSubViewProps) {
   const [activeService, setActiveService] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,6 +36,9 @@ export function ServicesPricingSubView({
     }
   }, [configs, activeService]);
 
+  const current = configs.find(c => (c._id ?? c.serviceId) === activeService) ?? configs[0] ?? null;
+  const editor = useConfigFieldEditor(current, onConfigUpdated);
+
   if (loading) {
     return (
       <View style={styles.sectionShell}>
@@ -40,7 +48,7 @@ export function ServicesPricingSubView({
     );
   }
 
-  if (!configs.length) {
+  if (!configs.length || !current) {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="settings-outline" size={44} color={Colors.textMuted} />
@@ -52,8 +60,7 @@ export function ServicesPricingSubView({
     );
   }
 
-  const current = configs.find(c => (c._id ?? c.serviceId) === activeService) ?? configs[0];
-  const configRows = flattenConfig(current.config, current.serviceId);
+  const configRows = extractConfigFields(current.config, current.serviceId);
   const serviceKey = current._id ?? current.serviceId;
 
   return (
@@ -83,12 +90,9 @@ export function ServicesPricingSubView({
       <FlatList
         key={serviceKey}
         data={configRows}
-        keyExtractor={(_, i) => String(i)}
+        keyExtractor={f => f.key}
         renderItem={({item}) => (
-          <View style={styles.configFieldRow}>
-            <Text style={styles.configFieldLabel}>{item.label}</Text>
-            <Text style={styles.configFieldValue}>{item.value}</Text>
-          </View>
+          <PricingFieldRow field={item} onEdit={editor.open} showDescription={false} />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
@@ -137,6 +141,22 @@ export function ServicesPricingSubView({
         visible={modalVisible}
         config={current}
         onClose={() => setModalVisible(false)}
+        onSaved={onConfigUpdated}
+      />
+
+      <EditValueModal
+        visible={editor.field !== null}
+        title="Edit Pricing"
+        subtitle={current.label || current.serviceId}
+        fieldLabel={editor.field?.label ?? ''}
+        value={editor.value}
+        onChangeValue={editor.changeValue}
+        saving={editor.saving}
+        error={editor.error}
+        success={editor.success}
+        successText="Pricing updated!"
+        onCancel={editor.cancel}
+        onSave={editor.save}
       />
     </View>
   );
@@ -249,26 +269,6 @@ const styles = StyleSheet.create({
   },
   inactiveBadgeText: {
     color: '#6b7280',
-  },
-  configFieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 11,
-    backgroundColor: Colors.surface,
-  },
-  configFieldLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  configFieldValue: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    textAlign: 'right',
   },
   separator: {
     height: 1,

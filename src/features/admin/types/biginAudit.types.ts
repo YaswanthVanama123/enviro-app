@@ -19,6 +19,21 @@ export interface BiginAuditLog {
   updatedAt: string;
 }
 
+export interface ScrapeSession {
+  _id: string;
+  sessionId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  progressMessage: string;
+  logsScraped: number;
+  logsStored: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  error: string | null;
+  triggeredBy: string;
+  createdAt: string;
+}
+
 export interface ScrapeStatus {
   isRunning: boolean;
   lastScrapeAt: string | null;

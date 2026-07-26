@@ -57,6 +57,21 @@ export interface MappingQueryParams {
   skip?: number;
 }
 
+export interface ConnectedCompany {
+  biginId: string;
+  companyName: string;
+  agreementCount: number;
+}
+
+export interface FarBreakdownRow {
+  agreementId: string;
+  title: string;
+  status: string;
+  hasCommission: boolean;
+  redline: number;
+  greenline: number;
+}
+
 const BASE_PATH = '/api/company-mappings';
 
 export const companyMappingApi = {
@@ -237,6 +252,68 @@ export const companyMappingApi = {
       return body?.success ? body.data : null;
     } catch (error) {
       console.error('Error bulk saving mappings:', error);
+      return null;
+    }
+  },
+
+  async getConnectedCompanies(): Promise<ConnectedCompany[] | null> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ConnectedCompany[];
+      }>(`${BASE_PATH}/connected-companies`);
+      const body = response.data as any;
+      return body ? (body.data || []) : null;
+    } catch (error) {
+      console.error('Error fetching connected companies:', error);
+      return null;
+    }
+  },
+
+  async getFarBreakdown(biginId: string): Promise<FarBreakdownRow[] | null> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        agreements: FarBreakdownRow[];
+      }>(`${BASE_PATH}/far-breakdown/${encodeURIComponent(biginId)}`);
+      const body = response.data as any;
+      return body ? (body.agreements || []) : null;
+    } catch (error) {
+      console.error('Error fetching far breakdown:', error);
+      return null;
+    }
+  },
+
+  async recalcCompanyFar(
+    biginId: string,
+  ): Promise<{redline: number; greenline: number} | null> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        prior: {redline: number; greenline: number};
+        agreementCount: number;
+      }>(`${BASE_PATH}/recalc-far/${encodeURIComponent(biginId)}`, {});
+      const body = response.data as any;
+      const prior = body?.prior;
+      return prior
+        ? {redline: Number(prior.redline) || 0, greenline: Number(prior.greenline) || 0}
+        : null;
+    } catch (error) {
+      console.error('Error recalculating company far:', error);
+      return null;
+    }
+  },
+
+  async syncMappings(): Promise<{updated: number} | null> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        data: {updated: number};
+      }>(`${BASE_PATH}/sync`, {});
+      const body = response.data as any;
+      return body?.success ? body.data : null;
+    } catch (error) {
+      console.error('Error syncing mappings:', error);
       return null;
     }
   },

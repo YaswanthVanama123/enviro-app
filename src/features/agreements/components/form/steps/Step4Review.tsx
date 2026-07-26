@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FormState} from '../../../hooks/useFormFilling';
@@ -6,11 +6,20 @@ import {Colors} from '../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
 import {formatCurrency} from '../../../../../shared/utils/format.utils';
-import {companyMappingApi} from '../../../../../services/api/endpoints/companyMapping.api';
+import {type ResolvedCommissionRules} from '../../../../admin/types/commission.types';
 import {GlobalCommissionSummary} from '../../commission';
 
 interface Step4ReviewProps {
   form: FormState;
+  accountTypeCache: Record<number, any>;
+  priorQuotaCredit?: number;
+  rulesOverride?: ResolvedCommissionRules | null;
+  isCompanyMapped: boolean;
+  isRouteStarMapped: boolean;
+  isNewLocation: boolean;
+  onNewLocationChange: (value: boolean) => void;
+  priorFarRedline?: number;
+  priorFarGreenline?: number;
 }
 
 const FREQ_MULT: Record<string, number> = {
@@ -49,7 +58,18 @@ function ReviewRow({label, value}: {label: string; value: string | number}) {
   );
 }
 
-export function Step4Review({form}: Step4ReviewProps) {
+export function Step4Review({
+  form,
+  accountTypeCache,
+  priorQuotaCredit,
+  rulesOverride = null,
+  isCompanyMapped,
+  isRouteStarMapped,
+  isNewLocation,
+  onNewLocationChange,
+  priorFarRedline = 0,
+  priorFarGreenline = 0,
+}: Step4ReviewProps) {
   const {
     headerTitle,
     headerRows,
@@ -153,23 +173,7 @@ export function Step4Review({form}: Step4ReviewProps) {
     ? new Date(startDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
     : 'Not set';
 
-  const [isNewLocation, setIsNewLocation] = useState<boolean>(false);
   const [isCommissionExpanded, setIsCommissionExpanded] = useState<boolean>(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    const biginId = form.biginCompanyId;
-    if (!biginId) return;
-    companyMappingApi
-      .getStatusByBigin(biginId)
-      .then(status => {
-        if (!cancelled && status) setIsNewLocation(!status.isExistingLocation);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [form.biginCompanyId]);
 
 
   return (
@@ -392,15 +396,17 @@ export function Step4Review({form}: Step4ReviewProps) {
           <View style={styles.commissionBody}>
             <GlobalCommissionSummary
               services={form.services}
-              accountTypeCache={form.accountTypeCache || {}}
+              accountTypeCache={accountTypeCache}
               contractMonths={contractMonths}
-              priorQuotaCredit={form.loadedPriorQuotaCredit ?? undefined}
-              rulesOverride={form.loadedCommissionRules ?? null}
+              priorQuotaCredit={priorQuotaCredit}
+              rulesOverride={rulesOverride}
               isNewLocation={isNewLocation}
               showDetectButton={false}
-              isCompanyMapped={true}
-              isRouteStarMapped={true}
-              onNewLocationChange={setIsNewLocation}
+              isCompanyMapped={isCompanyMapped}
+              isRouteStarMapped={isRouteStarMapped}
+              priorFarRedline={priorFarRedline}
+              priorFarGreenline={priorFarGreenline}
+              onNewLocationChange={onNewLocationChange}
               embedded
             />
           </View>

@@ -4,6 +4,7 @@ import {apiClient} from '../client';
 import type {
   BiginAuditLog,
   ScrapeStatus,
+  ScrapeSession,
   AuditStats,
   AuditLogsListResponse,
   AuditLogsQueryParams,
@@ -91,6 +92,38 @@ export const biginAuditApi = {
       return body ? (body.data ?? body) : null;
     } catch (error) {
       console.error('Error fetching scrape status:', error);
+      return null;
+    }
+  },
+
+  async getScrapeHistory(params?: {
+    limit?: number;
+    skip?: number;
+  }): Promise<{
+    data: ScrapeSession[];
+    pagination: {total: number; limit: number; skip: number; hasMore: boolean};
+  } | null> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.limit) {queryParams.append('limit', String(params.limit));}
+      if (params?.skip) {queryParams.append('skip', String(params.skip));}
+
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ScrapeSession[];
+        pagination: {total: number; limit: number; skip: number; hasMore: boolean};
+      }>(`${BASE_PATH}/scrape/history?${queryParams.toString()}`);
+
+      const body = response.data as any;
+      if (body && body.success !== false) {
+        return {
+          data: body.data || [],
+          pagination: body.pagination || {total: 0, limit: 20, skip: 0, hasMore: false},
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching scrape history:', error);
       return null;
     }
   },

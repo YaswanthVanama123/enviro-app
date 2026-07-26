@@ -10,6 +10,7 @@ import {
 } from '../../../services/api/endpoints/form.api';
 import {normalizeEditServices} from '../utils/serviceDataTransformers';
 import {serviceToBackendFormat} from '../utils/serviceToBackend';
+import {extractCustomerName, resolveDocumentTitle} from '../utils/customerName';
 import {hasPriceChanges, getPriceChangeCount, createVersionLogFile, trackProductChange, clearPriceChanges} from '../utils/fileLogger';
 import {useAuth} from '../../admin/context/AdminAuthContext';
 import {computeGlobalCommission} from './useServiceCommission';
@@ -882,15 +883,52 @@ export function useFormFilling(editAgreementId?: string) {
         }
       : form.loadedCommission;
 
+    const productFreqMult = (freq: string): number =>
+      ({
+        daily: 30,
+        weekly: 4.33,
+        biweekly: 2,
+        'bi-weekly': 2,
+        monthly: 1,
+        everyFourWeeks: 1.0833,
+        quarterly: 1 / 3,
+        yearly: 1 / 12,
+      } as Record<string, number>)[freq] ?? 1;
+
+    let productOnceTotal = 0;
+    let productMonthlyTotal = 0;
+    for (const p of form.smallProducts) {
+      const base = p.qty * p.unitPrice;
+      if ((p.costType ?? 'productCost') === 'productCost') {
+        productOnceTotal += base;
+      } else {
+        productMonthlyTotal += base * productFreqMult(p.frequency);
+      }
+    }
+    for (const p of form.bigProducts) {
+      productMonthlyTotal += p.qty * p.amount * productFreqMult(p.frequency);
+    }
+    for (const d of form.dispensers) {
+      if ((d.costType ?? 'productCost') === 'warranty') {
+        productMonthlyTotal += d.qty * d.warrantyRate * productFreqMult(d.frequency);
+      } else {
+        productOnceTotal += d.qty * d.replacementRate;
+      }
+    }
+    const productContractTotal =
+      productOnceTotal + productMonthlyTotal * form.contractMonths;
+
+    const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+
     const summary: GlobalSummary = {
       contractMonths: form.contractMonths,
       tripCharge: form.tripCharge,
       tripChargeFrequency: form.tripChargeFrequency,
       parkingCharge: form.parkingCharge,
       parkingChargeFrequency: form.parkingChargeFrequency,
-      serviceAgreementTotal: 0,
-      productMonthlyTotal: 0,
-      productContractTotal: 0,
+      serviceAgreementTotal: round2(totalCurrentContract),
+      productMonthlyTotal: round2(productMonthlyTotal),
+      productContractTotal: round2(productContractTotal),
       quotaCredit: canCalculate
         ? Math.round((commissionResult.totalQuotaCredit || 0) * 100) / 100
         : form.loadedQuotaCredit ?? 0,
@@ -948,9 +986,12 @@ export function useFormFilling(editAgreementId?: string) {
       })),
     ];
 
+    const customerName = extractCustomerName(form.headerRows);
+
     return {
-      headerTitle: form.headerTitle || 'New Agreement',
+      headerTitle: resolveDocumentTitle(form.headerTitle, form.headerRows),
       headerRows: form.headerRows,
+      customerName,
       products: {
         products: mergedProducts,
         dispensers,
@@ -974,7 +1015,7 @@ export function useFormFilling(editAgreementId?: string) {
     };
   }, [form, baseCommissionRate, quotaLevelData, activeRules, effectiveCommissionRules, effectivePriorQuotaCredit, isRouteStarMapped, isNewLocation, priorFarRedline, priorFarGreenline]);
 
-  const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
+  const saveDraft = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'; title: string}> => {
     setForm(prev => ({...prev, saving: true, saveError: null}));
     const payload = buildPayload();
     const docStatus = (payload.status ?? 'saved') as 'saved' | 'pending_approval';
@@ -1000,7 +1041,7 @@ export function useFormFilling(editAgreementId?: string) {
           salespersonId,
           salespersonName,
           saveAction: 'save_draft',
-          documentTitle: form.headerTitle || 'Untitled Document',
+          documentTitle: payload.headerTitle,
         });
         console.log('[FormFilling] Draft price-change log created');
       } catch (e) {
@@ -1012,10 +1053,10 @@ export function useFormFilling(editAgreementId?: string) {
       saving: false,
       saveError: ok ? null : 'Failed to save. Please try again.',
     }));
-    return {ok, agreementId, status: docStatus};
-  }, [form.savedId, form.headerTitle, buildPayload, salespersonId, salespersonName]);
+    return {ok, agreementId, status: docStatus, title: payload.headerTitle};
+  }, [form.savedId, buildPayload, salespersonId, salespersonName]);
 
-  const generate = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'}> => {
+  const generate = useCallback(async (): Promise<{ok: boolean; agreementId: string | null; status: 'saved' | 'pending_approval'; title: string}> => {
     // "Save & Generate PDF" — mirrors the web app:
     //   1. save the agreement (create new / update existing)
     //   2. createVersion → produces the PDF FILE shown in the agreement folder
@@ -1061,7 +1102,7 @@ export function useFormFilling(editAgreementId?: string) {
               salespersonId,
               salespersonName,
               saveAction: 'generate_pdf',
-              documentTitle: form.headerTitle || 'Untitled Document',
+              documentTitle: payload.headerTitle,
             });
             console.log('[FormFilling] Generate price-change log created (', getPriceChangeCount(), 'changes)');
           } catch (logErr) {
@@ -1080,8 +1121,8 @@ export function useFormFilling(editAgreementId?: string) {
       saving: false,
       saveError: ok ? null : 'Failed to generate. Please try again.',
     }));
-    return {ok, agreementId, status: docStatus};
-  }, [form.savedId, form.headerTitle, buildPayload, salespersonId, salespersonName]);
+    return {ok, agreementId, status: docStatus, title: payload.headerTitle};
+  }, [form.savedId, buildPayload, salespersonId, salespersonName]);
 
   const reset = useCallback(() => {
     setForm(INITIAL_STATE);

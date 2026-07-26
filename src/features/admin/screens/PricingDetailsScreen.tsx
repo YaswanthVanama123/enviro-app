@@ -15,6 +15,9 @@ import {RouteStarCustomersSection} from '../components/routestar/RouteStarCustom
 import {BiginAuditSection} from '../components/bigin/BiginAuditSection';
 import {BiginCompaniesSection} from '../components/bigin/BiginCompaniesSection';
 import {CompanyMappingSection} from '../components/company-mapping/CompanyMappingSection';
+import {AccountTypeDetectorSection} from '../components/account-type/AccountTypeDetectorSection';
+import {LocationFarSection} from '../components/location-far/LocationFarSection';
+import {MyInsideSalesScreen} from '../../inside-sales/screens/MyInsideSalesScreen';
 import {pdfApi} from '../../../services/api/endpoints/pdf.api';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
@@ -75,6 +78,9 @@ export function PricingDetailsScreen() {
         {activeTab === 'audit' && <BiginAuditSection />}
         {activeTab === 'companies' && <BiginCompaniesSection />}
         {activeTab === 'mapping' && <CompanyMappingSection />}
+        {activeTab === 'accountType' && <AccountTypeDetectorSection />}
+        {activeTab === 'locationFar' && <LocationFarSection />}
+        {activeTab === 'insideSales' && <MyInsideSalesScreen adminMode embedded />}
       </View>
     </View>
   );

@@ -8,6 +8,9 @@ import {
   SERVICE_SUBTABS,
   extractConfigFields,
 } from '../../utils/pricing.utils';
+import {useConfigFieldEditor} from '../../hooks/useConfigFieldEditor';
+import {EditValueModal} from '../pricing-shared/EditValueModal';
+import {PricingFieldRow} from '../pricing-shared/PricingFieldRow';
 import {Colors} from '../../../../theme/colors';
 import {Spacing, Radius} from '../../../../theme/spacing';
 import {FontSize} from '../../../../theme/typography';
@@ -16,11 +19,13 @@ interface ServiceDetailsModalProps {
   visible: boolean;
   config: ServiceConfig | null;
   onClose: () => void;
+  onSaved?: (updated: ServiceConfig) => void;
 }
 
-export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsModalProps) {
+export function ServiceDetailsModal({visible, config, onClose, onSaved}: ServiceDetailsModalProps) {
   const insets = useSafeAreaInsets();
   const [activeSubTab, setActiveSubTab] = useState<ServiceSubTab>('unit');
+  const editor = useConfigFieldEditor(config, onSaved);
 
   useEffect(() => {
     if (visible) {setActiveSubTab('unit');}
@@ -97,17 +102,7 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
           data={visibleFields}
           keyExtractor={f => f.key}
           renderItem={({item}) => (
-            <View style={detailStyles.fieldCard}>
-              <View style={detailStyles.fieldCardLeft}>
-                <Text style={detailStyles.fieldCardLabel}>{item.label}</Text>
-                {item.description ? (
-                  <Text style={detailStyles.fieldCardDesc}>{item.description}</Text>
-                ) : null}
-              </View>
-              <View style={detailStyles.fieldCardRight}>
-                <Text style={detailStyles.fieldCardValue}>{item.value}</Text>
-              </View>
-            </View>
+            <PricingFieldRow field={item} onEdit={editor.open} />
           )}
           ItemSeparatorComponent={() => <View style={detailStyles.separator} />}
           ListEmptyComponent={
@@ -120,6 +115,21 @@ export function ServiceDetailsModal({visible, config, onClose}: ServiceDetailsMo
           showsVerticalScrollIndicator={false}
         />
       </View>
+
+      <EditValueModal
+        visible={editor.field !== null}
+        title="Edit Pricing"
+        subtitle={editor.field?.label}
+        fieldLabel={editor.field?.label ?? ''}
+        value={editor.value}
+        onChangeValue={editor.changeValue}
+        saving={editor.saving}
+        error={editor.error}
+        success={editor.success}
+        successText="Pricing updated!"
+        onCancel={editor.cancel}
+        onSave={editor.save}
+      />
     </Modal>
   );
 }
@@ -236,40 +246,6 @@ const detailStyles = StyleSheet.create({
   },
   subTabBadgeTextActive: {
     color: Colors.primary,
-  },
-  fieldCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    backgroundColor: Colors.surface,
-    gap: Spacing.md,
-  },
-  fieldCardLeft: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  fieldCardRight: {
-    flexShrink: 0,
-    alignItems: 'flex-end',
-  },
-  fieldCardLabel: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  fieldCardDesc: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    lineHeight: 16,
-  },
-  fieldCardValue: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: '#16a34a',
-    textAlign: 'right',
-    maxWidth: 130,
   },
   separator: {
     height: 1,

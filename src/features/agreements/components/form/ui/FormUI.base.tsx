@@ -129,14 +129,18 @@ interface DropdownRowProps {
   value: string;
   options: {value: string; label: string}[];
   onChange: (v: string) => void;
+  subtitle?: string;
 }
 
-export function DropdownRow({label, value, options, onChange}: DropdownRowProps) {
+export function DropdownRow({label, value, options, onChange, subtitle}: DropdownRowProps) {
   const [open, setOpen] = React.useState(false);
   const current = options.find(o => o.value === value);
   return (
     <View style={ss.fieldRow}>
-      <Text style={ss.fieldLabel}>{label}</Text>
+      <View style={ss.fieldLabelBlock}>
+        <Text style={ss.fieldLabel}>{label}</Text>
+        {subtitle ? <Text style={ss.fieldSubtitle}>{subtitle}</Text> : null}
+      </View>
       <View>
         <TouchableOpacity style={ss.dropdown} onPress={() => setOpen(p => !p)}>
           <Text style={ss.dropdownText}>{current?.label ?? value}</Text>
@@ -282,7 +286,9 @@ const ss = StyleSheet.create({
   sectionIconBox: {width: 24, height: 24, borderRadius: Radius.sm, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center'},
   sectionTitle: {fontSize: FontSize.sm, fontWeight: '700', color: Colors.textPrimary, textTransform: 'uppercase', letterSpacing: 0.5},
   fieldRow: {paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, gap: Spacing.xs},
+  fieldLabelBlock: {gap: 2},
   fieldLabel: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary},
+  fieldSubtitle: {fontSize: FontSize.xs, color: Colors.textMuted},
   required: {color: Colors.primary},
   input: {backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, fontSize: FontSize.md, color: Colors.textPrimary},
   inputMultiline: {height: 80, textAlignVertical: 'top'},
