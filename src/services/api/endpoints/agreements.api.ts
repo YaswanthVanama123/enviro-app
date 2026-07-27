@@ -253,6 +253,7 @@ export interface ZohoUploadResult {
   success: boolean;
   message: string;
   error?: string;
+  data?: {deal?: {id?: string}; [key: string]: any};
 }
 
 export interface ZohoFirstTimePayload {
@@ -260,11 +261,25 @@ export interface ZohoFirstTimePayload {
   companyName: string;
   dealName: string;
   noteText: string;
+  pipelineName?: string;
+  stage?: string;
+  skipFileUpload?: boolean;
 }
 
 export interface ZohoUpdatePayload {
   noteText: string;
   dealId?: string;
+  skipNoteCreation?: boolean;
+  versionId?: string;
+  versionFileName?: string;
+}
+
+export interface ZohoAttachedFilePayload {
+  dealId: string;
+  noteText: string;
+  dealName: string;
+  skipNoteCreation?: boolean;
+  fileType?: string;
 }
 
 export interface ZohoUser {
@@ -337,6 +352,17 @@ export const zohoApi = {
       payload,
     );
     return res.data ?? {success: false, message: res.error ?? 'Update failed'};
+  },
+
+  async uploadAttachedFile(
+    fileId: string,
+    payload: ZohoAttachedFilePayload,
+  ): Promise<ZohoUploadResult> {
+    const res = await apiClient.post<ZohoUploadResult>(
+      `/api/zoho-upload/attached-file/${fileId}/add-to-deal`,
+      payload,
+    );
+    return res.data ?? {success: false, message: res.error ?? 'Attach failed'};
   },
 
   async getUsers(): Promise<ZohoUser[]> {

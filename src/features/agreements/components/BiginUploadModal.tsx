@@ -17,7 +17,9 @@ import {
   zohoApi,
   ZohoUploadStatus,
   ZohoCompany,
-} from '../../../services/api/endpoints/agreements.api';import {Colors} from '../../../theme/colors';
+  SavedFileListItem,
+} from '../../../services/api/endpoints/agreements.api';
+import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
 
@@ -25,14 +27,45 @@ interface BiginUploadModalProps {
   visible: boolean;
   agreementId: string;
   agreementTitle: string;
+  files?: SavedFileListItem[];
   onClose: () => void;
   onSuccess: () => void;
+}
+
+type UploadStrategy = {
+  type: 'agreement' | 'attached';
+  useAgreementId: boolean;
+  description: string;
+};
+
+// Mirrors getFileUploadStrategy in the web app's ZohoUpload.tsx — decides whether
+// a file goes up the agreement/version route or the attached-file route.
+function getFileUploadStrategy(file: SavedFileListItem): UploadStrategy {
+  if (file.fileType === 'main_pdf' || file.fileType === 'version_pdf') {
+    return {
+      type: 'agreement',
+      useAgreementId: true,
+      description: file.fileType === 'version_pdf' ? 'Version PDF' : 'Main Agreement',
+    };
+  }
+  if (file.fileType === 'attached_pdf') {
+    return {type: 'attached', useAgreementId: false, description: 'Manual Upload'};
+  }
+  if (file.fileType === 'version_log') {
+    return {type: 'attached', useAgreementId: false, description: 'Version Log'};
+  }
+  const fileName = file.fileName?.toLowerCase() || '';
+  if (fileName.includes('agreement') || fileName.includes('main')) {
+    return {type: 'agreement', useAgreementId: true, description: 'Agreement (by filename)'};
+  }
+  return {type: 'agreement', useAgreementId: true, description: 'Unknown (default to agreement)'};
 }
 
 export function BiginUploadModal({
   visible,
   agreementId,
   agreementTitle,
+  files,
   onClose,
   onSuccess,
 }: BiginUploadModalProps) {
@@ -52,6 +85,41 @@ export function BiginUploadModal({
   const [taskSubject, setTaskSubject] = useState('');
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
+
+  const bulkFiles = useMemo(() => files ?? [], [files]);
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!visible) {return;}
+    setSelectedFiles(
+      bulkFiles.length > 0
+        ? new Set(bulkFiles.map(f => f.id))
+        : new Set([agreementId]),
+    );
+  }, [visible, bulkFiles, agreementId]);
+
+  const toggleFileSelection = useCallback((fileId: string) => {
+    setSelectedFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(fileId)) {
+        next.delete(fileId);
+      } else {
+        next.add(fileId);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAllFiles = useCallback(
+    () => setSelectedFiles(new Set(bulkFiles.map(f => f.id))),
+    [bulkFiles],
+  );
+  const deselectAllFiles = useCallback(() => setSelectedFiles(new Set()), []);
+
+  const selectedBulkFiles = useMemo(
+    () => bulkFiles.filter(f => selectedFiles.has(f.id)),
+    [bulkFiles, selectedFiles],
+  );
 
   useEffect(() => {
     if (!visible) {return;}
@@ -93,6 +161,33 @@ export function BiginUploadModal({
     return companies.filter(c => c.name.toLowerCase().includes(q));
   }, [companies, companySearch]);
 
+  const runTaskIfRequested = useCallback(async () => {
+    if (taskSubject.trim()) {
+      await zohoApi.createTask(agreementId, {
+        subject: taskSubject.trim(),
+        dueDate: taskDueDate.trim() || undefined,
+        description: taskDescription.trim() || undefined,
+      });
+    }
+  }, [taskSubject, taskDueDate, taskDescription, agreementId]);
+
+  const finishBulk = useCallback(
+    async (successCount: number, failCount: number, total: number) => {
+      if (successCount > 0) {
+        await runTaskIfRequested();
+        setStep('done');
+        if (failCount > 0) {
+          setErrorMsg(`${successCount} of ${total} files uploaded, ${failCount} failed.`);
+        }
+        onSuccess();
+      } else {
+        setErrorMsg('All uploads failed. Please try again.');
+        setStep(status?.isFirstTime ? 'first-time' : 'update');
+      }
+    },
+    [runTaskIfRequested, onSuccess, status?.isFirstTime],
+  );
+
   const handleSubmit = useCallback(async () => {
     if (step === 'first-time') {
       if (!selectedCompany) {
@@ -104,40 +199,154 @@ export function BiginUploadModal({
         return;
       }
     }
+    if (bulkFiles.length > 0 && selectedBulkFiles.length === 0) {
+      setErrorMsg('Please select at least one file to upload.');
+      return;
+    }
     setErrorMsg('');
     setStep('submitting');
 
+    const trimmedNote = noteText.trim();
+    const isFirstTime = !!status?.isFirstTime;
+
+    // ---- Bulk path: mirrors the web app's per-file strategy routing ----
+    if (bulkFiles.length > 0) {
+      const fileNames = selectedBulkFiles.map(f => f.fileName);
+      const bulkNote = isFirstTime
+        ? `${trimmedNote}\n\nBulk upload of ${selectedBulkFiles.length} selected documents:\n${fileNames.map(n => `• ${n}`).join('\n')}`
+        : `${trimmedNote}\n\nUpdate with ${selectedBulkFiles.length} selected documents:\n${fileNames.map(n => `• ${n}`).join('\n')}`;
+
+      let successCount = 0;
+      let failCount = 0;
+      let dealId: string | undefined = status?.mapping?.dealId;
+      let isFirstFileUpload = true;
+
+      const hasAgreementFile = selectedBulkFiles.some(
+        f => getFileUploadStrategy(f).type === 'agreement',
+      );
+
+      for (const [index, file] of selectedBulkFiles.entries()) {
+        const strategy = getFileUploadStrategy(file);
+        try {
+          let result;
+
+          if (isFirstTime && index === 0) {
+            result = await zohoApi.firstTimeUpload(agreementId, {
+              companyId: selectedCompany!.id,
+              companyName: selectedCompany!.name,
+              dealName: dealName.trim(),
+              noteText: bulkNote,
+              skipFileUpload: hasAgreementFile || strategy.type === 'attached',
+            });
+            if (!result.success) {
+              failCount++;
+              break;
+            }
+            dealId = result.data?.deal?.id ?? dealId;
+            if (!dealId) {
+              failCount++;
+              break;
+            }
+            if (strategy.type === 'attached') {
+              const attached = await zohoApi.uploadAttachedFile(file.id, {
+                dealId,
+                noteText: `Bulk upload attached file: ${file.fileName}`,
+                dealName: dealName.trim(),
+                skipNoteCreation: true,
+                fileType: file.fileType,
+              });
+              attached.success ? successCount++ : failCount++;
+            } else {
+              const version = await zohoApi.updateUpload(agreementId, {
+                noteText: `First file in bulk upload: ${file.fileName}`,
+                dealId,
+                skipNoteCreation: true,
+                versionId: file.id,
+              });
+              version.success ? successCount++ : failCount++;
+            }
+            isFirstFileUpload = false;
+            continue;
+          }
+
+          if (strategy.type === 'attached') {
+            if (!dealId) {
+              failCount++;
+              continue;
+            }
+            result = await zohoApi.uploadAttachedFile(file.id, {
+              dealId,
+              noteText: isFirstFileUpload ? bulkNote : `Additional file in bulk upload: ${file.fileName}`,
+              dealName: status?.mapping?.dealName || dealName.trim() || 'Unknown Deal',
+              skipNoteCreation: !isFirstFileUpload,
+              fileType: file.fileType,
+            });
+          } else {
+            const targetId = strategy.useAgreementId ? agreementId : file.id;
+            result = await zohoApi.updateUpload(targetId, {
+              noteText: isFirstFileUpload ? bulkNote : `Additional file in bulk upload: ${file.fileName}`,
+              skipNoteCreation: !isFirstFileUpload,
+              versionId: file.id,
+              versionFileName: file.fileName,
+            });
+          }
+
+          if (result.success) {
+            successCount++;
+            isFirstFileUpload = false;
+          } else {
+            failCount++;
+          }
+        } catch {
+          failCount++;
+        }
+      }
+
+      await finishBulk(successCount, failCount, selectedBulkFiles.length);
+      return;
+    }
+
+    // ---- Single-document path ----
+    const includeFile = selectedFiles.has(agreementId);
     let result;
-    if (status?.isFirstTime) {
+    if (isFirstTime) {
       result = await zohoApi.firstTimeUpload(agreementId, {
         companyId: selectedCompany!.id,
         companyName: selectedCompany!.name,
         dealName: dealName.trim(),
-        noteText: noteText.trim(),
+        noteText: trimmedNote,
+        skipFileUpload: !includeFile,
       });
     } else {
       result = await zohoApi.updateUpload(agreementId, {
-        noteText: noteText.trim(),
+        noteText: trimmedNote,
         dealId: status?.mapping?.dealId,
+        skipNoteCreation: false,
       });
     }
 
     if (result.success) {
-      
-      if (taskSubject.trim()) {
-        await zohoApi.createTask(agreementId, {
-          subject: taskSubject.trim(),
-          dueDate: taskDueDate.trim() || undefined,
-          description: taskDescription.trim() || undefined,
-        });
-      }
+      await runTaskIfRequested();
       setStep('done');
       onSuccess();
     } else {
       setErrorMsg(result.message || result.error || 'Upload failed.');
-      setStep(status?.isFirstTime ? 'first-time' : 'update');
+      setStep(isFirstTime ? 'first-time' : 'update');
     }
-  }, [step, status, selectedCompany, dealName, noteText, taskSubject, taskDueDate, taskDescription, agreementId, onSuccess]);
+  }, [
+    step,
+    status,
+    selectedCompany,
+    dealName,
+    noteText,
+    agreementId,
+    onSuccess,
+    bulkFiles,
+    selectedBulkFiles,
+    selectedFiles,
+    finishBulk,
+    runTaskIfRequested,
+  ]);
 
   const renderCompanyItem = ({item}: {item: ZohoCompany}) => {
     const selected = selectedCompany?.id === item.id;
@@ -282,7 +491,75 @@ export function BiginUploadModal({
           </>
         )}
 
-        <Text style={[styles.fieldLabel, {marginTop: step === 'first-time' ? Spacing.md : 0}]}>
+        <View style={styles.sectionDivider} />
+        <View style={styles.filesHeaderRow}>
+          <Text style={styles.sectionHeaderPlain}>
+            {bulkFiles.length > 0
+              ? `Select Documents (${selectedFiles.size}/${bulkFiles.length})`
+              : `Document to Upload (${selectedFiles.has(agreementId) ? 1 : 0})`}
+          </Text>
+          {bulkFiles.length > 1 && (
+            <View style={styles.selectControls}>
+              <TouchableOpacity style={styles.selectCtrlBtn} onPress={selectAllFiles}>
+                <Text style={styles.selectCtrlText}>All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.selectCtrlBtn} onPress={deselectAllFiles}>
+                <Text style={styles.selectCtrlText}>None</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {bulkFiles.length > 0 ? (
+          bulkFiles.map(file => {
+            const checked = selectedFiles.has(file.id);
+            const strategy = getFileUploadStrategy(file);
+            return (
+              <TouchableOpacity
+                key={file.id}
+                style={styles.fileRow}
+                onPress={() => toggleFileSelection(file.id)}
+                activeOpacity={0.7}>
+                <View style={[styles.fileCheck, checked && styles.fileCheckSelected]}>
+                  {checked && <Ionicons name="checkmark" size={12} color="#fff" />}
+                </View>
+                <Ionicons name="document-text-outline" size={15} color={Colors.textMuted} />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileName} numberOfLines={1}>{file.fileName}</Text>
+                  <Text style={styles.fileMeta}>{strategy.description}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        ) : (
+          <TouchableOpacity
+            style={styles.fileRow}
+            onPress={() => toggleFileSelection(agreementId)}
+            activeOpacity={0.7}>
+            <View
+              style={[
+                styles.fileCheck,
+                selectedFiles.has(agreementId) && styles.fileCheckSelected,
+              ]}>
+              {selectedFiles.has(agreementId) && (
+                <Ionicons name="checkmark" size={12} color="#fff" />
+              )}
+            </View>
+            <Ionicons name="document-text-outline" size={15} color={Colors.textMuted} />
+            <View style={styles.fileInfo}>
+              <Text style={styles.fileName} numberOfLines={1}>{agreementTitle}</Text>
+              <Text style={styles.fileMeta}>PDF Document</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {selectedFiles.size === 0 && (
+          <Text style={styles.selectWarning}>
+            No files selected — only the note will be sent to Bigin.
+          </Text>
+        )}
+
+        <Text style={[styles.fieldLabel, {marginTop: Spacing.md}]}>
           Note / Description
         </Text>
         <TextInput
@@ -381,7 +658,8 @@ export function BiginUploadModal({
           </View>
 
           {renderContent()}
-        </View>      </KeyboardAvoidingView>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -650,6 +928,77 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 4,
+  },
+  sectionHeaderPlain: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  filesHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: 6,
+  },
+  selectControls: {
+    flexDirection: 'row',
+    gap: 6,
+    flexShrink: 0,
+  },
+  selectCtrlBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: '#f8fafc',
+  },
+  selectCtrlText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  fileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 8,
+  },
+  fileCheck: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  fileCheckSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  fileInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  fileName: {
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  fileMeta: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  selectWarning: {
+    fontSize: FontSize.xs,
+    color: '#d97706',
+    marginTop: 4,
   },
 
   submitBtn: {

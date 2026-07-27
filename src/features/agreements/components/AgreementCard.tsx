@@ -649,6 +649,7 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
         visible={showBiginModal}
         agreementId={agreement.id}
         agreementTitle={agreement.agreementTitle}
+        files={agreement.files}
         onClose={() => setShowBiginModal(false)}
         onSuccess={() => {
           setShowBiginModal(false);
