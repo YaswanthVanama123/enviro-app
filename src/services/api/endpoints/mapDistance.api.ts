@@ -21,6 +21,8 @@ export interface MapDistanceResult {
 export interface MapDistanceStats {
   totalRecords: number;
   customersWithData: number;
+  activeCustomers?: number;
+  customersMissingData?: number;
   lastSyncAt: string | null;
   lastSyncRecords: number;
   storageSizeBytes: number;
@@ -142,6 +144,42 @@ export const mapDistanceApi = {
         : {success: false, error: body?.error || response.error || 'Failed to start sync'};
     } catch (error) {
       console.error('Error starting sync:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async startUpdateSync(): Promise<{
+    success: boolean;
+    error?: string;
+    totalCustomers?: number;
+    refreshedCustomers?: number;
+    backfilledCustomers?: number;
+  }> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        error?: string;
+        totalCustomers?: number;
+        refreshedCustomers?: number;
+        backfilledCustomers?: number;
+      }>(`${BASE_PATH}/sync/update`, {});
+      const body = response.data as any;
+      return body?.success
+        ? {
+            success: true,
+            totalCustomers: body.totalCustomers,
+            refreshedCustomers: body.refreshedCustomers,
+            backfilledCustomers: body.backfilledCustomers,
+          }
+        : {
+            success: false,
+            error: body?.error || response.error || 'Failed to start update sync',
+          };
+    } catch (error) {
+      console.error('Error starting update sync:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

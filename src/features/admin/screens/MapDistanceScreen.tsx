@@ -164,6 +164,16 @@ export function MapDistanceScreen() {
     }
   };
 
+  const handleStartUpdateSync = async () => {
+    setError(null);
+    const result = await mapDistanceApi.startUpdateSync();
+    if (result.success) {
+      checkSyncStatus();
+    } else {
+      setError(result.error || 'Failed to start update sync');
+    }
+  };
+
   const handleCancelSync = async () => {
     const result = await mapDistanceApi.cancelSync();
     if (result.success) {
@@ -185,6 +195,13 @@ export function MapDistanceScreen() {
       c.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
       c.company?.toLowerCase().includes(pickerSearch.toLowerCase()),
   );
+
+  // "Update All Data" covers every active customer, including ones never synced,
+  // so the target is the active count when the server reports it.
+  const updateTargetCount = stats
+    ? stats.activeCustomers ?? stats.customersWithData
+    : 0;
+  const missingCount = stats?.customersMissingData ?? 0;
 
   const formatDate = (iso: string): string => {
     if (!iso) return '—';
@@ -394,6 +411,40 @@ export function MapDistanceScreen() {
                 <Text style={styles.syncButtonText}>Start Full Sync</Text>
               </TouchableOpacity>
             </View>
+
+            {}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Update Distance Data</Text>
+              <Text style={styles.cardDescription}>
+                Refresh stored records for every active customer. Customers that
+                have never been synced are picked up too.
+              </Text>
+              {missingCount > 0 && (
+                <View style={styles.missingBanner}>
+                  <Ionicons name="alert-circle-outline" size={14} color="#b45309" />
+                  <Text style={styles.missingBannerText}>
+                    {missingCount.toLocaleString()} customer
+                    {missingCount === 1 ? '' : 's'} never synced — this run will
+                    backfill them.
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.updateButton,
+                  (syncStatus.isRunning || updateTargetCount === 0) &&
+                    styles.syncButtonDisabled,
+                ]}
+                onPress={handleStartUpdateSync}
+                disabled={syncStatus.isRunning || updateTargetCount === 0}>
+                <Ionicons name="refresh-outline" size={18} color="#fff" />
+                <Text style={styles.syncButtonText}>
+                  {updateTargetCount > 0
+                    ? `Update All Data (${updateTargetCount.toLocaleString()} customers)`
+                    : 'No Data to Update'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -422,6 +473,19 @@ export function MapDistanceScreen() {
                     </Text>
                     <Text style={styles.statLabel}>Customers with Data</Text>
                   </View>
+
+                  {missingCount > 0 && (
+                    <View style={styles.statCard}>
+                      <View
+                        style={[styles.statIcon, {backgroundColor: '#fef3c7'}]}>
+                        <Ionicons name="alert-circle" size={20} color="#d97706" />
+                      </View>
+                      <Text style={[styles.statValue, {color: '#d97706'}]}>
+                        {missingCount.toLocaleString()}
+                      </Text>
+                      <Text style={styles.statLabel}>Never Synced</Text>
+                    </View>
+                  )}
 
                   <View style={styles.statCard}>
                     <View
@@ -706,6 +770,32 @@ const styles = StyleSheet.create({
   },
   syncButtonDisabled: {
     opacity: 0.6,
+  },
+  updateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  missingBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  missingBannerText: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: '#b45309',
+    lineHeight: 17,
   },
   syncButtonText: {
     fontSize: FontSize.md,
