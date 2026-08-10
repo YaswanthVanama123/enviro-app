@@ -174,6 +174,16 @@ export function MapDistanceScreen() {
     }
   };
 
+  const handleStartMissingSync = async () => {
+    setError(null);
+    const result = await mapDistanceApi.startMissingSync();
+    if (result.success) {
+      checkSyncStatus();
+    } else {
+      setError(result.error || 'Failed to start new-customer sync');
+    }
+  };
+
   const handleCancelSync = async () => {
     const result = await mapDistanceApi.cancelSync();
     if (result.success) {
@@ -444,6 +454,26 @@ export function MapDistanceScreen() {
                     : 'No Data to Update'}
                 </Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.newOnlyButton,
+                  (syncStatus.isRunning || missingCount === 0) &&
+                    styles.syncButtonDisabled,
+                ]}
+                onPress={handleStartMissingSync}
+                disabled={syncStatus.isRunning || missingCount === 0}>
+                <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+                <Text style={styles.syncButtonText}>
+                  {missingCount > 0
+                    ? `Fetch New Only (${missingCount.toLocaleString()})`
+                    : 'No New Customers'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.newOnlyHint}>
+                Fetches only customers that have never been stored. Runs
+                automatically once a day.
+              </Text>
             </View>
           </View>
         )}
@@ -779,6 +809,22 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
+  },
+  newOnlyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0f766e',
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  newOnlyHint: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    lineHeight: 16,
+    marginTop: 6,
   },
   missingBanner: {
     flexDirection: 'row',

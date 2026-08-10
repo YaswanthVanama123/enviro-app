@@ -187,6 +187,33 @@ export const mapDistanceApi = {
     }
   },
 
+  async startMissingSync(): Promise<{
+    success: boolean;
+    error?: string;
+    totalCustomers?: number;
+  }> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        error?: string;
+        totalCustomers?: number;
+      }>(`${BASE_PATH}/sync/missing`, {});
+      const body = response.data as any;
+      return body?.success
+        ? {success: true, totalCustomers: body.totalCustomers}
+        : {
+            success: false,
+            error: body?.error || response.error || 'Failed to start new-customer sync',
+          };
+    } catch (error) {
+      console.error('Error starting new-customer sync:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   async cancelSync(): Promise<{success: boolean; error?: string}> {
     try {
       const response = await apiClient.post<{success: boolean; error?: string}>(
