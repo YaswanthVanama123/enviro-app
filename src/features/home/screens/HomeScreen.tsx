@@ -166,7 +166,7 @@ export default function HomeScreen() {
               iconName="git-branch-outline"
               btnLabel="Click to extend"
               btnColor={Colors.green}
-              onPress={() => go('New')}
+              onPress={() => navigation.navigate('New' as any, {isExtension: true})}
               cardWidth={ACTION_CARD_WIDTH}
             />
           </View>

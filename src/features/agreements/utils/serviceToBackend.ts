@@ -219,6 +219,41 @@ function saniclean(d: any): any {
       rate: fixtureRate,
       total: round2(row.qty * fixtureRate),
     }));
+
+  // Facility components / add-ons reach the PDF as pdfExtras rows, matching the
+  // web app's labels and ordering. Quantity alone decides whether a row prints —
+  // a $0 rate is a comped item, not an empty one.
+  const luxuryQty = Number.isFinite(Number(d.luxuryUpgradeQty))
+    ? n(d.luxuryUpgradeQty)
+    : n(d.sinks);
+  const extraRows: Array<[string, number, number, number]> = [
+    ['Urinal Screens', n(d.addUrinalComponents ? d.urinalScreensQty : 0), n(d.urinalScreenMonthly), 13],
+    ['Urinal Mats', n(d.addUrinalComponents ? d.urinalMatsQty : 0), n(d.urinalMatMonthly), 14],
+    ['Toilet Clips', n(d.addMaleToiletComponents ? d.toiletClipsQty : 0), n(d.toiletClipsMonthly), 15],
+    ['Seat Cover Dispensers', n(d.addMaleToiletComponents ? d.seatCoverDispensersQty : 0), n(d.seatCoverDispenserMonthly), 16],
+    ['SaniPods', n(d.addFemaleToiletComponents ? d.sanipodsQty : 0), n(d.sanipodServiceMonthly), 17],
+    ['Warranty', n(d.warrantyDispensers), n(d.warrantyFeePerDispenserPerWeek), 18],
+    ['Microfiber Mopping', n(d.addMicrofiberMopping ? d.microfiberBathrooms : 0), n(d.microfiberMoppingPerBathroom), 19],
+    ['Luxury Upgrade', d.soapType === 'luxury' ? luxuryQty : 0, n(d.luxuryUpgradePerDispenser), 21],
+  ];
+
+  const money = (v: number) => `$${round2(v).toFixed(2)}`;
+  const extras = extraRows
+    .filter(([, qty]) => qty > 0)
+    .map(([label, qty, rate, orderNo]) => ({
+      label,
+      type: 'atCharge',
+      v1: qty,
+      v2: `${money(rate)}/mo`,
+      v3: money(qty * rate),
+      isDisplay: true,
+      orderNo,
+    }));
+
+  if (extras.length > 0) {
+    out.pdfExtras = [...(Array.isArray(d.pdfExtras) ? d.pdfExtras : []), ...extras];
+  }
+
   buildTotals(out, d, 'Weekly Service Total');
   return out;
 }

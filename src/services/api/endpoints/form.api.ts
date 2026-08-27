@@ -61,6 +61,7 @@ export interface FormPayload {
   headerTitle: string;
   headerRows: HeaderRow[];
   customerName?: string;
+  isExtension?: boolean;
   products: {
     products?: any[];
     smallProducts: any[];

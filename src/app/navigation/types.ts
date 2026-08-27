@@ -41,7 +41,7 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  New: undefined;
+  New: {isExtension?: boolean} | undefined;
   Saved: undefined;
   Trash: undefined;
   More: undefined;

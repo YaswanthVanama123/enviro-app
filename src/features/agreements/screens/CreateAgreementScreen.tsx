@@ -35,6 +35,7 @@ export function CreateAgreementScreen() {
   const route = useRoute<any>();
   const editAgreementId = (route.params as any)?.agreementId as string | undefined;
   const isEditMode = !!editAgreementId;
+  const routeIsExtension = (route.params as any)?.isExtension === true;
   const scrollRef  = useRef<ScrollView>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
@@ -50,6 +51,7 @@ export function CreateAgreementScreen() {
     nextStep,
     prevStep,
     setHeaderTitle,
+    setIsExtension,
     setHeaderRows,
     addSmallProduct,
     removeSmallProduct,
@@ -99,6 +101,15 @@ export function CreateAgreementScreen() {
   });
 
   const {step, saving, saveError, savedId} = form;
+
+  // Arriving via "Extend Agreement" marks the document as a renewal so it keeps the
+  // legacy addendum heading. Edit mode restores the flag from the saved agreement
+  // instead, so don't let the route param override it.
+  useEffect(() => {
+    if (routeIsExtension && !isEditMode) {
+      setIsExtension(true);
+    }
+  }, [routeIsExtension, isEditMode, setIsExtension]);
 
   useEffect(() => {
     if (step === 3 && form.biginCompanyId && Object.keys(form.services).length > 0) {

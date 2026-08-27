@@ -56,6 +56,7 @@ export interface FormState {
   step: FormStep;
   headerTitle: string;
   headerRows: HeaderRow[];
+  isExtension: boolean;
   smallProducts: SmallProduct[];
   bigProducts: BigProduct[];
   dispensers: Dispenser[];
@@ -110,6 +111,7 @@ const DEFAULT_SERVICE_AGREEMENT: ServiceAgreementData = {
 const INITIAL_STATE: FormState = {
   step: 1,
   headerTitle: '',
+  isExtension: false,
   headerRows: DEFAULT_HEADER_ROWS,
   smallProducts: [],
   bigProducts: [],
@@ -440,6 +442,7 @@ export function useFormFilling(editAgreementId?: string) {
 
           const editTitle = payload.headerTitle ?? doc.headerTitle;
           const editRows = payload.headerRows ?? doc.headerRows;
+          next.isExtension = (payload.isExtension ?? doc.isExtension) === true;
           if (editTitle) {next.headerTitle = editTitle;}
           if (Array.isArray(editRows) && editRows.length > 0) {next.headerRows = editRows;}
 
@@ -635,6 +638,10 @@ export function useFormFilling(editAgreementId?: string) {
 
   const setHeaderTitle = useCallback((headerTitle: string) => {
     setForm(prev => ({...prev, headerTitle}));
+  }, []);
+
+  const setIsExtension = useCallback((isExtension: boolean) => {
+    setForm(prev => ({...prev, isExtension}));
   }, []);
 
   const setHeaderRow = useCallback((index: number, field: keyof HeaderRow, value: string) => {
@@ -989,8 +996,9 @@ export function useFormFilling(editAgreementId?: string) {
     const customerName = extractCustomerName(form.headerRows);
 
     return {
-      headerTitle: resolveDocumentTitle(form.headerTitle, form.headerRows),
+      headerTitle: resolveDocumentTitle(form.headerTitle, form.headerRows, form.isExtension),
       headerRows: form.headerRows,
+      isExtension: form.isExtension,
       customerName,
       products: {
         products: mergedProducts,
@@ -1160,6 +1168,7 @@ export function useFormFilling(editAgreementId?: string) {
     nextStep,
     prevStep,
     setHeaderTitle,
+    setIsExtension,
     setHeaderRow,
     setHeaderRows,
     addSmallProduct,
