@@ -369,13 +369,27 @@ function transformMicrofiber(s: any): any {
   ]);
   if (Array.isArray(s.serviceBreakdown)) {
     s.serviceBreakdown.forEach((item: any) => {
-      if (item.label === 'Bathrooms' && out.bathroomCount === undefined) {
+      // 'Bathrooms'/'Huge Bathrooms' are the pre-rename labels — still matched so
+      // agreements saved before the rename load correctly.
+      if (
+        (item.label === 'Small Bathrooms' || item.label === 'Bathrooms') &&
+        out.bathroomCount === undefined
+      ) {
         out.bathroomCount = item.qty || 0;
-      } else if (item.label === 'Huge Bathrooms' && out.hugeBathroomSqFt === undefined) {
+      } else if (
+        (item.label === 'Large Bathrooms' || item.label === 'Huge Bathrooms') &&
+        out.hugeBathroomSqFt === undefined
+      ) {
         out.hugeBathroomSqFt = item.qty || 0;
-      } else if (item.label === 'Extra Area' && out.extraAreaSqFt === undefined) {
+      } else if (
+        (item.label === 'Mopping with Sani' || item.label === 'Extra Area') &&
+        out.extraAreaSqFt === undefined
+      ) {
         out.extraAreaSqFt = item.qty || 0;
-      } else if (item.label === 'Standalone Service' && out.standaloneSqFt === undefined) {
+      } else if (
+        (item.label === 'Mopping Non-Bathroom' || item.label === 'Standalone Service') &&
+        out.standaloneSqFt === undefined
+      ) {
         out.standaloneSqFt = item.qty || 0;
       } else if (item.label === 'Chemical Supply' && out.chemicalGallons === undefined) {
         out.chemicalGallons = item.qty || 0;

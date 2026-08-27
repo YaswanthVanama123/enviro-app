@@ -117,11 +117,14 @@ function renderServiceForm(
   pricingConfig: any,
   onChange: (d: any) => void,
   onRemove: () => void,
+  sanicleanData?: any,
 ) {
   const props = {data, onChange, contractMonths, onRemove, pricingConfig};
   switch (serviceId) {
     case 'saniclean':          return <SanicleanForm         key={serviceId} {...props} />;
-    case 'saniscrub':          return <SaniscrubForm         key={serviceId} {...props} />;
+    // SaniScrub mirrors SaniClean's restroom-fixture count and bills those fixtures
+    // at $0 when SaniClean is on the All-Inclusive package.
+    case 'saniscrub':          return <SaniscrubForm         key={serviceId} {...props} sanicleanData={sanicleanData} />;
     case 'sanipod':            return <SanipodForm           key={serviceId} {...props} />;
     case 'foamingDrain':       return <FoamingDrainForm       key={serviceId} {...props} />;
     case 'greaseTrap':         return <GreaseTrapForm         key={serviceId} {...props} />;
@@ -300,6 +303,7 @@ export function Step3Services({
             pricingConfigs[serviceId] ?? null,
             (d: any) => onUpdateService(serviceId, d),
             () => onRemoveService(serviceId),
+            services.saniclean,
           ),
         )}
 

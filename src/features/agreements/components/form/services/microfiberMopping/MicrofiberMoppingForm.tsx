@@ -135,13 +135,10 @@ export function MicrofiberMoppingForm({
       const merged = {...data, ...fields};
       trackServiceChanges('microfiberMopping', fields, {customIncludedBathroomRate: data?.customIncludedBathroomRate ?? includedBathroomRate, customHugeBathroomRatePerSqFt: data?.customHugeBathroomRatePerSqFt ?? hugeBathroomRatePerSqFt, customExtraAreaRatePerUnit: data?.customExtraAreaRatePerUnit ?? extraAreaRatePerUnit, customStandaloneRatePerUnit: data?.customStandaloneRatePerUnit ?? standaloneRatePerUnit}, {quantity: bathroomCount, frequency: freq});
 
-      // Entering huge-bathroom sq ft zeroes standard bathrooms (matches web).
+      // Standard bathrooms and huge bathroom sq ft can both be charged together —
+      // the calc sums them — so entering one must not clear the other.
       if ('hugeBathroomSqFt' in fields) {
-        const sq = Number(fields.hugeBathroomSqFt) || 0;
-        merged.isHugeBathroom = sq > 0;
-        if (sq > 0) {
-          merged.bathroomCount = 0;
-        }
+        merged.isHugeBathroom = (Number(fields.hugeBathroomSqFt) || 0) > 0;
       }
 
       const clearOverrides = RESET_OVERRIDE_FIELDS.some(k => k in fields);
@@ -194,7 +191,10 @@ export function MicrofiberMoppingForm({
     bathroomCount > 0 || hugeBathroomSqFt > 0 || extraAreaSqFt > 0 || standaloneSqFt > 0;
   const isGreenline = hasService && calc.contractTotal > calc.originalContractTotal * 1.3;
 
-  const showStandardBathrooms = !isAllInclusive && hasExistingSaniService && hugeBathroomSqFt === 0;
+  const smallBathroomMaxSqFt =
+    backendConfig?.hugeBathroomPricing?.sqFtUnit ?? cfg.hugeBathroomPricing.sqFtUnit;
+
+  const showStandardBathrooms = !isAllInclusive && hasExistingSaniService;
   const showHugeBathroom = !isAllInclusive && hasExistingSaniService;
   const showAreas = !isAllInclusive;
 
@@ -231,7 +231,7 @@ export function MicrofiberMoppingForm({
       {showStandardBathrooms && (
         <>
           <CalcRow
-            label="Standard Bathrooms"
+            label={`Small Bathrooms (${smallBathroomMaxSqFt} sq ft or less)`}
             qty={bathroomCount}
             onQtyChange={v => update({bathroomCount: v})}
             rate={data?.customIncludedBathroomRate ?? includedBathroomRate}
@@ -243,7 +243,7 @@ export function MicrofiberMoppingForm({
 
       {showHugeBathroom && (
         <CalcRow
-          label="Huge Bathroom (sq ft)"
+          label="Large Bathroom (by sq ft)"
           qty={hugeBathroomSqFt}
           onQtyChange={v => update({hugeBathroomSqFt: v})}
           rate={data?.customHugeBathroomRatePerSqFt ?? hugeBathroomRatePerSqFt}
@@ -255,7 +255,7 @@ export function MicrofiberMoppingForm({
       {showAreas && (
         <>
           <CalcRow
-            label="Extra Non-Bathroom (sq ft)"
+            label="Mopping with Sani (by sq ft)"
             qty={extraAreaSqFt}
             onQtyChange={v => update({extraAreaSqFt: v})}
             rate={data?.customExtraAreaRatePerUnit ?? extraAreaRatePerUnit}
@@ -263,13 +263,13 @@ export function MicrofiberMoppingForm({
             total={calc.extraAreaPrice}
           />
           <ToggleRow
-            label="Exact SqFt (extra area)"
+            label="Exact SqFt (mopping with Sani)"
             value={useExactExtraAreaSqft}
             onChange={v => update({useExactExtraAreaSqft: v})}
           />
 
           <CalcRow
-            label="Standalone Mopping (sq ft)"
+            label="Mopping non-bathroom sq footage"
             qty={standaloneSqFt}
             onQtyChange={v => update({standaloneSqFt: v})}
             rate={data?.customStandaloneRatePerUnit ?? standaloneRatePerUnit}
@@ -277,7 +277,7 @@ export function MicrofiberMoppingForm({
             total={calc.standaloneServicePrice}
           />
           <ToggleRow
-            label="Exact SqFt (standalone)"
+            label="Exact SqFt (non-bathroom)"
             value={useExactStandaloneSqft}
             onChange={v => update({useExactStandaloneSqft: v})}
           />

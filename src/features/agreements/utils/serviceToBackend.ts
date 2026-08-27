@@ -267,10 +267,10 @@ function microfiber(d: any): any {
   const standaloneRate = n(d.customStandaloneRatePerUnit ?? d.standaloneRatePerUnit);
   const chemicalRate = n(d.customDailyChemicalPerGallon ?? d.dailyChemicalPerGallon);
   out.serviceBreakdown = [
-    {label: 'Bathrooms', qty: n(d.bathroomCount), rate: bathroomRate},
-    {label: 'Huge Bathrooms', qty: n(d.hugeBathroomSqFt), rate: hugeRate, unit: 'sq ft'},
-    {label: 'Extra Area', qty: n(d.extraAreaSqFt), rate: extraRate, unit: 'sq ft'},
-    {label: 'Standalone Service', qty: n(d.standaloneSqFt), rate: standaloneRate, unit: 'sq ft'},
+    {label: 'Small Bathrooms', qty: n(d.bathroomCount), rate: bathroomRate},
+    {label: 'Large Bathrooms', qty: n(d.hugeBathroomSqFt), rate: hugeRate, unit: 'sq ft'},
+    {label: 'Mopping with Sani', qty: n(d.extraAreaSqFt), rate: extraRate, unit: 'sq ft'},
+    {label: 'Mopping Non-Bathroom', qty: n(d.standaloneSqFt), rate: standaloneRate, unit: 'sq ft'},
     {label: 'Chemical Supply', qty: n(d.chemicalGallons), rate: chemicalRate, unit: 'gallons'},
   ]
     .filter(row => row.qty > 0)
