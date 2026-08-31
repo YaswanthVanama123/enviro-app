@@ -71,6 +71,7 @@ export function CreateAgreementScreen() {
     setPaymentOption,
     setPaymentNote,
     setIncludeProductsTable,
+    setIncludeContractSummary,
     addService,
     removeService,
     updateService,
@@ -242,6 +243,8 @@ export function CreateAgreementScreen() {
             paymentNote={form.paymentNote}
             onPaymentNoteChange={setPaymentNote}
             allServicesOneTime={allServicesOneTime}
+            includeContractSummary={form.includeContractSummary}
+            onIncludeContractSummaryChange={setIncludeContractSummary}
           />
         );
       case 5:

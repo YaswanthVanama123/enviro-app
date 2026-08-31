@@ -259,6 +259,20 @@ export function FormDivider() {
   return <View style={ss.divider} />;
 }
 
+export function IncludeInPdfRow({label, value, onChange}: {label: string; value: boolean; onChange: (v: boolean) => void}) {
+  return (
+    <TouchableOpacity
+      style={ss.includeRow}
+      onPress={() => onChange(!value)}
+      activeOpacity={0.7}>
+      <View style={[ss.includeCheckbox, value && ss.includeCheckboxOn]}>
+        {value && <Ionicons name="checkmark" size={14} color="#fff" />}
+      </View>
+      <Text style={ss.includeLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export function StepIndicator({current, total}: {current: number; total: number}) {
   return (
     <View style={ss.stepRow}>
@@ -327,6 +341,10 @@ const ss = StyleSheet.create({
   dollarValue: {fontSize: FontSize.sm, fontWeight: '700', color: Colors.textPrimary, flexShrink: 1},
   dollarValueHighlight: {color: Colors.primary, fontSize: FontSize.sm, flexShrink: 1},
   divider: {height: 1, backgroundColor: Colors.borderLight, marginHorizontal: Spacing.lg, marginVertical: Spacing.sm},
+  includeRow: {flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginHorizontal: Spacing.md, marginTop: Spacing.sm, marginBottom: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surface},
+  includeCheckbox: {width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center'},
+  includeCheckboxOn: {backgroundColor: Colors.primary, borderColor: Colors.primary},
+  includeLabel: {fontSize: FontSize.sm, fontWeight: '600', color: Colors.textPrimary},
   stepRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.md},
   stepDot: {width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.surface, borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center'},
   stepDotActive: {borderColor: Colors.primary, backgroundColor: Colors.primary},

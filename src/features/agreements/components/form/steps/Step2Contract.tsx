@@ -8,6 +8,7 @@ import {
   SelectRow,
   FormDivider,
   DollarRow,
+  IncludeInPdfRow,
 } from '../ui/FormUI';
 import {PaymentOption} from '../../../hooks/useFormFilling';
 import {Colors} from '../../../../../theme/colors';
@@ -54,6 +55,8 @@ interface Step2ContractProps {
   paymentNote: string;
   onPaymentNoteChange: (v: string) => void;
   allServicesOneTime?: boolean;
+  includeContractSummary?: boolean;
+  onIncludeContractSummaryChange?: (v: boolean) => void;
 }
 
 function SimpleDatePicker({value, onChange}: {value: string; onChange: (v: string) => void}) {
@@ -130,9 +133,16 @@ export function Step2Contract({
   paymentNote,
   onPaymentNoteChange,
   allServicesOneTime = false,
+  includeContractSummary = true,
+  onIncludeContractSummaryChange,
 }: Step2ContractProps) {
   return (
     <View>
+      <IncludeInPdfRow
+        label="Include Contract Summary in PDF"
+        value={includeContractSummary}
+        onChange={v => onIncludeContractSummaryChange?.(v)}
+      />
       {!allServicesOneTime && (
       <FormSection icon="calendar-outline" title="Contract Duration">
         <DropdownRow

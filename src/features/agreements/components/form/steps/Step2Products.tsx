@@ -9,6 +9,7 @@ import {Colors} from '../../../../../theme/colors';
 import {Spacing, Radius} from '../../../../../theme/spacing';
 import {FontSize} from '../../../../../theme/typography';
 import {formatCurrency} from '../../../../../shared/utils/format.utils';
+import {IncludeInPdfRow} from '../ui/FormUI';
 
 const PROD_FREQ = [
   {value: 'daily',     label: 'Daily',   short: 'Daily'},
@@ -792,17 +793,11 @@ export function Step2Products({
       </View>
 
       {}
-      <TouchableOpacity
-        style={styles.includeCheckboxRow}
-        onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
-        activeOpacity={0.7}>
-        <View style={[styles.checkbox, includeProductsTable && styles.checkboxChecked]}>
-          {includeProductsTable && (
-            <Ionicons name="checkmark" size={14} color="#fff" />
-          )}
-        </View>
-        <Text style={styles.includeCheckboxLabel}>Include Products Table in PDF</Text>
-      </TouchableOpacity>
+      <IncludeInPdfRow
+        label="Include Products Table in PDF"
+        value={includeProductsTable}
+        onChange={onIncludeProductsTableChange}
+      />
 
     </View>
   );
@@ -811,38 +806,6 @@ export function Step2Products({
 const styles = StyleSheet.create({
   container: {
     paddingBottom: Spacing.xl,
-  },
-  includeCheckboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  includeCheckboxLabel: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textPrimary,
   },
 
   section: {

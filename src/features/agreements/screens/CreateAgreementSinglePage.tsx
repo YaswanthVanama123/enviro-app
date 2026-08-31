@@ -81,6 +81,7 @@ export function CreateAgreementSinglePage() {
     setPaymentOption,
     setPaymentNote,
     setIncludeProductsTable,
+    setIncludeContractSummary,
     addService,
     removeService,
     updateService,
@@ -214,6 +215,8 @@ export function CreateAgreementSinglePage() {
           paymentNote={form.paymentNote}
           onPaymentNoteChange={setPaymentNote}
           allServicesOneTime={allServicesOneTime}
+          includeContractSummary={form.includeContractSummary}
+          onIncludeContractSummaryChange={setIncludeContractSummary}
         />
 
         <SectionDivider />

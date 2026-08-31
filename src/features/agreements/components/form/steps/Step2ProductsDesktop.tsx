@@ -7,6 +7,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SmallProduct, Dispenser} from '../../../hooks/useFormFilling';
 import {formatCurrency} from '../../../../../shared/utils/format.utils';
+import {IncludeInPdfRow} from '../ui/FormUI';
 
 const C = {
   primary:     '#c00000',
@@ -631,15 +632,11 @@ export function Step2ProductsDesktop({
       </View>
 
       {}
-      <TouchableOpacity
-        style={s.checkRow}
-        onPress={() => onIncludeProductsTableChange(!includeProductsTable)}
-        activeOpacity={0.7}>
-        <View style={[s.checkbox, includeProductsTable && s.checkboxOn]}>
-          {includeProductsTable && <Ionicons name="checkmark" size={14} color="#fff" />}
-        </View>
-        <Text style={s.checkLabel}>Include Products Table in PDF</Text>
-      </TouchableOpacity>
+      <IncludeInPdfRow
+        label="Include Products Table in PDF"
+        value={includeProductsTable}
+        onChange={onIncludeProductsTableChange}
+      />
     </View>
   );
 }
@@ -741,15 +738,4 @@ const s = StyleSheet.create({
 
   noFreq: {fontSize: 12, color: C.textMuted, fontStyle: 'italic'},
 
-  checkRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    marginTop: 4, paddingHorizontal: 14, paddingVertical: 12,
-    borderRadius: 8, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface,
-  },
-  checkbox: {
-    width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: C.border,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxOn: {backgroundColor: C.primary, borderColor: C.primary},
-  checkLabel: {fontSize: 14, fontWeight: '600', color: C.text},
 });

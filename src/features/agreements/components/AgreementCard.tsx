@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   getFileDownloadUrl,
 } from '../../../services/api/endpoints/agreements.api';
 import {apiClient} from '../../../services/api/client';
+import {productionPushApi} from '../../../services/api/endpoints/productionPush.api';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
 import {FontSize} from '../../../theme/typography';
@@ -29,6 +30,19 @@ import {EmailComposerModal} from '../../../shared/components/ui/EmailComposerMod
 import type {EmailDocumentType} from '../../../services/api/endpoints/email.api';
 import {BiginUploadModal} from './BiginUploadModal';
 import {BiginTaskModal} from './BiginTaskModal';
+
+function formatBytes(bytes: number): string {
+  if (!bytes) {
+    return '0 B';
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 const FILE_EMAIL_TYPE: Record<FileType, EmailDocumentType> = {
   main_pdf: 'agreement',
@@ -332,7 +346,28 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   const [fileToDelete, setFileToDelete] = useState<SavedFileListItem | null>(null);
   const [showDeleteAgreement, setShowDeleteAgreement] = useState(false);
 
+  const [pushConfigured, setPushConfigured] = useState(false);
+  const [pushTarget, setPushTarget] = useState<string | null>(null);
+  const [showPushConfirm, setShowPushConfirm] = useState(false);
+  const [pushSummary, setPushSummary] = useState<string | null>(null);
+  const [pushing, setPushing] = useState(false);
+  const [pushResult, setPushResult] = useState<{ok: boolean; message: string} | null>(null);
+
   const timeline = calcTimelineStatus(agreement.startDate, agreement.contractMonths);
+
+  useEffect(() => {
+    let cancelled = false;
+    productionPushApi.getStatusCached().then(status => {
+      if (cancelled || !status) {
+        return;
+      }
+      setPushConfigured(status.configured);
+      setPushTarget(status.targetApiUrl);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getCreatorAndEditor = () => {
     const mainFile = agreement.files.find(f => f.fileType === 'main_pdf');
@@ -380,6 +415,37 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
   const handleTask = useCallback(() => {
     setShowTaskModal(true);
   }, []);
+
+  const handlePushToProduction = useCallback(async () => {
+    setShowPushConfirm(true);
+    setPushSummary(null);
+    const preview = await productionPushApi.preview(agreement.id);
+    if (!preview) {
+      setPushSummary('Could not read this agreement. Nothing has been pushed.');
+      return;
+    }
+    setPushSummary(
+      `${preview.counts.versions} version PDF(s), ${preview.counts.attachedFiles} attached file(s), ` +
+        `${preview.counts.changeLogs} change log(s), ${formatBytes(preview.totalPdfBytes)} of PDF data. ` +
+        'If it already exists in production it will be overwritten. Nothing is deleted.',
+    );
+  }, [agreement.id]);
+
+  const confirmPushToProduction = useCallback(async () => {
+    setPushing(true);
+    const res = await productionPushApi.push(agreement.id);
+    setPushing(false);
+    setShowPushConfirm(false);
+    setPushResult({
+      ok: res.success,
+      message: res.success
+        ? res.message ?? `Pushed "${agreement.agreementTitle}" to production`
+        : res.error ?? 'Push failed',
+    });
+    if (res.success) {
+      onRefresh?.();
+    }
+  }, [agreement.id, agreement.agreementTitle, onRefresh]);
 
   const handleAdd = useCallback(() => {
     setShowAddOptions(true);
@@ -529,6 +595,13 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
             <Text style={styles.addBtnText}>{uploading ? 'Uploading...' : 'Add'}</Text>
           </TouchableOpacity>
 
+          {pushConfigured && (
+            <TouchableOpacity style={styles.pushProdBtn} onPress={handlePushToProduction}>
+              <Ionicons name="cloud-upload-outline" size={13} color="#fff" />
+              <Text style={styles.pushProdBtnText}>Push to Production</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.deleteCardBtn} onPress={handleDeleteAgreement}>
             <Ionicons name="trash-outline" size={13} color={Colors.primary} />
             <Text style={styles.deleteCardBtnText}>Delete</Text>
@@ -643,6 +716,33 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
           onDelete(agreement);
         }}
         onCancel={() => setShowDeleteAgreement(false)}
+      />
+
+      <ConfirmModal
+        visible={showPushConfirm}
+        icon="cloud-upload-outline"
+        iconColor="#0f766e"
+        iconBg="#ecfdf5"
+        title="Push to Production"
+        subtitle={
+          pushSummary ??
+          `Sending "${agreement.agreementTitle}" to ${pushTarget ?? 'production'}…`
+        }
+        confirmLabel={pushing ? 'Pushing…' : 'Push to Production'}
+        confirmColor="#0f766e"
+        loading={pushing}
+        onConfirm={confirmPushToProduction}
+        onCancel={() => setShowPushConfirm(false)}
+      />
+
+      <InfoModal
+        visible={pushResult !== null}
+        icon={pushResult?.ok ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+        iconColor={pushResult?.ok ? '#16a34a' : '#ef4444'}
+        iconBg={pushResult?.ok ? '#f0fdf4' : '#fef2f2'}
+        title={pushResult?.ok ? 'Pushed to Production' : 'Push Failed'}
+        subtitle={pushResult?.message}
+        onClose={() => setPushResult(null)}
       />
 
       <BiginUploadModal
@@ -822,6 +922,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
   },
   taskBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
+  pushProdBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: '#0f766e',
+  },
+  pushProdBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',

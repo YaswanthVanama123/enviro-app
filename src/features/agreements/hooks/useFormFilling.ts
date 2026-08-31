@@ -69,6 +69,7 @@ export interface FormState {
   paymentOption: PaymentOption;
   paymentNote: string;
   includeProductsTable: boolean;
+  includeContractSummary: boolean;
   visibleServices: string[];
   services: Record<string, any>;
   enviroOf: string;
@@ -125,6 +126,7 @@ const INITIAL_STATE: FormState = {
   paymentOption: 'online',
   paymentNote: '',
   includeProductsTable: true,
+  includeContractSummary: true,
   visibleServices: [],
   services: {},
   enviroOf: '',
@@ -614,6 +616,9 @@ export function useFormFilling(editAgreementId?: string) {
           if (typeof payload.includeProductsTable === 'boolean') {
             next.includeProductsTable = payload.includeProductsTable;
           }
+          if (typeof payload.includeContractSummary === 'boolean') {
+            next.includeContractSummary = payload.includeContractSummary;
+          }
 
           console.log('[FormFilling] Edit mode populated — services:', Object.keys(next.services), '| contractMonths:', next.contractMonths);
         }
@@ -787,6 +792,10 @@ export function useFormFilling(editAgreementId?: string) {
 
   const setIncludeProductsTable = useCallback((includeProductsTable: boolean) => {
     setForm(prev => ({...prev, includeProductsTable}));
+  }, []);
+
+  const setIncludeContractSummary = useCallback((includeContractSummary: boolean) => {
+    setForm(prev => ({...prev, includeContractSummary}));
   }, []);
 
   const addService = useCallback((serviceId: string) => {
@@ -1017,6 +1026,7 @@ export function useFormFilling(editAgreementId?: string) {
       },
       serviceAgreement: form.serviceAgreement,
       includeProductsTable: form.includeProductsTable,
+      includeContractSummary: form.includeContractSummary,
       status: documentStatus,
       summary,
       commission,
@@ -1189,6 +1199,7 @@ export function useFormFilling(editAgreementId?: string) {
     setPaymentOption,
     setPaymentNote,
     setIncludeProductsTable,
+    setIncludeContractSummary,
     addService,
     removeService,
     updateService,

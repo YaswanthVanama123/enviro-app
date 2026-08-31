@@ -10,6 +10,7 @@ import {useFormFilling} from '../hooks/useFormFilling';
 import {zohoApi} from '../../../services/api/endpoints/agreements.api';
 import {ConfirmModal} from '../../../shared/components/ui/AppModal';
 import {Step2ProductsDesktop} from '../components/form/steps/Step2ProductsDesktop';
+import {IncludeInPdfRow} from '../components/form/ui/FormUI';
 import {Step3Services}         from '../components/form/steps/Step3Services';
 import {Step5Agreement}        from '../components/form/steps/Step5Agreement';
 import {Step4Review}           from '../components/form/steps/Step4Review';
@@ -461,6 +462,7 @@ export function CreateAgreementDesktop() {
     setParkingCharge, setParkingChargeFrequency,
     setPaymentOption, setPaymentNote,
     setIncludeProductsTable,
+    setIncludeContractSummary,
     addService, removeService, updateService,
     setEnviroOf, updateServiceAgreement,
     saveDraft, generate, allServicesOneTime,
@@ -671,6 +673,12 @@ export function CreateAgreementDesktop() {
         <View style={ss.gap} />
 
         {}
+        <IncludeInPdfRow
+          label="Include Contract Summary in PDF"
+          value={form.includeContractSummary}
+          onChange={setIncludeContractSummary}
+        />
+
         <View style={ss.contractRow}>
 
           {}

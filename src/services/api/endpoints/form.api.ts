@@ -81,6 +81,7 @@ export interface FormPayload {
   summary: GlobalSummary;
   commission?: CommissionData | null;
   includeProductsTable?: boolean;
+  includeContractSummary?: boolean;
   status?: string;
 }
 
