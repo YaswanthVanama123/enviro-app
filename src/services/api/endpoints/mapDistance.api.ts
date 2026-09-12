@@ -43,11 +43,22 @@ export interface MapDistanceSyncJob {
   fetchedData?: MapDistanceResult[];
 }
 
+export interface MapDistanceSyncFailure {
+  jobId: string;
+  jobType: string;
+  at: string | null;
+  error: string;
+  processedCustomers: number;
+  totalCustomers: number;
+}
+
 export interface SyncStatusResponse {
   success?: boolean;
   isRunning: boolean;
   isInterrupted: boolean;
   isPaused: boolean;
+  heartbeatAgeMs?: number | null;
+  lastFailure?: MapDistanceSyncFailure | null;
   job: MapDistanceSyncJob | null;
 }
 
@@ -104,6 +115,7 @@ export const mapDistanceApi = {
           isRunning: false,
           isInterrupted: false,
           isPaused: false,
+          lastFailure: null,
           job: null,
         }
       );

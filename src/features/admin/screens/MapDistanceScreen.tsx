@@ -21,6 +21,7 @@ import {
   MapDistanceResult,
   MapDistanceStats,
   SyncStatusResponse,
+  MapDistanceSyncFailure,
 } from '../../../services/api/endpoints/mapDistance.api';
 import {Colors} from '../../../theme/colors';
 import {Spacing, Radius} from '../../../theme/spacing';
@@ -54,6 +55,8 @@ export function MapDistanceScreen() {
   });
   const [stats, setStats] = useState<MapDistanceStats | null>(null);
 
+  const [isStarting, setIsStarting] = useState(false);
+  const [lastFailure, setLastFailure] = useState<MapDistanceSyncFailure | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export function MapDistanceScreen() {
   }, []);
 
   useEffect(() => {
-    if (syncStatus.isRunning) {
+    if (syncStatus.isRunning || isStarting) {
       pollIntervalRef.current = setInterval(() => {
         checkSyncStatus();
       }, 3000);
@@ -93,7 +96,7 @@ export function MapDistanceScreen() {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [syncStatus.isRunning, syncStatus.job?.status]);
+  }, [syncStatus.isRunning, syncStatus.job?.status, isStarting]);
 
   const loadCustomers = async () => {
     setLoadingCustomers(true);
@@ -113,6 +116,11 @@ export function MapDistanceScreen() {
     const isNowRunning = status.isRunning;
 
     setSyncStatus(status);
+    setLastFailure(status.lastFailure ?? null);
+
+    if (status.isRunning || status.isInterrupted || status.isPaused || status.lastFailure) {
+      setIsStarting(false);
+    }
 
     if (wasRunning && !isNowRunning && status.job) {
       if (
@@ -156,30 +164,39 @@ export function MapDistanceScreen() {
 
   const handleStartSync = async () => {
     setError(null);
+    setLastFailure(null);
+    setIsStarting(true);
     const result = await mapDistanceApi.startSync();
     if (result.success) {
       checkSyncStatus();
     } else {
+      setIsStarting(false);
       setError(result.error || 'Failed to start sync');
     }
   };
 
   const handleStartUpdateSync = async () => {
     setError(null);
+    setLastFailure(null);
+    setIsStarting(true);
     const result = await mapDistanceApi.startUpdateSync();
     if (result.success) {
       checkSyncStatus();
     } else {
+      setIsStarting(false);
       setError(result.error || 'Failed to start update sync');
     }
   };
 
   const handleStartMissingSync = async () => {
     setError(null);
+    setLastFailure(null);
+    setIsStarting(true);
     const result = await mapDistanceApi.startMissingSync();
     if (result.success) {
       checkSyncStatus();
     } else {
+      setIsStarting(false);
       setError(result.error || 'Failed to start new-customer sync');
     }
   };
