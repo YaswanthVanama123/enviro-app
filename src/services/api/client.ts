@@ -51,7 +51,7 @@ class ApiClient {
     return this.token;
   }
 
-  private handleUnauthorized(status: number, endpoint: string) {
+  private handleUnauthorized(status: number, endpoint: string, data?: unknown) {
     const isProtected =
       endpoint.includes('/admin') ||
       endpoint.includes('/api/pdf') ||
@@ -59,8 +59,20 @@ class ApiClient {
       endpoint.includes('/api/upload') ||
       endpoint.includes('/api/service-configs');
 
-    if ((status === 401 || status === 403) && isProtected && this.onUnauthorized) {
+    if (!isProtected || !this.onUnauthorized) {
+      return;
+    }
+
+    if (status === 401) {
       this.onUnauthorized();
+      return;
+    }
+
+    if (status === 403) {
+      const code = (data as Record<string, unknown> | null | undefined)?.code;
+      if (code !== 'permission_denied') {
+        this.onUnauthorized();
+      }
     }
   }
 
@@ -80,7 +92,7 @@ class ApiClient {
       });
       const data = await res.json();
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -101,7 +113,7 @@ class ApiClient {
       });
       const data = await res.json();
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -122,7 +134,7 @@ class ApiClient {
       });
       const data = await res.json();
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -148,7 +160,7 @@ class ApiClient {
       let data: any = null;
       try {data = JSON.parse(text);} catch {}
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -170,7 +182,7 @@ class ApiClient {
       let data: any = null;
       try {data = JSON.parse(text);} catch {}
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -195,7 +207,7 @@ class ApiClient {
       });
       const data = await res.json();
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
@@ -215,7 +227,7 @@ class ApiClient {
       });
       const data = await res.json();
       if (!res.ok) {
-        this.handleUnauthorized(res.status, endpoint);
+        this.handleUnauthorized(res.status, endpoint, data);
         return {error: extractError(data, res.status), status: res.status};
       }
       return {data, status: res.status};
