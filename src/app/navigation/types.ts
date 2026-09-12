@@ -18,6 +18,7 @@ export type RootStackParamList = {
   CompanyMapping: undefined;
   BiginAudit: undefined;
   MapDistance: undefined;
+  SystemConnections: undefined;
   EmployeeAgreements: undefined;
   EditHistory: undefined;
   PayrollSettings: undefined;

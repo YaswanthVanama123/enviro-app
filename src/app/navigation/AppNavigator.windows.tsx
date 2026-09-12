@@ -21,6 +21,7 @@ import {RouteStarCustomersScreen} from '../../features/admin/screens/RouteStarCu
 import {CompanyMappingScreen} from '../../features/admin/screens/CompanyMappingScreen';
 import {BiginAuditScreen} from '../../features/admin/screens/BiginAuditScreen';
 import {MapDistanceScreen} from '../../features/admin/screens/MapDistanceScreen';
+import {SystemConnectionsScreen} from '../../features/admin/screens/SystemConnectionsScreen';
 import {EmployeeAgreementsScreen} from '../../features/admin/screens/EmployeeAgreementsScreen';
 import {EditHistoryScreen} from '../../features/admin/screens/EditHistoryScreen';
 import {PayrollSettingsScreen} from '../../features/admin/screens/PayrollSettingsScreen';
@@ -89,6 +90,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="CompanyMapping" component={CompanyMappingScreen} />
                 <Stack.Screen name="BiginAudit" component={BiginAuditScreen} />
                 <Stack.Screen name="MapDistance" component={MapDistanceScreen} />
+                <Stack.Screen name="SystemConnections" component={SystemConnectionsScreen} />
                 <Stack.Screen name="EmployeeAgreements" component={EmployeeAgreementsScreen} />
                 <Stack.Screen name="EditHistory" component={EditHistoryScreen} />
                 <Stack.Screen name="PayrollSettings" component={PayrollSettingsScreen} />

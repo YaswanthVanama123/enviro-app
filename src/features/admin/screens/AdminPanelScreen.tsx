@@ -335,6 +335,18 @@ export function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.menuRow}
+            onPress={() => navigation.navigate('SystemConnections')}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconBox, {backgroundColor: '#ecfdf5'}]}>
+                <Ionicons name="git-network-outline" size={18} color="#0f766e" />
+              </View>
+              <Text style={styles.menuRowText}>Database Connections</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => navigation.navigate('Trash')}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconBox, {backgroundColor: '#fef2f2'}]}>
