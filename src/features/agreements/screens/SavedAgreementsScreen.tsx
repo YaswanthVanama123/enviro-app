@@ -33,6 +33,12 @@ const OWNERSHIP_FILTERS = [
   {key: 'mine' as const, label: 'My Agreements'},
 ];
 
+const SOURCE_FILTERS = [
+  {key: 'all' as const, label: 'All Sources', icon: 'layers-outline'},
+  {key: 'migrated' as const, label: 'Migrated', icon: 'cloud-download-outline'},
+  {key: 'local' as const, label: 'Created Here', icon: 'document-outline'},
+];
+
 function SearchBar({
   value,
   onChange,
@@ -121,6 +127,41 @@ function OwnershipChips({
   );
 }
 
+function SourceChips({
+  active,
+  onSelect,
+}: {
+  active: 'all' | 'migrated' | 'local';
+  onSelect: (k: 'all' | 'migrated' | 'local') => void;
+}) {
+  return (
+    <View style={styles.ownershipRow}>
+      {SOURCE_FILTERS.map(f => (
+        <TouchableOpacity
+          key={f.key}
+          onPress={() => onSelect(f.key)}
+          style={[
+            styles.ownershipChip,
+            f.key === active && styles.ownershipChipActive,
+          ]}>
+          <Ionicons
+            name={f.icon}
+            size={14}
+            color={f.key === active ? Colors.textWhite : Colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.ownershipChipText,
+              f.key === active && styles.ownershipChipTextActive,
+            ]}>
+            {f.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 function EmptyState({
   hasSearch,
   hasFilter,
@@ -189,9 +230,11 @@ export function SavedAgreementsScreen() {
     searchQuery,
     activeFilter,
     ownershipFilter,
+    sourceFilter,
     setSearchQuery,
     setActiveFilter,
     setOwnershipFilter,
+    setSourceFilter,
     refresh,
     loadMore,
     deleteAgreement,
@@ -237,6 +280,7 @@ export function SavedAgreementsScreen() {
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </View>
         <OwnershipChips active={ownershipFilter} onSelect={setOwnershipFilter} />
+        <SourceChips active={sourceFilter} onSelect={setSourceFilter} />
         <FilterChips active={activeFilter} onSelect={setActiveFilter} />
       </View>
 

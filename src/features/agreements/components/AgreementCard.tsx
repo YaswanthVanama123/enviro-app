@@ -520,6 +520,15 @@ export function AgreementCard({agreement, onDelete, onDeleteFile, onRefresh}: Ag
                     <Text style={styles.metaItemText} numberOfLines={1}>{createdBy}</Text>
                   </View>
                 )}
+                {agreement.isMigrated && (
+                  <>
+                    {createdBy && <Text style={styles.metaDot}>·</Text>}
+                    <View style={styles.migratedBadge}>
+                      <Ionicons name="cloud-download-outline" size={11} color="#0f766e" />
+                      <Text style={styles.migratedBadgeText}>Migrated</Text>
+                    </View>
+                  </>
+                )}
                 {(lastEditedBy && lastEditedBy !== createdBy
                   ? `${lastEditedBy}${formattedEditTime ? ` · ${formattedEditTime}` : ''}`
                   : formattedEditTime) ? (
@@ -932,6 +941,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f766e',
   },
   pushProdBtnText: {fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.2},
+  migratedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+    backgroundColor: '#ecfdf5',
+  },
+  migratedBadgeText: {fontSize: 10, fontWeight: '700', color: '#0f766e'},
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',

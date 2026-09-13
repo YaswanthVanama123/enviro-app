@@ -70,6 +70,10 @@ export interface SavedFileGroup {
   contractMonths?: number | null;
   addedToPayroll?: boolean;
   payrollPeriodLabel?: string | null;
+  isMigrated?: boolean;
+  migratedAt?: string | null;
+  migratedBy?: string | null;
+  migratedFromEnv?: string | null;
 }
 
 export interface GroupedSavedFilesResult {
@@ -90,6 +94,7 @@ export interface GetSavedFilesOptions {
   isTrashView?: boolean;
   includeLogs?: boolean;
   includeDrafts?: boolean;
+  source?: 'all' | 'migrated' | 'local';
 }
 
 export const agreementsApi = {
@@ -99,6 +104,7 @@ export const agreementsApi = {
     const params = new URLSearchParams();
     if (options.page !== undefined) {params.set('page', String(options.page));}
     if (options.limit !== undefined) {params.set('limit', String(options.limit));}
+    if (options.source && options.source !== 'all') {params.set('source', options.source);}
     if (options.search) {params.set('search', options.search);}
     if (options.status && options.status !== 'all') {params.set('status', options.status);}
     if (options.isDeleted !== undefined) {

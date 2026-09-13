@@ -17,9 +17,11 @@ export interface UseSavedAgreementsResult {
   searchQuery: string;
   activeFilter: string;
   ownershipFilter: 'all' | 'mine';
+  sourceFilter: 'all' | 'migrated' | 'local';
   setSearchQuery: (q: string) => void;
   setActiveFilter: (f: string) => void;
   setOwnershipFilter: (f: 'all' | 'mine') => void;
+  setSourceFilter: (f: 'all' | 'migrated' | 'local') => void;
   refresh: () => void;
   loadMore: () => void;
   deleteAgreement: (id: string) => Promise<boolean>;
@@ -40,10 +42,12 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
   const [searchQuery, setSearchQueryState] = useState('');
   const [activeFilter, setActiveFilterState] = useState('all');
   const [ownershipFilter, setOwnershipFilterState] = useState<'all' | 'mine'>('all');
+  const [sourceFilter, setSourceFilterState] = useState<'all' | 'migrated' | 'local'>('all');
 
   const searchRef = useRef('');
   const filterRef = useRef('all');
   const ownershipRef = useRef<'all' | 'mine'>('all');
+  const sourceRef = useRef<'all' | 'migrated' | 'local'>('all');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(
@@ -52,10 +56,11 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       search: string;
       filter: string;
       ownership: 'all' | 'mine';
+      source: 'all' | 'migrated' | 'local';
       append: boolean;
       isRefresh: boolean;
     }) => {
-      const {pageNum, search, filter, ownership, append, isRefresh} = opts;
+      const {pageNum, search, filter, ownership, source, append, isRefresh} = opts;
 
       if (isRefresh) {
         setRefreshing(true);
@@ -72,6 +77,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
         isDeleted: false,
         includeLogs: true,
         includeDrafts: true,
+        source: source !== 'all' ? source : undefined,
       };
 
       const result = await agreementsApi.getGrouped(options);
@@ -115,6 +121,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       search: '',
       filter: 'all',
       ownership: 'all',
+      source: sourceRef.current,
       append: false,
       isRefresh: false,
     });
@@ -132,6 +139,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
           search: q,
           filter: filterRef.current,
           ownership: ownershipRef.current,
+      source: sourceRef.current,
           append: false,
           isRefresh: false,
         });
@@ -150,6 +158,25 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
         search: searchRef.current,
         filter: f,
         ownership: ownershipRef.current,
+      source: sourceRef.current,
+        append: false,
+        isRefresh: false,
+      });
+    },
+    [fetchData],
+  );
+
+  const setSourceFilter = useCallback(
+    (f: 'all' | 'migrated' | 'local') => {
+      setSourceFilterState(f);
+      sourceRef.current = f;
+      setPage(1);
+      fetchData({
+        pageNum: 1,
+        search: searchRef.current,
+        filter: filterRef.current,
+        ownership: ownershipRef.current,
+        source: f,
         append: false,
         isRefresh: false,
       });
@@ -167,6 +194,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
         search: searchRef.current,
         filter: filterRef.current,
         ownership: f,
+        source: sourceRef.current,
         append: false,
         isRefresh: false,
       });
@@ -181,6 +209,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       search: searchRef.current,
       filter: filterRef.current,
       ownership: ownershipRef.current,
+      source: sourceRef.current,
       append: false,
       isRefresh: true,
     });
@@ -195,6 +224,7 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
       search: searchRef.current,
       filter: filterRef.current,
       ownership: ownershipRef.current,
+      source: sourceRef.current,
       append: true,
       isRefresh: false,
     });
@@ -239,9 +269,11 @@ export function useSavedAgreements(): UseSavedAgreementsResult {
     searchQuery,
     activeFilter,
     ownershipFilter,
+    sourceFilter,
     setSearchQuery,
     setActiveFilter,
     setOwnershipFilter,
+    setSourceFilter,
     refresh,
     loadMore,
     deleteAgreement,
